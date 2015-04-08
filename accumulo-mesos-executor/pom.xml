@@ -63,11 +63,12 @@
         <dependency>
             <groupId>aredee.mesos.frameworks.accumulo</groupId>
             <artifactId>accumulo-mesos-model</artifactId>
+            <version>${parent.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.apache.accumulo</groupId>
-            <artifactId>accumulo-all</artifactId>
+            <artifactId>accumulo-core</artifactId>
         </dependency>
 
     </dependencies>

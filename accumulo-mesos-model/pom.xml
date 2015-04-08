@@ -9,11 +9,11 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>accumulo-mesos-scheduler</artifactId>
+    <artifactId>accumulo-mesos-model</artifactId>
 
     <description>
         The Accumulo-on-Mesos framework to deploy Apache Accumulo to Apache Mesos.
-        This artifact contains the Mesos scheduler for the Accumulo-on-Mesos framework.
+        This artifact contains the protobuf generated code.
     </description>
 
     <licenses>
@@ -39,6 +39,7 @@
         </developer>
     </developers>
 
+
     <distributionManagement>
         <snapshotRepository>
             <id>ossrh</id>
@@ -61,11 +62,53 @@
 
     <dependencies>
         <dependency>
-            <groupId>aredee.mesos.frameworks.accumulo</groupId>
-            <artifactId>accumulo-mesos-model</artifactId>
-            <version>${parent.version}</version>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
         </dependency>
-   </dependencies>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-toolchains-plugin</artifactId>
+                <version>1.1</version>
+                <executions>
+                    <execution>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>toolchain</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <toolchains>
+                        <protobuf>
+                            <version>2.6.1</version>
+                        </protobuf>
+                    </toolchains>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>com.google.protobuf.tools</groupId>
+                <artifactId>maven-protoc-plugin</artifactId>
+                <version>0.4.0</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <checkStaleness>true</checkStaleness>
+                    <outputDirectory>${project.build.directory}/generated-sources/protobuf</outputDirectory>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>compile</goal>
+                            <goal>testCompile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>
 
