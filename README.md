@@ -49,7 +49,7 @@ The Accumulo Mesos Framework requires an install of Maven 3.2.x.
     <toolchain>
       <type>protobuf</type>
       <provides>
-        <version>2.5.0</version>
+        <version>2.6.1</version>
       </provides>
       <configuration>
         <protocExecutable>$PROTOBUF_HOME/src/protoc</protocExecutable>
