@@ -14,7 +14,7 @@ document, code behavior, and anything else may change without notice and/or brea
 # Current Status
 
 ### Implemented
-* Project setup modified from (mesos-cassandra)[https://github.com/mesosphere/cassandra-mesos)
+* Project setup modified from [mesos-cassandra](https://github.com/mesosphere/cassandra-mesos)
 
 ### Near Term Tasks
 * none
