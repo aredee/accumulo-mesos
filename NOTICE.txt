@@ -1,0 +1,8 @@
+
+For a list of 3rd party dependencies and their licenses see:
+    accumulo-mesos-executor/THIRD-PARTY.txt (licenses in accumulo-mesos-executor/licenses directory)
+and
+    accumulo-mesos-framework/THIRD-PARTY.txt (licenses in accumulo-mesos-framework/licenses directory)
+which are generated upon a build.
+
+These generated files are included in the generated artifacts.
