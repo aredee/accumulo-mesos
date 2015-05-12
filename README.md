@@ -14,7 +14,7 @@ document, code behavior, and anything else may change without notice and/or brea
 # Current Status
 
 ### Implemented
-* Project setup modified from (mesos-cassandra)[https://github.com/mesosphere/cassandra-mesos)
+* Project setup modified from [mesos-cassandra](https://github.com/mesosphere/cassandra-mesos)
 
 ### Near Term Tasks
 * none
@@ -49,7 +49,7 @@ The Accumulo Mesos Framework requires an install of Maven 3.2.x.
     <toolchain>
       <type>protobuf</type>
       <provides>
-        <version>2.5.0</version>
+        <version>2.6.1</version>
       </provides>
       <configuration>
         <protocExecutable>$PROTOBUF_HOME/src/protoc</protocExecutable>
