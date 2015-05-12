@@ -14,13 +14,12 @@
  */
 package aredee.mesos.frameworks.accumulo;
 
-option java_outer_classname = "AccumuloFrameworkProtos";
+option java_outer_classname = "Protos";
 
 /**
- * Base configuration object.
- * This is a top-level object in the state hierarchy.
+ * Framework
  */
-message AccumuloFrameworkConfiguration {
+message FrameworkIdentity {
 
     /**
      * ID of the framework.
@@ -28,5 +27,31 @@ message AccumuloFrameworkConfiguration {
      * The framework will use this value (if set) when it restarts and re-registers with Mesos
      */
     optional string frameworkId = 1;
+
+    /**
+     * Name for the framework that's more convenient to use than the framework id.
+     *
+     */
+    optional string frameworkName = 2;
+}
+
+message RegisteredFrameworks {
+    repeated FrameworkIdentity frameworks = 1;
+}
+
+message FrameworkConfiguration {
+    required FrameworkIdentity id = 1;
+    optional string accumuloInstance = 2;
+}
+
+message ClusterStatus {
+  enum ClusterState {
+      STARTING_UP = 0;
+      AWAITING_MORE_RESOURCES = 1;
+      RUNNING = 2;
+      SHUTTING_DOWN = 3;
+  }
+
+  optional ClusterState state = 1;
 
 }

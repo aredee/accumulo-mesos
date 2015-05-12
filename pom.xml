@@ -65,13 +65,18 @@
         <version.accumulo>1.6.1</version.accumulo>
         <version.guava>18.0</version.guava>
         <version.slf4j>1.7.10</version.slf4j>
+        <version.jetty>9.1.5.v20140505</version.jetty>
+        <version.jersey>1.18.1</version.jersey>
+        <version.jackson>1.9.6</version.jackson>
+        <version.guice>3.0</version.guice>
+        <version.protobuf>2.6.1</version.protobuf>
     </properties>
 
     <modules>
         <module>accumulo-mesos-model</module>
         <module>accumulo-mesos-scheduler</module>
-        <module>accumulo-mesos-framework</module>
         <module>accumulo-mesos-executor</module>
+        <module>accumulo-mesos-framework</module>
         <module>accumulo-mesos-dist</module>
     </modules>
 
@@ -81,35 +86,14 @@
             <!-- project libraries -->
             <dependency>
                 <groupId>ardee.mesos.frameworks.accumulo</groupId>
-                <artifactId>accumulo-mesos-scheduler</artifactId>
-                <version>0.1.0-SNAPSHOT</version>
-            </dependency>
-            <dependency>
-                <groupId>ardee.mesos.frameworks.accumulo</groupId>
-                <artifactId>accumulo-mesos-model</artifactId>
-                <version>0.1.0-SNAPSHOT</version>
-            </dependency>
-            <dependency>
-                <groupId>ardee.mesos.frameworks.accumulo</groupId>
-                <artifactId>accumulo-mesos-executor</artifactId>
-                <version>0.1.0-SNAPSHOT</version>
-            </dependency>
-            <dependency>
-                <groupId>ardee.mesos.frameworks.accumulo</groupId>
                 <artifactId>accumulo-mesos-executor</artifactId>
                 <classifier>jar-with-dependencies</classifier>
-                <version>0.1.0-SNAPSHOT</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>ardee.mesos.frameworks.accumulo</groupId>
                 <artifactId>accumulo-mesos-framework</artifactId>
-                <version>0.1.0-SNAPSHOT</version>
-            </dependency>
-            <dependency>
-                <groupId>ardee.mesos.frameworks.accumulo</groupId>
-                <artifactId>accumulo-mesos-framework</artifactId>
-                <classifier>jar-with-dependencies</classifier>
-                <version>0.1.0-SNAPSHOT</version>
+                <version>${project.version}</version>
             </dependency>
 
             <!-- Mesos dependencies -->
@@ -121,21 +105,18 @@
             <dependency>
                 <groupId>com.google.protobuf</groupId>
                 <artifactId>protobuf-java</artifactId>
-                <version>2.6.1</version>
+                <version>${version.protobuf}</version>
             </dependency>
 
-            <!-- accumulo dependencies (needed for MBean interfaces) -->
             <dependency>
                 <groupId>org.apache.accumulo</groupId>
                 <artifactId>accumulo-core</artifactId>
                 <version>${version.accumulo}</version>
-                <exclusions>
-                    <!-- we only need the MBean interfaces and nothing else -->
-                    <exclusion>
-                        <groupId>*</groupId>
-                        <artifactId>*</artifactId>
-                    </exclusion>
-                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.accumulo</groupId>
+                <artifactId>accumulo-start</artifactId>
+                <version>${version.accumulo}</version>
             </dependency>
 
             <!-- Libraries that make working in java easier -->
@@ -153,17 +134,7 @@
             </dependency>
             <dependency>
                 <groupId>org.slf4j</groupId>
-                <artifactId>jcl-over-slf4j</artifactId>
-                <version>${version.slf4j}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.slf4j</groupId>
                 <artifactId>log4j-over-slf4j</artifactId>
-                <version>${version.slf4j}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>jul-to-slf4j</artifactId>
                 <version>${version.slf4j}</version>
             </dependency>
             <!-- Test Libraries -->
@@ -175,44 +146,6 @@
             </dependency>
        </dependencies>
     </dependencyManagement>
-
-    <dependencies>
-
-        <dependency>
-            <groupId>org.apache.mesos</groupId>
-            <artifactId>mesos</artifactId>
-        </dependency>
-
-        <!-- Libraries that make working in java easier -->
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-        </dependency>
-
-        <!-- Logging -->
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>jcl-over-slf4j</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>log4j-over-slf4j</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>jul-to-slf4j</artifactId>
-        </dependency>
-
-        <!-- Test Libraries -->
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-        </dependency>
-   </dependencies>
 
     <pluginRepositories>
         <pluginRepository>
@@ -228,7 +161,7 @@
                 <includes>
                     <include>**/*</include>
                 </includes>
-                <filtering>false</filtering>
+                <filtering>true</filtering>
             </resource>
             <resource>
                 <directory>${project.basedir}</directory>
@@ -241,37 +174,6 @@
         </resources>
         <pluginManagement>
             <plugins>
-                <plugin>
-                    <groupId>org.codehaus.mojo</groupId>
-                    <artifactId>license-maven-plugin</artifactId>
-                    <version>1.8</version>
-                    <configuration>
-                        <excludedScopes>test</excludedScopes>
-                        <excludedGroups>${project.groupId}</excludedGroups>
-                        <fileTemplate>${project.basedir}/../src/main/licenses/third-party.ftl</fileTemplate>
-                        <licenseMerges>
-                            <licenseMerge>Apache Software License Version 2.0|The Apache Software License, Version 2.0|Apache 2|Apache License, Version 2.0|Apache Software Licenses</licenseMerge>
-                            <licenseMerge>CDDL+GPL License|CDDL+GPL</licenseMerge>
-                            <licenseMerge>Eclipse Public License 1.0|Eclipse Public License - v 1.0</licenseMerge>
-                        </licenseMerges>
-                        <!-- If we use something like target/generated-resources/... that path including
-                             target/generated-resources would be used in the jar, which is really ugly.
-                          -->
-                        <outputDirectory>.</outputDirectory>
-                        <licensesOutputDirectory>licenses</licensesOutputDirectory>
-                    </configuration>
-                    <executions>
-                        <execution>
-                            <id>default-cli</id>
-                            <goals>
-                                <goal>add-third-party</goal>
-                                <goal>download-licenses</goal>
-                            </goals>
-                            <phase>generate-resources</phase>
-                        </execution>
-                    </executions>
-                </plugin>
-
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-source-plugin</artifactId>

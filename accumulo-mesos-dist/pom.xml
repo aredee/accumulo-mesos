@@ -66,27 +66,22 @@
             <groupId>aredee.mesos.frameworks.accumulo</groupId>
             <artifactId>accumulo-mesos-executor</artifactId>
             <classifier>jar-with-dependencies</classifier>
-            <version>${parent.version}</version>
+            <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>aredee.mesos.frameworks.accumulo</groupId>
             <artifactId>accumulo-mesos-framework</artifactId>
             <classifier>jar-with-dependencies</classifier>
-            <version>${parent.version}</version>
+            <version>${project.parent.version}</version>
         </dependency>
     </dependencies>
 
     <build>
         <plugins>
-            <!-- License stuff -->
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>license-maven-plugin</artifactId>
-            </plugin>
-
             <plugin>
                 <groupId>com.googlecode.maven-download-plugin</groupId>
                 <artifactId>download-maven-plugin</artifactId>
+                <version>1.2.1</version>
                 <executions>
                     <execution>
                         <goals>
