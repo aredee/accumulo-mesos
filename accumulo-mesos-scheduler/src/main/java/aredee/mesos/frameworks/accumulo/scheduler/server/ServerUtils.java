@@ -1,5 +1,7 @@
 package aredee.mesos.frameworks.accumulo.scheduler.server;
 
+import aredee.mesos.frameworks.accumulo.configuration.ServerType;
+
 import java.util.UUID;
 
 
@@ -12,39 +14,39 @@ public class ServerUtils {
     private ServerUtils(){}
 
     public static AccumuloServer newMaster(){
-        return new Master(getUUIDTask(AccumuloServer.SERVER_TYPE.MASTER));
+        return new Master(getUUIDTask(ServerType.MASTER));
     }
 
-    public static AccumuloServer newTserver(){
-        return new Tserver(getUUIDTask(AccumuloServer.SERVER_TYPE.TSERVER));
+    public static AccumuloServer newTabletServer(){
+        return new TabletServer(getUUIDTask(ServerType.TABLET_SERVER));
     }
 
-    public static AccumuloServer newGC(){
-        return new GarbageCollector(getUUIDTask(AccumuloServer.SERVER_TYPE.GC));
+    public static AccumuloServer newGarbageCollector(){
+        return new GarbageCollector(getUUIDTask(ServerType.GARBAGE_COLLECTOR));
     }
 
     public static AccumuloServer newMonitor(){
-        return new Monitor(getUUIDTask(AccumuloServer.SERVER_TYPE.MONITOR));
+        return new Monitor(getUUIDTask(ServerType.MONITOR));
     }
 
 
     public static boolean isMaster(String id){
-        return id.startsWith(AccumuloServer.SERVER_TYPE.MASTER.getName());
+        return id.startsWith(ServerType.MASTER.getName());
     }
 
-    public static boolean isTserver(String id){
-        return id.startsWith(AccumuloServer.SERVER_TYPE.TSERVER.getName());
+    public static boolean isTabletServer(String id){
+        return id.startsWith(ServerType.TABLET_SERVER.getName());
     }
 
     public static boolean isGarbageCollector(String id){
-        return id.startsWith(AccumuloServer.SERVER_TYPE.GC.getName());
+        return id.startsWith(ServerType.GARBAGE_COLLECTOR.getName());
     }
 
     public static boolean isMonitor(String id){
-        return id.startsWith(AccumuloServer.SERVER_TYPE.MONITOR.getName());
+        return id.startsWith(ServerType.MONITOR.getName());
     }
 
-    private static String getUUIDTask(AccumuloServer.SERVER_TYPE type){
+    private static String getUUIDTask(ServerType type){
         return type.getName() + "_" + UUID.randomUUID();
     }
 

@@ -30,16 +30,6 @@
         <name>Apache Mesos accumulo framework</name>
         <url>http://mesos.apache.org/</url>
     </organization>
-    <developers>
-        <developer>
-            <name>Jim Klucar</name>
-            <email>klucar@gmail.com</email>
-        </developer>
-        <developer>
-            <name>Brandon Gulla</name>
-            <email>gulla.brandon@gmail.com</email>
-        </developer>
-    </developers>
 
     <distributionManagement>
         <snapshotRepository>
@@ -90,6 +80,8 @@
                         <configuration>
                             <url>http://apache.claz.org/accumulo/${version.accumulo}//accumulo-${version.accumulo}-bin.tar.gz</url>
                             <outputDirectory>${project.build.directory}/tarball</outputDirectory>
+                            <unpack>true</unpack>
+                            <md5>${accumulo.bin.md5}</md5>
                         </configuration>
                     </execution>
                 </executions>
@@ -99,6 +91,7 @@
                 <artifactId>maven-dependency-plugin</artifactId>
                 <executions>
                     <execution>
+                        <id>tarball</id>
                         <goals>
                             <goal>copy</goal>
                         </goals>
@@ -109,13 +102,11 @@
                                     <groupId>aredee.mesos.frameworks.accumulo</groupId>
                                     <artifactId>accumulo-mesos-framework</artifactId>
                                     <classifier>jar-with-dependencies</classifier>
-                                    <destFileName>accumulo-mesos-framework.jar</destFileName>
                                 </artifactItem>
                                 <artifactItem>
                                     <groupId>aredee.mesos.frameworks.accumulo</groupId>
                                     <artifactId>accumulo-mesos-executor</artifactId>
                                     <classifier>jar-with-dependencies</classifier>
-                                    <destFileName>accumulo-mesos-executor.jar</destFileName>
                                 </artifactItem>
                             </artifactItems>
                         </configuration>

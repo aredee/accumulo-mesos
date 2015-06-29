@@ -11,14 +11,10 @@ public class Main {
 
     public static void main(String[] args){
 
-        // TODO check that required environment variables are set
-        // perhaps source accumulo-site.env file?
-
-        // TODO parse args, first should be server type, check others based on type of server.
-        LOGGER.info("Parsing Executor Arguments: " + args);
+        //TODO Should executors have REST API?
 
         // start the executor process
-        StartServerExecutor executor = new StartServerExecutor(args);
+        AccumuloStartExecutor executor = new AccumuloStartExecutor();
 
         ExecutorDriver executorDriver = new MesosExecutorDriver(executor);
         final int status;

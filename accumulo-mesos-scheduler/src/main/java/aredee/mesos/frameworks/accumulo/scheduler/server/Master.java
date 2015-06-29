@@ -1,5 +1,7 @@
 package aredee.mesos.frameworks.accumulo.scheduler.server;
 
+import aredee.mesos.frameworks.accumulo.configuration.ServerType;
+
 public class Master extends BaseServer {
 
     public Master(String taskId, String slaveId) {
@@ -11,5 +13,5 @@ public class Master extends BaseServer {
     }
 
     @Override
-    public SERVER_TYPE getType(){ return SERVER_TYPE.MASTER; }
+    public ServerType getType(){ return ServerType.MASTER; }
 }

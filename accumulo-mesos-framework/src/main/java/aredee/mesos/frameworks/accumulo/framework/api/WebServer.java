@@ -1,6 +1,6 @@
 package aredee.mesos.frameworks.accumulo.framework.api;
 
-import aredee.mesos.frameworks.accumulo.configuration.Configuration;
+import aredee.mesos.frameworks.accumulo.configuration.ClusterConfiguration;
 import com.google.inject.Inject;
 import com.google.inject.servlet.GuiceFilter;
 import org.eclipse.jetty.server.*;
@@ -10,11 +10,11 @@ import java.util.EnumSet;
 
 public class WebServer {
 
-    private final Configuration config;
+    private final ClusterConfiguration config;
     private Server server;
 
     @Inject
-    public WebServer(Configuration config) {
+    public WebServer(ClusterConfiguration config) {
         this.config = config;
     }
 
@@ -35,7 +35,6 @@ public class WebServer {
         context.setResourceBase(staticDir);
 
         this.server.start();
-        this.server.join();
     }
 
     public void stop() throws java.lang.Exception{

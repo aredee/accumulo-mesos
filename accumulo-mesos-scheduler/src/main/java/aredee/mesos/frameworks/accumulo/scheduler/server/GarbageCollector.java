@@ -1,5 +1,7 @@
 package aredee.mesos.frameworks.accumulo.scheduler.server;
 
+import aredee.mesos.frameworks.accumulo.configuration.ServerType;
+
 public class GarbageCollector extends BaseServer {
     public GarbageCollector(String taskId, String slaveId) {
         super(taskId, slaveId);
@@ -8,6 +10,6 @@ public class GarbageCollector extends BaseServer {
         super(taskId);
     }
     @Override
-    public SERVER_TYPE getType(){ return SERVER_TYPE.GC; }
+    public ServerType getType(){ return ServerType.GARBAGE_COLLECTOR; }
 
 }

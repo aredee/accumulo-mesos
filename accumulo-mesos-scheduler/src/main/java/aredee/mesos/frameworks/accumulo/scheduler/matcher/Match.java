@@ -12,8 +12,7 @@ public class Match {
         be launched, but had no matching offers.
      */
     public Match(AccumuloServer server){
-        this.server = server;
-        this.offer = null;
+        this(server, null);
     }
 
     /**
@@ -21,8 +20,7 @@ public class Match {
      * @param offer
      */
     public Match(Protos.Offer offer){
-        this.server = null;
-        this.offer = null;
+        this(null, offer);
     }
 
     /**

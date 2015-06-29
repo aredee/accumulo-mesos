@@ -1,5 +1,7 @@
 package aredee.mesos.frameworks.accumulo.scheduler.server;
 
+import aredee.mesos.frameworks.accumulo.configuration.ServerType;
+
 public abstract class BaseServer implements AccumuloServer {
     protected String taskId;
     protected String slaveId;
@@ -10,16 +12,16 @@ public abstract class BaseServer implements AccumuloServer {
     }
 
     protected BaseServer(String taskId){
-        this.taskId = taskId;
+        this(taskId, "");
     }
 
     @Override
-    public SERVER_TYPE getType(){
-        if(ServerUtils.isTserver(taskId)) return SERVER_TYPE.TSERVER;
-        if(ServerUtils.isMaster(taskId)) return SERVER_TYPE.MASTER;
-        if(ServerUtils.isMonitor(taskId)) return SERVER_TYPE.MONITOR;
-        if(ServerUtils.isGarbageCollector(taskId)) return SERVER_TYPE.GC;
-        return SERVER_TYPE.UNKNOWN;
+    public ServerType getType(){
+        if(ServerUtils.isTabletServer(taskId)) return ServerType.TABLET_SERVER;
+        if(ServerUtils.isMaster(taskId)) return ServerType.MASTER;
+        if(ServerUtils.isMonitor(taskId)) return ServerType.MONITOR;
+        if(ServerUtils.isGarbageCollector(taskId)) return ServerType.GARBAGE_COLLECTOR;
+        return ServerType.UNKNOWN;
     }
 
     @Override
@@ -31,6 +33,8 @@ public abstract class BaseServer implements AccumuloServer {
     public void setSlaveId(String newId){
         this.slaveId = newId;
     }
+
+    public boolean hasSlaveId(){ return this.slaveId.isEmpty(); }
 
     @Override
     public String getTaskId() {
@@ -53,7 +57,11 @@ public abstract class BaseServer implements AccumuloServer {
     @Override
     public int hashCode() {
         int result;
-        result = getSlaveId().hashCode();
+        if( this.hasSlaveId() ) {
+            result = getSlaveId().hashCode();
+        } else {
+            result = 814;
+        }
         result = 29 * result + getTaskId().hashCode();
         return result;
     }
