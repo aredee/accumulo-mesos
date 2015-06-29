@@ -32,7 +32,8 @@ public class Scheduler implements org.apache.mesos.Scheduler {
      */
     @Override
     public void registered(SchedulerDriver schedulerDriver, Protos.FrameworkID frameworkID, Protos.MasterInfo masterInfo) {
-        LOGGER.info("Framework Registered");
+        LOGGER.info("Framework Registered: {}", frameworkID.getValue());
+        cluster.setFrameworkId(frameworkID.getValue()); // ID is only available after registration.
         cluster.restore(schedulerDriver);
     }
 

@@ -28,16 +28,6 @@
         <name>Apache Mesos Accumulo framework</name>
         <url>http://mesos.apache.org/</url>
     </organization>
-    <developers>
-        <developer>
-            <name>Jim Klucar</name>
-            <email>klucar@gmail.com</email>
-        </developer>
-        <developer>
-            <name>Brandon Gulla</name>
-            <email>gulla.brandon@gmail.com</email>
-        </developer>
-    </developers>
 
     <distributionManagement>
         <snapshotRepository>
@@ -62,7 +52,7 @@
     <dependencies>
         <dependency>
             <groupId>aredee.mesos.frameworks.accumulo</groupId>
-            <artifactId>accumulo-mesos-model</artifactId>
+            <artifactId>accumulo-mesos-common</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
@@ -75,7 +65,7 @@
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
-            <artifactId>log4j-over-slf4j</artifactId>
+            <artifactId>${slf4j.binding}</artifactId>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

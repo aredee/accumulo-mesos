@@ -1,6 +1,6 @@
 package aredee.mesos.frameworks.accumulo.scheduler;
 
-import aredee.mesos.frameworks.accumulo.scheduler.launcher.AccumuloStartClassLauncher;
+import aredee.mesos.frameworks.accumulo.scheduler.launcher.AccumuloStartExecutorLauncher;
 import aredee.mesos.frameworks.accumulo.scheduler.launcher.Launcher;
 import aredee.mesos.frameworks.accumulo.scheduler.matcher.Match;
 import aredee.mesos.frameworks.accumulo.scheduler.matcher.Matcher;
@@ -8,20 +8,20 @@ import aredee.mesos.frameworks.accumulo.scheduler.matcher.MinCpuMinRamFIFOMatche
 import aredee.mesos.frameworks.accumulo.scheduler.server.*;
 import org.apache.mesos.Protos;
 import org.apache.mesos.SchedulerDriver;
+import org.apache.mesos.state.State;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import aredee.mesos.frameworks.accumulo.configuration.Configuration;
+import aredee.mesos.frameworks.accumulo.configuration.ClusterConfiguration;
 
 import java.util.*;
-
-// TODO (klucar) refactor to use Launcher and Matcher interfaces.
 
 public class Cluster {
     private static final Logger LOGGER = LoggerFactory.getLogger(Cluster.class);
 
-    private final Configuration config;
+    private final ClusterConfiguration config;
 
-    private String accumuloInstance;
+    private String frameworkId;
+    private State state;
 
     private Master master = null;
     private GarbageCollector gc = null;
@@ -35,25 +35,44 @@ public class Cluster {
     private Matcher matcher;
     private Launcher launcher;
 
-    public Cluster(final Configuration config){
+    public Cluster(final State state, final ClusterConfiguration config){
+        this.state = state;
         this.config = config;
-        this.launcher = new AccumuloStartClassLauncher(config);
+        this.launcher = new AccumuloStartExecutorLauncher(config);
         this.matcher = new MinCpuMinRamFIFOMatcher(config);
+
+        // Launch servers
+        // TODO need to populate this from Cluster state for recovery purposes
+        this.serversToLaunch.add(ServerUtils.newMaster());
+        this.serversToLaunch.add(ServerUtils.newGarbageCollector());
+        this.serversToLaunch.add(ServerUtils.newMonitor());
+        for(int ii = 0; ii < config.getMinTservers(); ii++) {
+            this.serversToLaunch.add(ServerUtils.newTabletServer());
+        }
+
     }
 
-    public void setAccumuloInstance(String instanceName){
-        this.accumuloInstance = instanceName;
+    public void setFrameworkId(String fid){
+        this.frameworkId = fid;
+        config.getFrameworkName();
+        //TODO persist configuration
     }
 
     public void handleOffers(SchedulerDriver driver, List<Protos.Offer> offers){
 
+        LOGGER.info("Mesos Accumulo Cluster handling offers");
+
         List<Match> matchedServers = matcher.matchOffers(serversToLaunch, offers);
+        LOGGER.info("Found {} matches for servers from {} offers", matchedServers.size(), offers.size());
+
         List<Match> unlaunchedServers = new ArrayList<>();
         List<AccumuloServer> launchedServers = new ArrayList<>();
 
         for (Match match: matchedServers){
             if( match.hasServer() && match.hasOffer() ){
+                LOGGER.info("Launching Server: {} on {}", match.getServer().getType().getName(), match.getOffer().getSlaveId() );
                 Protos.TaskInfo taskInfo = launcher.launch(driver, match);
+                LOGGER.info("Created Task {} on {}", taskInfo.getTaskId(), taskInfo.getSlaveId());
                 launchedServers.add(match.getServer());
             } else {
                 unlaunchedServers.add(match);
@@ -66,6 +85,25 @@ public class Cluster {
         for( Match match: unlaunchedServers) {
             serversToLaunch.add(match.getServer());
         }
+
+        LOGGER.info("Still need to launch {} servers", serversToLaunch.size());
+
+        declineUnmatchedOffers(driver, offers, matchedServers);
+        // TODO call restore here?
+    }
+
+    // Remove used offers from the available offers and decline the rest.
+    private void declineUnmatchedOffers(SchedulerDriver driver, List<Protos.Offer> offers, List<Match> matches){
+        List<Protos.Offer> usedOffers = new ArrayList<>(matches.size());
+        for(Match match: matches){
+            if(match.hasOffer()){
+                usedOffers.add(match.getOffer());
+            }
+        }
+        offers.removeAll(usedOffers);
+        for( Protos.Offer offer: offers){
+            driver.declineOffer(offer.getId());
+        }
     }
 
 
@@ -74,7 +112,7 @@ public class Cluster {
         // reconcileTasks causes the framework to call updateTaskStatus, which
         // will update the tasks list.
         // TODO handle return of reconcileTasks
-        driver.reconcileTasks(runningServers);
+        Protos.Status reconcileStatus = driver.reconcileTasks(runningServers);
         clearServers();
 
         // process the existing tasks
@@ -84,14 +122,16 @@ public class Cluster {
 
             if( ServerUtils.isMaster(taskId)){
                 master = new Master(slaveId, taskId);
-            } else if( ServerUtils.isTserver(taskId)) {
-                tservers.add(new Tserver(slaveId, taskId));
+            } else if( ServerUtils.isTabletServer(taskId)) {
+                tservers.add(new TabletServer(slaveId, taskId));
             } else if( ServerUtils.isGarbageCollector(taskId)) {
                 gc = new GarbageCollector(slaveId, taskId);
             } else if( ServerUtils.isMonitor(taskId)){
                 monitor = new Monitor(slaveId, taskId);
             }
         }
+
+        //TODO save cluster state
     }
 
     /**
@@ -118,14 +158,14 @@ public class Cluster {
                 if( ServerUtils.isMaster(taskId)){
                     serversToLaunch.add(ServerUtils.newMaster());
                     clearMaster();
-                } else if (ServerUtils.isTserver(taskId)) {
-                    tservers.remove(new Tserver(taskId, slaveId));
-                    serversToLaunch.add(ServerUtils.newTserver());
+                } else if (ServerUtils.isTabletServer(taskId)) {
+                    tservers.remove(new TabletServer(taskId, slaveId));
+                    serversToLaunch.add(ServerUtils.newTabletServer());
                 } else if (ServerUtils.isMonitor(taskId)) {
                     serversToLaunch.add(ServerUtils.newMonitor());
                     clearMonitor();
                 } else if (ServerUtils.isGarbageCollector(taskId)) {
-                    serversToLaunch.add(ServerUtils.newGC());
+                    serversToLaunch.add(ServerUtils.newGarbageCollector());
                     clearGC();
                 }
                 break;

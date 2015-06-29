@@ -1,19 +1,19 @@
 package aredee.mesos.frameworks.accumulo.framework.guice;
 
-import aredee.mesos.frameworks.accumulo.configuration.Configuration;
+import aredee.mesos.frameworks.accumulo.configuration.ClusterConfiguration;
 import com.google.inject.AbstractModule;
 
 public class ConfigurationModule extends AbstractModule {
 
-    private final Configuration config;
+    private final ClusterConfiguration config;
 
-    public ConfigurationModule(Configuration config){
+    public ConfigurationModule(ClusterConfiguration config){
         this.config = config;
     }
 
     @Override
     protected void configure() {
-        bind(Configuration.class).toInstance(config);
+        bind(ClusterConfiguration.class).toInstance(config);
     }
 
 }

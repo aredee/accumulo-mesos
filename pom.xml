@@ -27,10 +27,6 @@
             <name>Jim Klucar</name>
             <email>klucar@gmail.com</email>
         </developer>
-        <developer>
-            <name>Brandon Gulla</name>
-            <email>gulla.brandon@gmail.com</email>
-        </developer>
     </developers>
 
     <distributionManagement>
@@ -65,15 +61,21 @@
         <version.accumulo>1.6.1</version.accumulo>
         <version.guava>18.0</version.guava>
         <version.slf4j>1.7.10</version.slf4j>
+        <slf4j.binding>slf4j-log4j12</slf4j.binding>
         <version.jetty>9.1.5.v20140505</version.jetty>
         <version.jersey>1.18.1</version.jersey>
         <version.jackson>1.9.6</version.jackson>
         <version.guice>3.0</version.guice>
         <version.protobuf>2.6.1</version.protobuf>
+        <version.commons-vfs2>2.0</version.commons-vfs2>
+        <version.commons-cli>1.2</version.commons-cli>
+        <version.servlet-api>3.1.0</version.servlet-api>
+
+        <accumulo.bin.md5>523d3ab55a6fe2b48c0a1d012f9c2ffc</accumulo.bin.md5>
     </properties>
 
     <modules>
-        <module>accumulo-mesos-model</module>
+        <module>accumulo-mesos-common</module>
         <module>accumulo-mesos-scheduler</module>
         <module>accumulo-mesos-executor</module>
         <module>accumulo-mesos-framework</module>
@@ -108,6 +110,7 @@
                 <version>${version.protobuf}</version>
             </dependency>
 
+            <!-- Accumulo dependencies -->
             <dependency>
                 <groupId>org.apache.accumulo</groupId>
                 <artifactId>accumulo-core</artifactId>
@@ -118,12 +121,122 @@
                 <artifactId>accumulo-start</artifactId>
                 <version>${version.accumulo}</version>
             </dependency>
+            <dependency>
+                <groupId>org.apache.accumulo</groupId>
+                <artifactId>accumulo-server-base</artifactId>
+                <version>${version.accumulo}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.accumulo</groupId>
+                <artifactId>accumulo-master</artifactId>
+                <version>${version.accumulo}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.accumulo</groupId>
+                <artifactId>accumulo-monitor</artifactId>
+                <version>${version.accumulo}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.accumulo</groupId>
+                <artifactId>accumulo-tracer</artifactId>
+                <version>${version.accumulo}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.accumulo</groupId>
+                <artifactId>accumulo-tserver</artifactId>
+                <version>${version.accumulo}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.accumulo</groupId>
+                <artifactId>accumulo-gc</artifactId>
+                <version>${version.accumulo}</version>
+            </dependency>
 
             <!-- Libraries that make working in java easier -->
             <dependency>
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
                 <version>${version.guava}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-vfs2</artifactId>
+                <version>${version.commons-vfs2}</version>
+            </dependency>
+            <dependency>
+                <groupId>javax.servlet</groupId>
+                <artifactId>javax.servlet-api</artifactId>
+                <version>${version.servlet-api}</version>
+            </dependency>
+             <dependency>
+                <groupId>commons-cli</groupId>
+                <artifactId>commons-cli</artifactId>
+                <version>${version.commons-cli}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-server</artifactId>
+                <version>${version.jetty}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-servlet</artifactId>
+                <version>${version.jetty}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-servlets</artifactId>
+                <version>${version.jetty}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.sun.jersey</groupId>
+                <artifactId>jersey-server</artifactId>
+                <version>${version.jersey}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.sun.jersey</groupId>
+                <artifactId>jersey-servlet</artifactId>
+                <version>${version.jersey}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.sun.jersey.contribs</groupId>
+                <artifactId>jersey-guice</artifactId>
+                <version>${version.jersey}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.sun.jersey</groupId>
+                <artifactId>jersey-json</artifactId>
+                <version>${version.jersey}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.codehaus.jackson</groupId>
+                <artifactId>jackson-core-asl</artifactId>
+                <version>${version.jackson}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.codehaus.jackson</groupId>
+                <artifactId>jackson-mapper-asl</artifactId>
+                <version>${version.jackson}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.codehaus.jackson</groupId>
+                <artifactId>jackson-jaxrs</artifactId>
+                <version>${version.jackson}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.codehaus.jackson</groupId>
+                <artifactId>jackson-xc</artifactId>
+                <version>${version.jackson}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.inject</groupId>
+                <artifactId>guice</artifactId>
+                <version>${version.guice}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.inject.extensions</groupId>
+                <artifactId>guice-servlet</artifactId>
+                <version>${version.guice}</version>
             </dependency>
 
             <!-- Logging -->
@@ -134,7 +247,7 @@
             </dependency>
             <dependency>
                 <groupId>org.slf4j</groupId>
-                <artifactId>log4j-over-slf4j</artifactId>
+                <artifactId>${slf4j.binding}</artifactId>
                 <version>${version.slf4j}</version>
             </dependency>
             <!-- Test Libraries -->
@@ -155,23 +268,6 @@
     </pluginRepositories>
 
     <build>
-        <resources>
-            <resource>
-                <directory>src/main/resources</directory>
-                <includes>
-                    <include>**/*</include>
-                </includes>
-                <filtering>true</filtering>
-            </resource>
-            <resource>
-                <directory>${project.basedir}</directory>
-                <includes>
-                    <include>THIRD-PARTY.txt</include>
-                    <include>licenses/**</include>
-                </includes>
-                <filtering>false</filtering>
-            </resource>
-        </resources>
         <pluginManagement>
             <plugins>
                 <plugin>
