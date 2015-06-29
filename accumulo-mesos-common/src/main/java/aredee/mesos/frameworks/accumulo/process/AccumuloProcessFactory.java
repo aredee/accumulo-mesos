@@ -3,7 +3,6 @@ package aredee.mesos.frameworks.accumulo.process;
 import aredee.mesos.frameworks.accumulo.configuration.ProcessConfiguration;
 import aredee.mesos.frameworks.accumulo.configuration.ServerType;
 import com.google.common.base.Joiner;
-import org.apache.accumulo.server.util.time.SimpleTimer;
 import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.impl.VFSClassLoader;
 import org.slf4j.Logger;
@@ -31,16 +30,13 @@ public class AccumuloProcessFactory {
             this.in = new BufferedReader(new InputStreamReader(stream));
             this.out = new BufferedWriter(new FileWriter(logFile));
 
-        SimpleTimer.getInstance().schedule(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    flush();
-                } catch (IOException e) {
-                    LOGGER.error("Exception while attempting to flush.", e);
-                }
-            }
-        }, 1000, 1000);
+           new Timer().schedule(new TimerTask() {public void run() {
+               try {
+                   flush();
+               } catch (IOException e) {
+                   LOGGER.error("Exception while attempting to flush.", e);
+               }      
+           }}, 1000,1000);
     }
 
     public synchronized void flush() throws IOException {
