@@ -58,7 +58,7 @@
         <version.java>1.7</version.java>
         <version.junit>4.12</version.junit>
         <version.mesos>0.22.0</version.mesos>
-        <version.accumulo>1.6.1</version.accumulo>
+        <version.accumulo>1.7.0</version.accumulo>
         <version.guava>18.0</version.guava>
         <version.slf4j>1.7.10</version.slf4j>
         <slf4j.binding>slf4j-log4j12</slf4j.binding>
