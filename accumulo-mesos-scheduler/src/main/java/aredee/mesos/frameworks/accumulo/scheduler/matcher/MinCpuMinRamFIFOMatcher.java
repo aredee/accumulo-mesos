@@ -1,7 +1,10 @@
 package aredee.mesos.frameworks.accumulo.scheduler.matcher;
 
 import aredee.mesos.frameworks.accumulo.configuration.ClusterConfiguration;
+import aredee.mesos.frameworks.accumulo.configuration.IProcessorConfiguration;
+import aredee.mesos.frameworks.accumulo.configuration.ServerType;
 import aredee.mesos.frameworks.accumulo.scheduler.server.AccumuloServer;
+
 import org.apache.mesos.Protos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -82,24 +85,28 @@ public class MinCpuMinRamFIFOMatcher implements Matcher {
                     break;
             }
         }
+        
         double serverCpus = Double.MAX_VALUE;
         double serverMem = Double.MAX_VALUE;
+                
+        Map<ServerType,IProcessorConfiguration> servers = this.config.getProcessorConfigurations();
+        
         switch ( server.getType() ) {
             case MASTER:
-                serverCpus = this.config.getMinMasterCpus();
-                serverMem = this.config.getMinMasterMem();
+                serverCpus = servers.get(ServerType.MASTER).getCpuOffer();
+                serverMem = servers.get(ServerType.MASTER).getMinMemoryOffer();
                 break;
             case MONITOR:
-                serverCpus = this.config.getMinMonitorCpus();
-                serverMem = this.config.getMinMonitorMem();
+                serverCpus = servers.get(ServerType.MONITOR).getCpuOffer();
+                serverMem = servers.get(ServerType.MONITOR).getMinMemoryOffer();
                 break;
             case TABLET_SERVER:
-                serverCpus = this.config.getMinTserverCpus();
-                serverMem = this.config.getMinTserverMem();
+                serverCpus = servers.get(ServerType.TABLET_SERVER).getCpuOffer();
+                serverMem = servers.get(ServerType.TABLET_SERVER).getMinMemoryOffer();
                 break;
             case GARBAGE_COLLECTOR:
-                serverCpus = this.config.getMinGCCpus();
-                serverMem = this.config.getMinGCMem();
+                serverCpus = servers.get(ServerType.GARBAGE_COLLECTOR).getCpuOffer();
+                serverMem = servers.get(ServerType.GARBAGE_COLLECTOR).getMinMemoryOffer();
                 break;
             //TODO handle tracer
             case UNKNOWN:

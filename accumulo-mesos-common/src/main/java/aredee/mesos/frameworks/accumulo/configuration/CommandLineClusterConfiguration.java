@@ -19,6 +19,9 @@ public class CommandLineClusterConfiguration extends AbstractClusterConfiguratio
     private static final Parser parser = new GnuParser();
 
     public CommandLineClusterConfiguration(CommandLine cmdLine){
+        
+        super();
+        
         // Populate configuration
         if( cmdLine.hasOption('P') ){
             try {
@@ -29,7 +32,7 @@ public class CommandLineClusterConfiguration extends AbstractClusterConfiguratio
         }
 
         if( cmdLine.hasOption('b') ){
-            this.setBindAddress( cmdLine.getOptionValue('P') );
+            this.setBindAddress( cmdLine.getOptionValue('b') );
         }
 
         if ( cmdLine.hasOption('m') ){

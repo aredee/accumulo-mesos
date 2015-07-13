@@ -1,0 +1,5 @@
+{
+maxMemory:2048.0,
+zooKeeperDir:"/usr/local/zookeeper",
+"systemProperties":{"java.home":"/usr/java/jdk1.7",ACCUMULO_HOME:"/usr/local/accumulo"}
+}

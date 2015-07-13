@@ -1,8 +1,18 @@
 package aredee.mesos.frameworks.accumulo.executor;
 
-import aredee.mesos.frameworks.accumulo.configuration.ProcessConfiguration;
+import aredee.mesos.frameworks.accumulo.configuration.ConfigNormalizer;
+import aredee.mesos.frameworks.accumulo.configuration.ServiceProcessConfiguration;
 import aredee.mesos.frameworks.accumulo.configuration.ServerType;
 import aredee.mesos.frameworks.accumulo.process.AccumuloProcessFactory;
+import aredee.mesos.frameworks.accumulo.Protos.ServerProcessConfiguration;
+
+
+
+//import org.apache.accumulo.tserver.TabletServer;
+//import org.apache.accumulo.master.Master;
+//import org.apache.accumulo.gc.SimpleGarbageCollector;
+//import org.apache.accumulo.monitor.Monitor;
+//import org.apache.accumulo.tracer.TraceServer;
 import org.apache.mesos.Executor;
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos;
@@ -10,7 +20,9 @@ import org.apache.mesos.SchedulerDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -93,75 +105,24 @@ public class AccumuloStartExecutor implements Executor {
 
         this.taskInfo = taskInfo;
 
-        if(this.serverProcess != null){
-            if(this.serverProcess.isAlive()){
-                LOGGER.error("This executor is already running a server process");
-                System.exit(-1);
-            } else {
-                serverProcess.destroy();
-                serverProcess = null;
-            }
-        }
-
-        aredee.mesos.frameworks.accumulo.Protos.ServerProcessConfiguration server = null;
-        try {
-            server = aredee.mesos.frameworks.accumulo.Protos.ServerProcessConfiguration.parseFrom(taskInfo.getData());
-        } catch (Exception e) {
-            //TODO don't swallow this!
-            LOGGER.error("Failed to parse AccumuloServer protobuf");
-        }
-
-        //Server type
-        String serverType = "unknown";
-        if( server != null ) {
-            serverType = server.getServerType();
-        }
-
-        Class serverClass = getClassForServer(serverType);
-        ProcessConfiguration procConfig = new ProcessConfiguration();
-        AccumuloProcessFactory factory = new AccumuloProcessFactory(procConfig);
+        // If there is another executor then exit?!
+        checkForRunningExecutor();
+        ServiceProcessConfiguration process = createProcessorConfig(taskInfo); 
+        AccumuloProcessFactory factory = new AccumuloProcessFactory(process);
 
         //TODO get jvmArgs and args from protobuf?
         List<String> jvmArgs = new ArrayList<>();
         String[] args = new String[0];
-
-        LOGGER.info("Launching {}", serverType);
+   
         try {
-            this.serverProcess = factory.exec(serverClass, jvmArgs, args);
-
+            this.serverProcess = factory.exec(discoverServerClass(process), jvmArgs, args);
         } catch (IOException e) {
             LOGGER.error("Unable to launch server process!");
             System.exit(-1);
         }
 
     }
-
-    private Class getClassForServer(String serverName){
-        ServerType serverType = ServerType.getTypeFromName(serverName);
-        Class clazz = null;
-        switch(serverType){
-            case TABLET_SERVER:
-                clazz = org.apache.accumulo.tserver.TabletServer.class;
-                break;
-            case MASTER:
-                clazz = org.apache.accumulo.master.Master.class;
-                break;
-            case GARBAGE_COLLECTOR:
-                clazz = org.apache.accumulo.gc.SimpleGarbageCollector.class;
-                break;
-            case MONITOR:
-                clazz = org.apache.accumulo.monitor.Monitor.class;
-                break;
-            case TRACER:
-                clazz = org.apache.accumulo.tracer.TraceServer.class;
-                break;
-            case UNKNOWN:
-            default:
-                break;
-        }
-        return clazz;
-    }
-
+    
     /**
      * Invoked when a task running within this executor has been killed
      * (via {@link org.apache.mesos.SchedulerDriver#killTask}). Note that no
@@ -179,31 +140,7 @@ public class AccumuloStartExecutor implements Executor {
         LOGGER.info("Killing Task: " + taskID.getValue());
         destroyServer();
     }
-
-    private void destroyServer(){
-        if( this.serverProcess != null ){
-            this.serverProcess.destroy();
-            this.serverProcess = null;
-            LOGGER.info("Server destroyed.");
-        } else {
-            LOGGER.info("No server process is running.");
-        }
-    }
-
-    private void sendFailMessageAndExit(ExecutorDriver driver, Protos.TaskStatus.Reason reason, String message){
-        Protos.TaskStatus status = Protos.TaskStatus.newBuilder()
-                .setState(Protos.TaskState.TASK_FAILED)
-                .setExecutorId(this.executorInfo.getExecutorId())
-                .setSlaveId(this.slaveInfo.getId())
-                .setTaskId(this.taskInfo.getTaskId())
-                .setReason(reason)
-                .setMessage(message)
-                .build();
-        driver.sendStatusUpdate(status);
-
-        System.exit(-1);
-    }
-
+   
     /**
      * Invoked when a framework message has arrived for this
      * executor. These messages are best effort; do not expect a
@@ -250,5 +187,77 @@ public class AccumuloStartExecutor implements Executor {
         } catch (Exception e) {
             LOGGER.error("Exception while trying to destroy server {} ", e.getMessage());
         }
+    }
+    
+    @SuppressWarnings("rawtypes")
+    private Class discoverServerClass(ServiceProcessConfiguration process) {
+        Class clazz = null;
+        Exception exc = null;
+        try {
+            ServerType serverType = ServerType.getTypeFromName(process.getType());
+            if (serverType.getServiceClass() == null)
+                throw new RuntimeException("Unknown service " + process.getType());
+            
+            clazz = serverType.getServiceClass();
+        } catch (RuntimeException e) {
+            exc = e;
+        } catch (Exception e) {
+            exc = e;
+        } finally {
+            if (exc != null) {
+                LOGGER.error("Failed to discover executer server type, exiting",exc);
+                System.exit(-2);
+            }
+        }
+        
+        return clazz;
+    }
+   
+    private void checkForRunningExecutor() {
+        if(this.serverProcess != null){
+            if(this.serverProcess.isAlive()){
+                LOGGER.error("This executor is already running a server process, exiting");
+                System.exit(-1);
+            } else {
+                serverProcess.destroy();
+                serverProcess = null;
+            }
+        }      
+    }
+   
+    private void destroyServer(){
+        if( this.serverProcess != null ){
+            this.serverProcess.destroy();
+            this.serverProcess = null;
+            LOGGER.info("Server destroyed.");
+        } else {
+            LOGGER.info("No server process is running.");
+        }
+    }
+
+    private void sendFailMessageAndExit(ExecutorDriver driver, Protos.TaskStatus.Reason reason, String message){
+        Protos.TaskStatus status = Protos.TaskStatus.newBuilder()
+                .setState(Protos.TaskState.TASK_FAILED)
+                .setExecutorId(this.executorInfo.getExecutorId())
+                .setSlaveId(this.slaveInfo.getId())
+                .setTaskId(this.taskInfo.getTaskId())
+                .setReason(reason)
+                .setMessage(message)
+                .build();
+        driver.sendStatusUpdate(status);
+
+        System.exit(-1);
+    }
+
+    private ServiceProcessConfiguration createProcessorConfig(Protos.TaskInfo taskInfo) {
+         ServiceProcessConfiguration config = new ServiceProcessConfiguration();
+         try {
+            config = new ConfigNormalizer(ServerProcessConfiguration.parseFrom(taskInfo.getData())).getServiceConfiguration();
+ 
+         } catch (Exception e) {
+            LOGGER.error("Failed to parse AccumuloServer protobuf",e);
+            throw new RuntimeException("Failed to parse server configuration: " + e.getMessage());
+        }   
+        return config;
     }
 }

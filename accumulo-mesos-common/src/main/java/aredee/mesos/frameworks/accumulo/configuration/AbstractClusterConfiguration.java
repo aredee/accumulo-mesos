@@ -1,5 +1,8 @@
 package aredee.mesos.frameworks.accumulo.configuration;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public abstract class AbstractClusterConfiguration implements ClusterConfiguration {
 
     String bindAddress = Defaults.BIND_ADDRESS;
@@ -7,27 +10,24 @@ public abstract class AbstractClusterConfiguration implements ClusterConfigurati
     String mesosMaster = Defaults.MESOS_MASTER;
     String frameworkName = Defaults.FRAMEWORK_NAME;
     String zkServers = Defaults.ZK_SERVERS;
-
-    double minMasterMem = Defaults.MIN_MASTER_MEM;
-    double minTserverMem = Defaults.MIN_TSERVER_MEM;
-    double minGCMem = Defaults.MIN_GC_MEM;
-    double minMonitorMem = Defaults.MIN_MONITOR_MEM;
-
-    double minMasterCpus = Defaults.MIN_MASTER_CPUS;
-    double minTserverCpus = Defaults.MIN_TSERVER_CPUS;
-    double minGCCpus = Defaults.MIN_GC_CPUS;
-    double minMonitorCpus = Defaults.MIN_MONITOR_CPUS;
-
+    
     int minTservers = Defaults.MIN_TSERVERS;
 
     String instanceName = "default-instance";
-
+    String accumuloTarBallUri = null;
     String executorJarUri = Defaults.EXECUTOR_JAR;
     String accumuloRootPassword = Defaults.ROOT_PASSWORD;
 
     double maxExecutorMemory = Defaults.MAX_EXECUTOR_MEM;
     double minExecutorMemory = Defaults.MIN_EXECUTOR_MEM;
-
+    
+    Map<ServerType, IProcessorConfiguration> servers;
+    
+    
+    public AbstractClusterConfiguration() {
+        setDefaultServers();    
+    }
+    
     @Override
     public double getMaxExecutorMemory() {
         return maxExecutorMemory;
@@ -47,87 +47,17 @@ public abstract class AbstractClusterConfiguration implements ClusterConfigurati
     public void setMinExecutorMemory(double minExecutorMemory) {
         this.minExecutorMemory = minExecutorMemory;
     }
-
+    
     @Override
-    public double getMinMasterMem() {
-        return minMasterMem;
+    public void setProcessorConfigurations(Map<ServerType, IProcessorConfiguration> processors) {
+        servers = processors;
     }
-
+    
     @Override
-    public void setMinMasterMem(double minMasterMem) {
-        this.minMasterMem = minMasterMem;
+    public Map<ServerType, IProcessorConfiguration> getProcessorConfigurations() {
+        return servers;
     }
-
-    @Override
-    public double getMinTserverMem() {
-        return minTserverMem;
-    }
-
-    @Override
-    public void setMinTserverMem(double minTserverMem) {
-        this.minTserverMem = minTserverMem;
-    }
-
-    @Override
-    public double getMinGCMem() {
-        return minGCMem;
-    }
-
-    @Override
-    public void setMinGCMem(double minGCMem) {
-        this.minGCMem = minGCMem;
-    }
-
-    @Override
-    public double getMinMonitorMem() {
-        return minMonitorMem;
-    }
-
-    @Override
-    public void setMinMonitorMem(double minMonitorMem) {
-        this.minMonitorMem = minMonitorMem;
-    }
-
-    @Override
-    public double getMinMasterCpus() {
-        return minMasterCpus;
-    }
-
-    @Override
-    public void setMinMasterCpus(double minMasterCpus) {
-        this.minMasterCpus = minMasterCpus;
-    }
-
-    @Override
-    public double getMinTserverCpus() {
-        return minTserverCpus;
-    }
-
-    @Override
-    public void setMinTserverCpus(double minTserverCpus) {
-        this.minTserverCpus = minTserverCpus;
-    }
-
-    @Override
-    public double getMinGCCpus() {
-        return minGCCpus;
-    }
-
-    @Override
-    public void setMinGCCpus(double minGCCpus) {
-        this.minGCCpus = minGCCpus;
-    }
-
-    @Override
-    public double getMinMonitorCpus() {
-        return minMonitorCpus;
-    }
-
-    @Override
-    public void setMinMonitorCpus(double minMonitorCpus) {
-        this.minMonitorCpus = minMonitorCpus;
-    }
-
+    
     @Override
     public int getMinTservers() {
         return minTservers;
@@ -142,20 +72,27 @@ public abstract class AbstractClusterConfiguration implements ClusterConfigurati
     public String getAccumuloInstanceName() {
         return this.instanceName;
     }
+    
     @Override
     public void setAccumuloInstanceName(String name) {
         this.instanceName = name;
     }
 
     @Override
-    public String getBindAddress(){ return this.bindAddress; }
+    public String getBindAddress(){ 
+        return this.bindAddress; 
+    }
+    
     @Override
     public void setBindAddress(String address){
         this.bindAddress = address;
     }
 
     @Override
-    public int getHttpPort(){ return httpPort; }
+    public int getHttpPort(){ 
+        return httpPort; 
+    }
+    
     @Override
     public void setHttpPort(int port){
         this.httpPort = port;
@@ -165,6 +102,7 @@ public abstract class AbstractClusterConfiguration implements ClusterConfigurati
     public String getMesosMaster() {
         return this.mesosMaster;
     }
+    
     @Override
     public void setMesosMaster(String master) {
         this.mesosMaster = master;
@@ -174,6 +112,7 @@ public abstract class AbstractClusterConfiguration implements ClusterConfigurati
     public String getFrameworkName() {
         return this.frameworkName;
     }
+    
     @Override
     public void setFrameworkName(String name) {
         this.frameworkName = name;
@@ -183,6 +122,7 @@ public abstract class AbstractClusterConfiguration implements ClusterConfigurati
     public String getZkServers() {
         return this.zkServers;
     }
+    
     @Override
     public void setZkServers(String servers) {
         this.zkServers = servers;
@@ -191,25 +131,68 @@ public abstract class AbstractClusterConfiguration implements ClusterConfigurati
     // TODO implement below this line
     @Override
     public String getAccumuloTarballUri() {
-        return null;
+        return accumuloTarBallUri;
     }
+    
     @Override
     public void setAccumuloTarballUri(String uriString) {
-
+        accumuloTarBallUri = uriString;
     }
 
     @Override
     public String getExecutorJarUri() {
         return this.executorJarUri;
     }
+    
     @Override
     public void setExecutorJarUri(String uriString) {
         this.executorJarUri = uriString;
     }
 
     @Override
-    public String getAccumuloRootPassword() { return this.accumuloRootPassword; }
+    public String getAccumuloRootPassword() { 
+        return this.accumuloRootPassword; 
+    }
+    
     @Override
-    public void setAccumuloRootPassword(String password) { this.accumuloRootPassword = password; }
+    public void setAccumuloRootPassword(String password) { 
+        this.accumuloRootPassword = password;
+    }
 
+    protected void setDefaultServers() {
+        servers = new HashMap<ServerType, IProcessorConfiguration>(5);
+        servers.put(ServerType.MASTER, getDefaultMasterServer());
+        servers.put(ServerType.TABLET_SERVER, getDefaultTabletServer());
+        servers.put(ServerType.MONITOR, getDefaultMonitorServer());
+        servers.put(ServerType.GARBAGE_COLLECTOR, getDefaultGCServer());
+    }
+    
+    protected IProcessorConfiguration getDefaultMasterServer() {
+       return new ProcessorConfiguration("" + Defaults.MIN_MASTER_MEM, 
+                        null, 
+                        "" + Defaults.MIN_MASTER_CPUS, 
+                        ServerType.MASTER.getName());
+    }
+    
+    protected IProcessorConfiguration getDefaultTabletServer() {
+        return new ProcessorConfiguration("" + Defaults.MIN_TSERVER_MEM, 
+                         null, 
+                         "" + Defaults.MIN_TSERVER_CPUS, 
+                         ServerType.TABLET_SERVER.getName());
+    }   
+    
+    protected IProcessorConfiguration getDefaultMonitorServer() {
+        return new ProcessorConfiguration(""+Defaults.MIN_MONITOR_MEM, 
+                         null, 
+                         ""+Defaults.MIN_MONITOR_CPUS, 
+                         ServerType.MONITOR.getName());
+    }      
+    
+    protected IProcessorConfiguration getDefaultGCServer() {
+        return new ProcessorConfiguration(""+Defaults.MIN_GC_MEM, 
+                         null, 
+                         ""+Defaults.MIN_GC_CPUS, 
+                         ServerType.GARBAGE_COLLECTOR.getName());
+    }       
+    
 }
