@@ -67,10 +67,19 @@ public class AccumuloProcessFactory {
         String className = clazz.getName();
 
         ArrayList<String> argList = new ArrayList<>();
-        argList.addAll(Arrays.asList(javaBin, "-Dproc=" + clazz.getSimpleName(), "-cp", classpath));
+        argList.addAll(Arrays.asList(javaBin, "-Dproc=" + clazz.getSimpleName()));
         argList.addAll(extraJvmOpts);
+        
+        String prop;
         for (Map.Entry<String, String> sysProp : config.getSystemProperties().entrySet()) {
-            argList.add(String.format("-D%s=%s", sysProp.getKey(), sysProp.getValue()));
+            
+            String svar;
+            if (sysProp.getKey().equals("java.class.path")){
+                svar = String.format("-D%s=%s", sysProp.getKey(), classpath+":"+sysProp.getValue());
+            } else {
+                svar = String.format("-D%s=%s", sysProp.getKey(), sysProp.getValue());
+            }
+            argList.add(svar);
         }
         // @formatter:off
        
@@ -173,6 +182,8 @@ public class AccumuloProcessFactory {
                 for (Object s : config.getClasspathItems())
                     classpathBuilder.append(File.pathSeparator).append(s.toString());
             }
+            
+            LOGGER.info("Creating classpath: " + classpathBuilder.toString());
 
             return classpathBuilder.toString();
 

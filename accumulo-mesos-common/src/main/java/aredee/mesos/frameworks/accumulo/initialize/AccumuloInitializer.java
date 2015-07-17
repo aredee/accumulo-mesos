@@ -43,7 +43,9 @@ public class AccumuloInitializer {
     private State frameworkState;
     private FrameworkStateProtobufPersister stateProxy;
     private ServiceProcessConfiguration processConfiguration;
-    private static HashMap<String, String> properties;
+    private ClusterConfiguration config;
+    
+   // private static HashMap<String, String> properties;
     
     public AccumuloInitializer(ClusterConfiguration config) throws Exception {
          initializeIfNoInstance(config);
@@ -73,7 +75,12 @@ public class AccumuloInitializer {
         return processConfiguration;
     }
     
-  
+    public void setClusterConfiguration(ClusterConfiguration config) {
+        this.config = config;
+    }
+    public ClusterConfiguration getClusterConfiguration() {
+        return config;
+    }
     /**
      * Write the accumulo site file and initialize accumulo.
      * 
@@ -84,12 +91,17 @@ public class AccumuloInitializer {
      * @return accumulo instance name
      */
     public String initializeAccumuloInstance(ClusterConfiguration config){
+        
+        setClusterConfiguration(config);
+        
         // run accumulo init procedure
         LOGGER.info("Writing accumulo-site.xml");
     
         processConfiguration = new ConfigNormalizer(config).getServiceConfiguration();
         
-        File accumuloSiteFile = writeAccumuloSiteFile(processConfiguration.getAccumuloDir().getAbsolutePath());
+        String accumuloHome = processConfiguration.getAccumuloDir().getAbsolutePath();
+        
+        File accumuloSiteFile = writeAccumuloSiteFile(accumuloHome, config.getAccumuloRootPassword(), config.getZkServers());
 
         LOGGER.info("New site file at " + accumuloSiteFile.getAbsolutePath());
         
@@ -97,7 +109,6 @@ public class AccumuloInitializer {
         LinkedList<String> initArgs  = new LinkedList<>();
         initArgs.add("--instance-name");
         initArgs.add(accumuloInstanceName);
-        // TODO handle SASL see MiniAccumuloClusterImpl
         initArgs.add("--password");
         initArgs.add(config.getAccumuloRootPassword());
         
@@ -112,11 +123,10 @@ public class AccumuloInitializer {
             LOGGER.error("IOException while trying to initialize Accumulo", ioe);
             System.exit(-1);
         }  
-        //Initialize.main(initArgs.toArray(new String[initArgs.size()]));
         return accumuloInstanceName;
     }
     
-    public File writeAccumuloSiteFile(String accumuloHomeDir) {
+    public static File writeAccumuloSiteFile(String accumuloHomeDir, String secret, String zooHosts) {
         File accumuloSiteFile = null;
 
         LOGGER.info("ACCUMULO HOME? " + accumuloHomeDir);
@@ -128,17 +138,10 @@ public class AccumuloInitializer {
             Document doc = docBuilder.newDocument();
             Element rootElement = doc.createElement("configuration");
             doc.appendChild(rootElement);
-
-            Element propertyElement = doc.createElement("property");
-            rootElement.appendChild(propertyElement);
-
-            Element nameElement = doc.createElement("name");
-            nameElement.appendChild(doc.createTextNode("general.classpaths"));
-            propertyElement.appendChild(nameElement);
-
-            Element valueElement = doc.createElement("value");
-            valueElement.appendChild(doc.createTextNode(getGeneralClasspathsLiteral()));
-            propertyElement.appendChild(valueElement);
+            
+            addDocProperty("instance.secret",secret,doc,rootElement);
+            addDocProperty("instance.zookeeper.host",zooHosts,doc,rootElement);
+            addDocProperty("general.classpaths",getGeneralClasspathsLiteral(),doc,rootElement);
 
             TransformerFactory transformerFactory = TransformerFactory.newInstance();
             Transformer transformer = transformerFactory.newTransformer();
@@ -156,7 +159,20 @@ public class AccumuloInitializer {
 
         return accumuloSiteFile;      
     }
-   
+    
+    private static void addDocProperty(String name, String value, Document doc, Element rootElement) {
+        Element propertyElement = doc.createElement("property");
+        rootElement.appendChild(propertyElement);
+
+        Element nameElement = doc.createElement("name");
+        nameElement.appendChild(doc.createTextNode(name));
+        propertyElement.appendChild(nameElement);
+
+        Element valueElement = doc.createElement("value");
+        valueElement.appendChild(doc.createTextNode(value));
+        propertyElement.appendChild(valueElement);       
+    }
+    
     private void initializeIfNoInstance(ClusterConfiguration config) throws Exception {
         LOGGER.info("Checking Framework State");
         // Check Framework State to see if this is a failover framework.
@@ -191,14 +207,16 @@ public class AccumuloInitializer {
         } else {
             LOGGER.info("Framework not found in state store, Initializing New Accumulo Instance");
             accumuloInstanceName = initializeAccumuloInstance(config);
-
-            //TODO save new instance info to Framework State
             frameworkName = config.getFrameworkName();
+            frameworkId = frameworkName+"-"+accumuloInstanceName;
+            LOGGER.info("FrameworkName? " + frameworkName + " frameworkId? " + frameworkId);
+            
+            stateProxy.saveAccumuloInstanceName(frameworkId, accumuloInstanceName);
         }
         config.setAccumuloInstanceName(accumuloInstanceName);
     }
     
-    private void logErrorAndDie(String message, Exception e){
+    private static void logErrorAndDie(String message, Exception e){
         LOGGER.error(message,e);
         System.exit(-1);
     }
@@ -229,19 +247,13 @@ public class AccumuloInitializer {
     }
     
     static {
+        /**
         properties = new HashMap<String, String>();
         properties.put("instance.volumes", "");
         properties.put("instance.zookeeper.host", "localhost:2181");
         properties.put("instance.secret", "DEFAULT");
-        properties.put("", "");
-        properties.put("", "");
-        properties.put("", "");
-        properties.put("", "");
-        properties.put("", "");
-        properties.put("", "");
-              
-        
-      
+   
+      **/
     }
     
 }

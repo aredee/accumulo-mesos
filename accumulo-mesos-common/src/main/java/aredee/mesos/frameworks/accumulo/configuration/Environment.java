@@ -27,7 +27,7 @@ public class Environment {
     public static final String ZOOKEEPER_HOME = "ZOOKEEPER_HOME";
  
     public static final List<String> REQUIRED_VARS = Arrays.asList(new String[]
-            {ACCUMULO_HOME, HADOOP_PREFIX, HADOOP_CONF_DIR});
+            {ACCUMULO_HOME, HADOOP_PREFIX, HADOOP_CONF_DIR, ZOOKEEPER_HOME, ACCUMULO_CLIENT_CONF_PATH});
 
     public static List<String> getMissingVariables() {
         List<String> req = Environment.getRequiredVariables();

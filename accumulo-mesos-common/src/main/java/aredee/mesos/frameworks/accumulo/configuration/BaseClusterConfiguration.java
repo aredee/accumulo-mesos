@@ -3,7 +3,9 @@ package aredee.mesos.frameworks.accumulo.configuration;
 import java.util.HashMap;
 import java.util.Map;
 
-public abstract class AbstractClusterConfiguration implements ClusterConfiguration {
+import com.google.gson.GsonBuilder;
+
+public class BaseClusterConfiguration implements ClusterConfiguration {
 
     String bindAddress = Defaults.BIND_ADDRESS;
     int httpPort = Defaults.HTTP_PORT;
@@ -21,10 +23,10 @@ public abstract class AbstractClusterConfiguration implements ClusterConfigurati
     double maxExecutorMemory = Defaults.MAX_EXECUTOR_MEM;
     double minExecutorMemory = Defaults.MIN_EXECUTOR_MEM;
     
-    Map<ServerType, IProcessorConfiguration> servers;
+    Map<ServerType, ProcessorConfiguration> servers;
     
     
-    public AbstractClusterConfiguration() {
+    public BaseClusterConfiguration() {
         setDefaultServers();    
     }
     
@@ -47,14 +49,14 @@ public abstract class AbstractClusterConfiguration implements ClusterConfigurati
     public void setMinExecutorMemory(double minExecutorMemory) {
         this.minExecutorMemory = minExecutorMemory;
     }
-    
+      
     @Override
-    public void setProcessorConfigurations(Map<ServerType, IProcessorConfiguration> processors) {
-        servers = processors;
+    public void setProcessorConfigurations(Map<ServerType, ProcessorConfiguration> processors) {
+       servers = processors;
     }
     
     @Override
-    public Map<ServerType, IProcessorConfiguration> getProcessorConfigurations() {
+    public Map<ServerType, ProcessorConfiguration> getProcessorConfigurations() {
         return servers;
     }
     
@@ -159,40 +161,55 @@ public abstract class AbstractClusterConfiguration implements ClusterConfigurati
         this.accumuloRootPassword = password;
     }
 
+    public String toString() {
+        return new GsonBuilder().setPrettyPrinting().create().toJson(this);
+    }
+    
     protected void setDefaultServers() {
-        servers = new HashMap<ServerType, IProcessorConfiguration>(5);
+        servers = new HashMap<ServerType, ProcessorConfiguration>(5);
         servers.put(ServerType.MASTER, getDefaultMasterServer());
         servers.put(ServerType.TABLET_SERVER, getDefaultTabletServer());
         servers.put(ServerType.MONITOR, getDefaultMonitorServer());
         servers.put(ServerType.GARBAGE_COLLECTOR, getDefaultGCServer());
+        servers.put(ServerType.TRACER, getDefaultTracerServer());
     }
     
-    protected IProcessorConfiguration getDefaultMasterServer() {
+    protected ProcessorConfiguration getDefaultTracerServer() {
+        // Make it the same as the monitor for now.
+        return new ProcessorConfiguration("" + Defaults.MIN_MONITOR_MEM, 
+                         Defaults.DEFAULT_1G_MAX_MEMORY, 
+                         "" + Defaults.MIN_MONITOR_CPUS, 
+                         ServerType.TRACER.getName());
+     }   
+    protected ProcessorConfiguration getDefaultMasterServer() {
        return new ProcessorConfiguration("" + Defaults.MIN_MASTER_MEM, 
-                        null, 
+                        Defaults.DEFAULT_8G_MAX_MEMORY, 
                         "" + Defaults.MIN_MASTER_CPUS, 
                         ServerType.MASTER.getName());
     }
     
-    protected IProcessorConfiguration getDefaultTabletServer() {
+    protected ProcessorConfiguration getDefaultTabletServer() {
         return new ProcessorConfiguration("" + Defaults.MIN_TSERVER_MEM, 
-                         null, 
+                        Defaults.DEFAULT_8G_MAX_MEMORY, 
                          "" + Defaults.MIN_TSERVER_CPUS, 
                          ServerType.TABLET_SERVER.getName());
     }   
     
-    protected IProcessorConfiguration getDefaultMonitorServer() {
+    protected ProcessorConfiguration getDefaultMonitorServer() {
         return new ProcessorConfiguration(""+Defaults.MIN_MONITOR_MEM, 
-                         null, 
+                        Defaults.DEFAULT_1G_MAX_MEMORY, 
                          ""+Defaults.MIN_MONITOR_CPUS, 
                          ServerType.MONITOR.getName());
     }      
     
-    protected IProcessorConfiguration getDefaultGCServer() {
+    protected ProcessorConfiguration getDefaultGCServer() {
         return new ProcessorConfiguration(""+Defaults.MIN_GC_MEM, 
-                         null, 
+                        Defaults.DEFAULT_2G_MAX_MEMORY, 
                          ""+Defaults.MIN_GC_CPUS, 
                          ServerType.GARBAGE_COLLECTOR.getName());
-    }       
+    }
+
+
+    
     
 }

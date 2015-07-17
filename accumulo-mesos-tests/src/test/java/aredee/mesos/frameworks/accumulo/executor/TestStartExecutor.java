@@ -35,7 +35,6 @@ public class TestStartExecutor {
     public void testProp() {
         System.out.println(System.getProperty("PWD"));
         System.out.println(System.getenv("PWD"));
-     
     }
     
     /**
@@ -100,17 +99,17 @@ public class TestStartExecutor {
     
     public ClusterConfiguration buildConfig() {
         
-        String args[] = new String[] {"P","8711","b","126.0.0.0","f","testAccumulo-1","z","localhost:2181"};        
+        String args[] = new String[] {"-P=8711","-b=126.0.0.0","-f=testAccumulo-1","-z=localhost:2181"};        
         
         CommandLine cmd = CommandLineClusterConfiguration.parseArgs(args);
-        CommandLineClusterConfiguration config = new CommandLineClusterConfiguration(cmd);
+        ClusterConfiguration config = CommandLineClusterConfiguration.getConfiguration(cmd);
         
-        config.setAccumuloTarballUri("/usr/local/accumulo/accumulo-dist.tgz");
-        config.setExecutorJarUri("/usr/local/accumulo/accumulo-executor.jar");
+        config.setAccumuloTarballUri("file:///usr/local/accumulo/accumulo-dist.tgz");
+        config.setExecutorJarUri("file:///usr/local/accumulo/accumulo-executor.jar");
         config.setMaxExecutorMemory(2048.0);
         config.setMinExecutorMemory(1000.0);
         config.setAccumuloRootPassword("password");
-        Map<ServerType, IProcessorConfiguration> processors = new HashMap<ServerType, IProcessorConfiguration>(2);
+        Map<ServerType, ProcessorConfiguration> processors = new HashMap<ServerType, ProcessorConfiguration>(2);
         processors.put(ServerType.MASTER, new ProcessorConfiguration("512", "1024","1",ServerType.MASTER.getName()));
         config.setProcessorConfigurations(processors);
         return config;
@@ -118,7 +117,7 @@ public class TestStartExecutor {
     
     public TaskInfo buildTaskInfo(AccumuloServer server, ClusterConfiguration config) {
 
-        Map<ServerType, IProcessorConfiguration> servers = config.getProcessorConfigurations();
+        Map<ServerType, ProcessorConfiguration> servers = config.getProcessorConfigurations();
         IProcessorConfiguration inServerConfig = servers.get(server.getType());
         
         List<Protos.CommandInfo.URI> uris = new ArrayList<>();
@@ -208,6 +207,8 @@ public class TestStartExecutor {
     
     public static class MyServer implements AccumuloServer {
         public String slaveId = "Slave-1";
+        private int maxMemory;
+        private int minMemory;
         public ServerType getType() {
             return ServerType.MASTER;
         }
@@ -219,6 +220,18 @@ public class TestStartExecutor {
         }
         public String getTaskId() {
             return "62134-accumulo-master";
+        }
+        public int getMaxMemorySize() {
+            return maxMemory;
+        }
+        public int getMinMemorySize() {
+            return minMemory;
+        }
+        public void setMaxMemorySize(int memory) {
+            maxMemory = memory;            
+        }
+        public void setMinMemorySize(int memory) {
+            minMemory = memory;            
         }
     }
     

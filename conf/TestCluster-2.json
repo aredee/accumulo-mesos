@@ -1,0 +1,28 @@
+{
+  "bindAddress": "10.141.141.20",
+  "httpPort": 18120,
+  "mesosMaster": "10.141.141.20:5050",
+  "frameworkName": "testAccumulo-1",
+  "zkServers": "10.141.141.20:2181",
+  "minTservers": 1,
+  "instanceName": "default-instance",
+  "accumuloTarBallUri": "file:///usr/local/accumulo/AccumuloDist-1.7.0.tgz",
+  "executorJarUri": "/usr/local/accumulo/accumulo-mesos-executor-0.1.0-SNAPSHOT.jar",
+  "accumuloRootPassword": "password",
+  "maxExecutorMemory": 1024.0,
+  "minExecutorMemory": 128.0,
+  "servers": {
+    "TABLET_SERVER": {
+      "minMemory": "128",
+      "maxMemory": "512",
+      "cpus": "1",
+      "type": "tserver"
+    },
+    "MASTER": {
+      "minMemory": "128",
+      "maxMemory": "512",
+      "cpus": "1",
+      "type": "master"
+    }
+  }
+}

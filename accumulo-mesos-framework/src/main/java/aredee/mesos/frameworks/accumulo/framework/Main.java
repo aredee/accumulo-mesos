@@ -71,7 +71,7 @@ public final class Main {
         // TODO check commandline for .yml or properties file
 
         // create injector with command line
-        ClusterConfiguration config = new CommandLineClusterConfiguration(cmdLine);
+        ClusterConfiguration config = CommandLineClusterConfiguration.getConfiguration(cmdLine);
 
         int exitStatus = -1;
         try {
@@ -108,11 +108,8 @@ public final class Main {
 
         // Start the schedulerDriver
         LOGGER.info("Initializing mesos-accumulo Scheduler");
-        String master = config.getMesosMaster();
-
-        Cluster cluster = new Cluster(accumuloInitializer.getFrameworkState(), config);
-
-        org.apache.mesos.Scheduler scheduler = new Scheduler(cluster);
+  
+        Cluster cluster = new Cluster(accumuloInitializer);
 
         FrameworkInfo frameworkInfo = FrameworkInfo.newBuilder()
                 .setId(createMesosFrameworkID(accumuloInitializer.getFrameworkId())) // empty string creates new random name
@@ -124,7 +121,7 @@ public final class Main {
                 .build();
 
         final SchedulerDriver schedulerDriver =
-                new MesosSchedulerDriver( scheduler, frameworkInfo, master);
+                new MesosSchedulerDriver( new Scheduler(cluster), frameworkInfo, config.getMesosMaster());
 
         LOGGER.info("Running mesos-accumulo SchedulerDriver");
         final int status;
@@ -146,7 +143,8 @@ public final class Main {
                 status = 3;
                 break;
         }
-        LOGGER.info("mesos-accumulo stopped with status " + driverStatus.name());
+        LOGGER.info("mesos-accumulo stopped with status " + 
+            driverStatus.name() + " " +driverStatus.getNumber());
 
         webServer.stop();
 

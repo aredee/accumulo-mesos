@@ -3,11 +3,15 @@ package aredee.mesos.frameworks.accumulo.executor;
 import aredee.mesos.frameworks.accumulo.configuration.ConfigNormalizer;
 import aredee.mesos.frameworks.accumulo.configuration.ServiceProcessConfiguration;
 import aredee.mesos.frameworks.accumulo.configuration.ServerType;
+import aredee.mesos.frameworks.accumulo.initialize.AccumuloInitializer;
 import aredee.mesos.frameworks.accumulo.process.AccumuloProcessFactory;
 import aredee.mesos.frameworks.accumulo.Protos.ServerProcessConfiguration;
 
 
 
+
+
+import org.apache.commons.lang3.StringUtils;
 //import org.apache.accumulo.tserver.TabletServer;
 //import org.apache.accumulo.master.Master;
 //import org.apache.accumulo.gc.SimpleGarbageCollector;
@@ -101,6 +105,9 @@ public class AccumuloStartExecutor implements Executor {
      */
     @Override
     public void launchTask(ExecutorDriver executorDriver, Protos.TaskInfo taskInfo) {
+        
+        LOGGER.info("Launch TaskInfo " + taskInfo);
+      
         LOGGER.info("Launch Task Requested: " + taskInfo.getCommand());
 
         this.taskInfo = taskInfo;
@@ -108,6 +115,9 @@ public class AccumuloStartExecutor implements Executor {
         // If there is another executor then exit?!
         checkForRunningExecutor();
         ServiceProcessConfiguration process = createProcessorConfig(taskInfo); 
+
+        AccumuloInitializer.writeAccumuloSiteFile(process.getAccumuloDir().getAbsolutePath(), "password", "localhost:2181");
+        
         AccumuloProcessFactory factory = new AccumuloProcessFactory(process);
 
         //TODO get jvmArgs and args from protobuf?
@@ -252,7 +262,7 @@ public class AccumuloStartExecutor implements Executor {
     private ServiceProcessConfiguration createProcessorConfig(Protos.TaskInfo taskInfo) {
          ServiceProcessConfiguration config = new ServiceProcessConfiguration();
          try {
-            config = new ConfigNormalizer(ServerProcessConfiguration.parseFrom(taskInfo.getData())).getServiceConfiguration();
+             config = new ConfigNormalizer(ServerProcessConfiguration.parseFrom(taskInfo.getData())).getServiceConfiguration();
  
          } catch (Exception e) {
             LOGGER.error("Failed to parse AccumuloServer protobuf",e);

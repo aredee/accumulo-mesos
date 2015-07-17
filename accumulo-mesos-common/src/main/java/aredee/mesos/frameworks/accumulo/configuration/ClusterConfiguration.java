@@ -27,8 +27,8 @@ public interface ClusterConfiguration {
 
     //TODO get hadoop namenode for accumulo?
 
-    public void setProcessorConfigurations(Map<ServerType, IProcessorConfiguration> processors);
-    public Map<ServerType, IProcessorConfiguration> getProcessorConfigurations();
+    public void setProcessorConfigurations(Map<ServerType, ProcessorConfiguration> processors);
+    public Map<ServerType, ProcessorConfiguration> getProcessorConfigurations();
    
     public String getAccumuloInstanceName();
     public void setAccumuloInstanceName(String instance);

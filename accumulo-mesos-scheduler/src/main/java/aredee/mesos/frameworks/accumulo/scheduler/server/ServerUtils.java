@@ -1,8 +1,11 @@
 package aredee.mesos.frameworks.accumulo.scheduler.server;
 
+import aredee.mesos.frameworks.accumulo.configuration.ProcessorConfiguration;
 import aredee.mesos.frameworks.accumulo.configuration.ServerType;
 
-import java.util.UUID;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 
 /**
@@ -10,44 +13,80 @@ import java.util.UUID;
  */
 public class ServerUtils {
 
+    private static Map<ServerType, IServerFactory> serverFactories = new HashMap<ServerType, IServerFactory>(7);
+    
     // Don't allow instantiation
     private ServerUtils(){}
 
-    public static AccumuloServer newMaster(){
-        return new Master(getUUIDTask(ServerType.MASTER));
+    public static void addServer(Set<AccumuloServer> launchable, ProcessorConfiguration config ) {
+        launchable.add(ServerUtils.newServer(config));
     }
-
-    public static AccumuloServer newTabletServer(){
-        return new TabletServer(getUUIDTask(ServerType.TABLET_SERVER));
+    
+    public static AccumuloServer newServer(ProcessorConfiguration config) {
+        AccumuloServer server = ServerUtils.newServer(config.toServerType());
+        server.setMaxMemorySize(config.getMaxMemorySize());
+        server.setMinMemorySize(config.getMinMemorySize());        
+        return server;
     }
-
-    public static AccumuloServer newGarbageCollector(){
-        return new GarbageCollector(getUUIDTask(ServerType.GARBAGE_COLLECTOR));
+    public static AccumuloServer newServer(ProcessorConfiguration config, String taskId, String slaveId) {
+        AccumuloServer server = ServerUtils.newServer(config.toServerType(),taskId, slaveId);
+        server.setMaxMemorySize(config.getMaxMemorySize());
+        server.setMinMemorySize(config.getMinMemorySize());        
+        return server;
+    }   
+    public static AccumuloServer newServer(ServerType type) {
+        return serverFactories.get(type).newServer();
     }
-
-    public static AccumuloServer newMonitor(){
-        return new Monitor(getUUIDTask(ServerType.MONITOR));
+    public static AccumuloServer newServer(ServerType type, String taskId, String slaveId) {
+        return serverFactories.get(type).newServer(taskId,slaveId);
+    }  
+    private static interface IServerFactory {
+        public AccumuloServer newServer();
+        public AccumuloServer newServer(String taskId,String slaveId);
     }
-
-
-    public static boolean isMaster(String id){
-        return id.startsWith(ServerType.MASTER.getName());
+    
+    static {
+        serverFactories.put(ServerType.MASTER, new IServerFactory() {
+            public AccumuloServer newServer() { 
+                return new Master();
+            }
+            public AccumuloServer newServer(String taskId,String slaveId) {
+                return new Master(taskId,slaveId);
+            }
+        });
+        
+        serverFactories.put(ServerType.TABLET_SERVER,  new IServerFactory() {
+            public AccumuloServer newServer() { 
+                return new TabletServer();
+            }
+            public AccumuloServer newServer(String taskId,String slaveId) {
+                return new TabletServer(taskId,slaveId);
+            }
+        });
+        serverFactories.put(ServerType.GARBAGE_COLLECTOR,  new IServerFactory() {
+            public AccumuloServer newServer() { 
+                return new GarbageCollector();
+            }
+            public AccumuloServer newServer(String taskId,String slaveId) {
+                return new GarbageCollector(taskId,slaveId);
+            }          
+        });
+        serverFactories.put(ServerType.MONITOR,  new IServerFactory() {
+            public AccumuloServer newServer() { 
+                return new Monitor();
+            }
+            public AccumuloServer newServer(String taskId,String slaveId) {
+                return new Monitor(taskId,slaveId);
+            }         
+        });
+        serverFactories.put(ServerType.TRACER,  new IServerFactory() {
+            public AccumuloServer newServer() { 
+                return new Tracer();
+            }
+            public AccumuloServer newServer(String taskId,String slaveId) {
+                return new Tracer(taskId,slaveId);
+            }         
+        });
+      
     }
-
-    public static boolean isTabletServer(String id){
-        return id.startsWith(ServerType.TABLET_SERVER.getName());
-    }
-
-    public static boolean isGarbageCollector(String id){
-        return id.startsWith(ServerType.GARBAGE_COLLECTOR.getName());
-    }
-
-    public static boolean isMonitor(String id){
-        return id.startsWith(ServerType.MONITOR.getName());
-    }
-
-    private static String getUUIDTask(ServerType type){
-        return type.getName() + "_" + UUID.randomUUID();
-    }
-
 }
