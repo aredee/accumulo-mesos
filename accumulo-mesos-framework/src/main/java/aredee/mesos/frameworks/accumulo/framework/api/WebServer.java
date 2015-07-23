@@ -1,8 +1,11 @@
 package aredee.mesos.frameworks.accumulo.framework.api;
 
 import aredee.mesos.frameworks.accumulo.configuration.ClusterConfiguration;
+
 import com.google.inject.Inject;
 import com.google.inject.servlet.GuiceFilter;
+
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jetty.server.*;
 import org.eclipse.jetty.servlet.*;
 
@@ -20,6 +23,9 @@ public class WebServer {
 
     public void start() throws java.lang.Exception {
 
+        checkParam(this.config.getBindAddress(), "Bind address");
+        checkParam(this.config.getHttpPort() + "", "Http Port");
+       
         this.server = new Server();
         // configure server
         ServerConnector http = new ServerConnector(server);
@@ -39,5 +45,11 @@ public class WebServer {
 
     public void stop() throws java.lang.Exception{
         this.server.stop();
+    }
+    
+    private void checkParam(String value, String name) {
+        if (StringUtils.isEmpty(value)) {
+            throw new RuntimeException("Required parameter " + name + " is missing");
+        }
     }
 }
