@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import java.util.HashMap;
 import java.util.Map;
 
+import aredee.mesos.frameworks.accumulo.configuration.process.ProcessConfiguration;
 import org.junit.Test;
 
 import com.google.gson.Gson;
@@ -24,7 +25,7 @@ public class TestProcessorConfiguration {
         
         testSettersGetters(getTestConfig(MAX, MIN), MAX, MIN);
         testSettersGetters(getTestConfig(MAXO, MINO), MAXO, MINO);
-        testSettersGetters(new Gson().fromJson(JSON, ProcessorConfiguration.class), MAX, MIN);
+        testSettersGetters(new Gson().fromJson(JSON, ProcessConfiguration.class), MAX, MIN);
     }
     
     @SuppressWarnings("unused")
@@ -84,7 +85,7 @@ public class TestProcessorConfiguration {
     
     
     public IProcessorConfiguration getTestConfig(String max, String min) {
-        ProcessorConfiguration config = new ProcessorConfiguration();
+        ProcessConfiguration config = new ProcessConfiguration();
         config.setMaxMemory(max);
         config.setMinMemory(min);     
         return config;

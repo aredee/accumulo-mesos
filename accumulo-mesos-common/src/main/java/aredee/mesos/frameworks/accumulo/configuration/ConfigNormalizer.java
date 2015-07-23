@@ -7,12 +7,11 @@ import java.util.Map;
 import java.util.Properties;
 
 import aredee.mesos.frameworks.accumulo.configuration.cluster.ClusterConfiguration;
+import aredee.mesos.frameworks.accumulo.configuration.process.ServerProcessConfiguration;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import aredee.mesos.frameworks.accumulo.Protos.ServerProcessConfiguration;
- 
 /**
  * 
  * Need to normalize the various configs that drive the AccumuloProcessFactory which
@@ -23,7 +22,7 @@ import aredee.mesos.frameworks.accumulo.Protos.ServerProcessConfiguration;
 public class ConfigNormalizer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConfigNormalizer.class);
-    private ServiceProcessConfiguration serviceConfiguration;
+    private ServerProcessConfiguration serviceConfiguration;
   
     /**
      * Used in the scheduler
@@ -37,11 +36,11 @@ public class ConfigNormalizer {
      * Used in the Executor
      * @param config
      */
-    public ConfigNormalizer(ServerProcessConfiguration config) {
+    public ConfigNormalizer(aredee.mesos.frameworks.accumulo.Protos.ServerProcessConfiguration config) {
         toServiceConfiguration(config);
     }
     
-    public ServiceProcessConfiguration getServiceConfiguration() {
+    public ServerProcessConfiguration getServiceConfiguration() {
         return serviceConfiguration;
     }
     
@@ -59,7 +58,7 @@ public class ConfigNormalizer {
     }
     
     private void toServiceConfiguration(ClusterConfiguration config) {
-        serviceConfiguration = new ServiceProcessConfiguration();
+        serviceConfiguration = new ServerProcessConfiguration();
         
         // Memory for the initialization process.
         serviceConfiguration.setMaxMemory("1024m");
@@ -71,9 +70,9 @@ public class ConfigNormalizer {
      * 
      * @param server
      */
-    private void toServiceConfiguration(ServerProcessConfiguration server) {
+    private void toServiceConfiguration(aredee.mesos.frameworks.accumulo.Protos.ServerProcessConfiguration server) {
         
-        serviceConfiguration = new ServiceProcessConfiguration();
+        serviceConfiguration = new ServerProcessConfiguration();
         
         try {
         

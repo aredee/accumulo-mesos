@@ -20,7 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import aredee.mesos.frameworks.accumulo.configuration.cluster.ClusterConfiguration;
-import aredee.mesos.frameworks.accumulo.configuration.ProcessorConfiguration;
+import aredee.mesos.frameworks.accumulo.configuration.process.ProcessConfiguration;
 import aredee.mesos.frameworks.accumulo.configuration.ServerType;
 import aredee.mesos.frameworks.accumulo.initialize.AccumuloInitializer;
 
@@ -44,7 +44,7 @@ public class Cluster {
 
     private Set<Protos.TaskStatus> runningServers = new HashSet<Protos.TaskStatus>();
     private Set<AccumuloServer> serversToLaunch = new HashSet<AccumuloServer>();
-    private Map<ServerType, ProcessorConfiguration> clusterServers;
+    private Map<ServerType, ProcessConfiguration> clusterServers;
 
     private Matcher matcher;
     private Launcher launcher;
@@ -62,7 +62,7 @@ public class Cluster {
         LOGGER.info("Servers in the cluster? " + clusterServers);
         
         // Take the cluster configuration from the input cluster configuration.
-        for(Entry<ServerType, ProcessorConfiguration> entry : clusterServers.entrySet()) {
+        for(Entry<ServerType, ProcessConfiguration> entry : clusterServers.entrySet()) {
             if (entry.getKey() == ServerType.TABLET_SERVER) {
                 for(int ii = 0; ii < config.getMinTservers(); ii++) {
                     ServerUtils.addServer(serversToLaunch, entry.getValue());              

@@ -1,11 +1,13 @@
-package aredee.mesos.frameworks.accumulo.configuration;
+package aredee.mesos.frameworks.accumulo.configuration.process;
+
+import aredee.mesos.frameworks.accumulo.configuration.ServerType;
 
 /**
  * 
- * Base processor configuration across system.
+ * Processor configuration across system.
  *
  */
-public interface IProcessorConfiguration {
+public interface ProcessConfiguration {
 
     /**
      * 

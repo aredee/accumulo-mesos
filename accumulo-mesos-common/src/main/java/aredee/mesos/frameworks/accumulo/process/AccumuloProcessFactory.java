@@ -1,7 +1,7 @@
 package aredee.mesos.frameworks.accumulo.process;
 
 import aredee.mesos.frameworks.accumulo.configuration.Environment;
-import aredee.mesos.frameworks.accumulo.configuration.ServiceProcessConfiguration;
+import aredee.mesos.frameworks.accumulo.configuration.process.ServerProcessConfiguration;
 
 import com.google.common.base.Joiner;
 
@@ -33,12 +33,12 @@ import java.util.TimerTask;
 public class AccumuloProcessFactory {
     private static final Logger LOGGER = LoggerFactory.getLogger(AccumuloProcessFactory.class);
 
-    private final ServiceProcessConfiguration config;
+    private final ServerProcessConfiguration config;
     private List<LogWriter> logWriters = new ArrayList<>(5);
     private List<Process> cleanup = new ArrayList<>();
 
  
-    public AccumuloProcessFactory(ServiceProcessConfiguration config){
+    public AccumuloProcessFactory(ServerProcessConfiguration config){
         this.config = config;
     }
 

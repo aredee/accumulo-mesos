@@ -2,7 +2,7 @@ package aredee.mesos.frameworks.accumulo.scheduler.launcher;
 
 import aredee.mesos.frameworks.accumulo.configuration.cluster.ClusterConfiguration;
 import aredee.mesos.frameworks.accumulo.configuration.Environment;
-import aredee.mesos.frameworks.accumulo.configuration.ServiceProcessConfiguration;
+import aredee.mesos.frameworks.accumulo.configuration.process.ServerProcessConfiguration;
 import aredee.mesos.frameworks.accumulo.scheduler.matcher.Match;
 import aredee.mesos.frameworks.accumulo.scheduler.server.AccumuloServer;
 
@@ -30,9 +30,9 @@ public class AccumuloStartExecutorLauncher implements Launcher {
     private static final Logger LOGGER = LoggerFactory.getLogger(AccumuloStartExecutorLauncher.class);
     
     private ClusterConfiguration config;
-    private ServiceProcessConfiguration serviceConfig;
+    private ServerProcessConfiguration serviceConfig;
     
-    public AccumuloStartExecutorLauncher(ServiceProcessConfiguration serviceConfig, ClusterConfiguration config){
+    public AccumuloStartExecutorLauncher(ServerProcessConfiguration serviceConfig, ClusterConfiguration config){
         this.config = config;
         this.serviceConfig = serviceConfig;
     }

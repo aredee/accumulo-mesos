@@ -1,10 +1,11 @@
-package aredee.mesos.frameworks.accumulo.configuration;
+package aredee.mesos.frameworks.accumulo.configuration.process;
 
+import aredee.mesos.frameworks.accumulo.configuration.ServerType;
 import org.apache.commons.lang3.StringUtils;
 
 import com.google.gson.Gson;
 
-public class ProcessorConfiguration implements IProcessorConfiguration {
+public class BaseProcessConfiguration implements ProcessConfiguration {
 
     private String minMemory;
     private String maxMemory;
@@ -12,7 +13,7 @@ public class ProcessorConfiguration implements IProcessorConfiguration {
     private String type;
     
     
-    public ProcessorConfiguration() {
+    public BaseProcessConfiguration() {
     }
     /**
      * 
@@ -21,7 +22,7 @@ public class ProcessorConfiguration implements IProcessorConfiguration {
      * @param cpus number of cpus, all digits
      * @param type server type, matches ServerType
      */
-    public ProcessorConfiguration(String minMemory, String maxMemory, String cpus, String type) {
+    public BaseProcessConfiguration(String minMemory, String maxMemory, String cpus, String type) {
         this.minMemory = minMemory;
         this.maxMemory = maxMemory;
         this.cpus = cpus;

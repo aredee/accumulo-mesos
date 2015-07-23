@@ -49,8 +49,6 @@ public final class Main {
         CommandLine cmdLine = CommandLineClusterConfiguration.parseArgs(args);
         CommandLineClusterConfiguration.checkHelpOrVersion(cmdLine);  // early exit
 
-        // TODO check commandline for .yml or properties file
-
         // create injector with command line
         ClusterConfiguration clusterConfiguration;
         if( cmdLine.hasOption('j') ){

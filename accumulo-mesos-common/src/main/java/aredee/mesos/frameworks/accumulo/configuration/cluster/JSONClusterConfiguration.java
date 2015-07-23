@@ -1,6 +1,6 @@
 package aredee.mesos.frameworks.accumulo.configuration.cluster;
 
-import aredee.mesos.frameworks.accumulo.configuration.ProcessorConfiguration;
+import aredee.mesos.frameworks.accumulo.configuration.process.ProcessConfiguration;
 import aredee.mesos.frameworks.accumulo.configuration.ServerType;
 import com.google.gson.Gson;
 import org.apache.commons.io.IOUtils;
@@ -106,12 +106,12 @@ public class JSONClusterConfiguration implements ClusterConfiguration {
     }
 
     @Override
-    public void setProcessorConfigurations(Map<ServerType, ProcessorConfiguration> processors) {
+    public void setProcessorConfigurations(Map<ServerType, ProcessConfiguration> processors) {
         jsonAdaptor.setProcessorConfigurations(processors);
     }
 
     @Override
-    public Map<ServerType, ProcessorConfiguration> getProcessorConfigurations() {
+    public Map<ServerType, ProcessConfiguration> getProcessorConfigurations() {
         return jsonAdaptor.getProcessorConfigurations();
     }
 

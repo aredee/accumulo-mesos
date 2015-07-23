@@ -1,7 +1,7 @@
 package aredee.mesos.frameworks.accumulo.scheduler.matcher;
 
 import aredee.mesos.frameworks.accumulo.configuration.cluster.ClusterConfiguration;
-import aredee.mesos.frameworks.accumulo.configuration.ProcessorConfiguration;
+import aredee.mesos.frameworks.accumulo.configuration.process.ProcessConfiguration;
 import aredee.mesos.frameworks.accumulo.configuration.ServerType;
 import aredee.mesos.frameworks.accumulo.scheduler.server.AccumuloServer;
 
@@ -87,7 +87,7 @@ public class MinCpuMinRamFIFOMatcher implements Matcher {
             }
         }
       
-        Map<ServerType,ProcessorConfiguration> servers = this.config.getProcessorConfigurations();
+        Map<ServerType,ProcessConfiguration> servers = this.config.getProcessorConfigurations();
         boolean offerMatches = false;
         
         if (servers.containsKey(server.getType())) {

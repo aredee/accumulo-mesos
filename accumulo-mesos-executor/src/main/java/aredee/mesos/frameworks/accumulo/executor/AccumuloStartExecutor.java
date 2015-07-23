@@ -1,17 +1,12 @@
 package aredee.mesos.frameworks.accumulo.executor;
 
 import aredee.mesos.frameworks.accumulo.configuration.ConfigNormalizer;
-import aredee.mesos.frameworks.accumulo.configuration.ServiceProcessConfiguration;
+import aredee.mesos.frameworks.accumulo.configuration.process.ServerProcessConfiguration;
 import aredee.mesos.frameworks.accumulo.configuration.ServerType;
 import aredee.mesos.frameworks.accumulo.initialize.AccumuloInitializer;
 import aredee.mesos.frameworks.accumulo.process.AccumuloProcessFactory;
-import aredee.mesos.frameworks.accumulo.Protos.ServerProcessConfiguration;
 
 
-
-
-
-import org.apache.commons.lang3.StringUtils;
 //import org.apache.accumulo.tserver.TabletServer;
 //import org.apache.accumulo.master.Master;
 //import org.apache.accumulo.gc.SimpleGarbageCollector;
@@ -24,9 +19,7 @@ import org.apache.mesos.SchedulerDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -114,7 +107,7 @@ public class AccumuloStartExecutor implements Executor {
 
         // If there is another executor then exit?!
         checkForRunningExecutor();
-        ServiceProcessConfiguration process = createProcessorConfig(taskInfo); 
+        ServerProcessConfiguration process = createProcessorConfig(taskInfo);
 
         AccumuloInitializer.writeAccumuloSiteFile(process.getAccumuloDir().getAbsolutePath(), "password", "localhost:2181");
         
@@ -200,7 +193,7 @@ public class AccumuloStartExecutor implements Executor {
     }
     
     @SuppressWarnings("rawtypes")
-    private Class discoverServerClass(ServiceProcessConfiguration process) {
+    private Class discoverServerClass(ServerProcessConfiguration process) {
         Class clazz = null;
         Exception exc = null;
         try {
@@ -259,10 +252,10 @@ public class AccumuloStartExecutor implements Executor {
         System.exit(-1);
     }
 
-    private ServiceProcessConfiguration createProcessorConfig(Protos.TaskInfo taskInfo) {
-         ServiceProcessConfiguration config = new ServiceProcessConfiguration();
+    private ServerProcessConfiguration createProcessorConfig(Protos.TaskInfo taskInfo) {
+         ServerProcessConfiguration config = new ServerProcessConfiguration();
          try {
-             config = new ConfigNormalizer(ServerProcessConfiguration.parseFrom(taskInfo.getData())).getServiceConfiguration();
+             config = new ConfigNormalizer(aredee.mesos.frameworks.accumulo.Protos.ServerProcessConfiguration.parseFrom(taskInfo.getData())).getServiceConfiguration();
  
          } catch (Exception e) {
             LOGGER.error("Failed to parse AccumuloServer protobuf",e);
