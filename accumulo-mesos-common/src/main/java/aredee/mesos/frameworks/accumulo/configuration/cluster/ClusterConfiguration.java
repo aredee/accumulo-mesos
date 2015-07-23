@@ -1,4 +1,7 @@
-package aredee.mesos.frameworks.accumulo.configuration;
+package aredee.mesos.frameworks.accumulo.configuration.cluster;
+
+import aredee.mesos.frameworks.accumulo.configuration.ProcessorConfiguration;
+import aredee.mesos.frameworks.accumulo.configuration.ServerType;
 
 import java.util.Map;
 

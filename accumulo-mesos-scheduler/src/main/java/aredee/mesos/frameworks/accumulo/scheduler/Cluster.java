@@ -19,7 +19,7 @@ import org.apache.mesos.state.State;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import aredee.mesos.frameworks.accumulo.configuration.ClusterConfiguration;
+import aredee.mesos.frameworks.accumulo.configuration.cluster.ClusterConfiguration;
 import aredee.mesos.frameworks.accumulo.configuration.ProcessorConfiguration;
 import aredee.mesos.frameworks.accumulo.configuration.ServerType;
 import aredee.mesos.frameworks.accumulo.initialize.AccumuloInitializer;

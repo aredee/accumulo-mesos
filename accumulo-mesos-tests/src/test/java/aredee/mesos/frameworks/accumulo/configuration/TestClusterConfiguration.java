@@ -7,11 +7,10 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 
+import aredee.mesos.frameworks.accumulo.configuration.cluster.BaseClusterConfiguration;
+import aredee.mesos.frameworks.accumulo.configuration.cluster.ClusterConfiguration;
+import aredee.mesos.frameworks.accumulo.configuration.cluster.CommandLineClusterConfiguration;
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.GnuParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-import org.apache.commons.cli.Parser;
 import org.junit.Test;
 
 import com.google.gson.Gson;

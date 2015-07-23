@@ -20,8 +20,8 @@ import org.apache.mesos.Protos.Value;
 import org.apache.mesos.Protos.Value.Scalar;
 import org.junit.Test;
 
-import aredee.mesos.frameworks.accumulo.configuration.ClusterConfiguration;
-import aredee.mesos.frameworks.accumulo.configuration.CommandLineClusterConfiguration;
+import aredee.mesos.frameworks.accumulo.configuration.cluster.ClusterConfiguration;
+import aredee.mesos.frameworks.accumulo.configuration.cluster.CommandLineClusterConfiguration;
 import aredee.mesos.frameworks.accumulo.configuration.Environment;
 import aredee.mesos.frameworks.accumulo.configuration.IProcessorConfiguration;
 import aredee.mesos.frameworks.accumulo.configuration.ProcessorConfiguration;

@@ -1,9 +1,7 @@
 package aredee.mesos.frameworks.accumulo.initialize;
 
 import java.io.File;
-import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -21,15 +19,10 @@ import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-import com.google.protobuf.InvalidProtocolBufferException;
-
 import aredee.mesos.frameworks.accumulo.Protos;
-import aredee.mesos.frameworks.accumulo.Protos.ServerProcessConfiguration;
-import aredee.mesos.frameworks.accumulo.configuration.ClusterConfiguration;
-import aredee.mesos.frameworks.accumulo.configuration.Environment;
+import aredee.mesos.frameworks.accumulo.configuration.cluster.ClusterConfiguration;
 import aredee.mesos.frameworks.accumulo.configuration.ConfigNormalizer;
 import aredee.mesos.frameworks.accumulo.configuration.ServiceProcessConfiguration;
-import aredee.mesos.frameworks.accumulo.configuration.ServerType;
 import aredee.mesos.frameworks.accumulo.process.AccumuloProcessFactory;
 import aredee.mesos.frameworks.accumulo.state.FrameworkStateProtobufPersister;
  
