@@ -43,7 +43,7 @@ public class CommandLineClusterConfiguration extends BaseClusterConfiguration {
         }
 
         if( cmdLine.hasOption('b') ){
-            this.setBindAddress( cmdLine.getOptionValue('P') );
+            this.setBindAddress( cmdLine.getOptionValue('b') );
         }
 
         if ( cmdLine.hasOption('m') ){
@@ -59,17 +59,6 @@ public class CommandLineClusterConfiguration extends BaseClusterConfiguration {
         }
     }
 
-    public static ClusterConfiguration getConfiguration(CommandLine cmdLine) {
-        
-        ClusterConfiguration cc;
-        if (cmdLine.hasOption('j')) {
-            cc = getClusterFromJson(cmdLine.getOptionValue('j'));
-        } else {
-            cc = new CommandLineClusterConfiguration(cmdLine);    
-        }
-        return cc;
-    }
-   
     public static CommandLine parseArgs(String args[]) {
         CommandLine cmdLine = null;
         try {

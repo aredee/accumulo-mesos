@@ -4,11 +4,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 import aredee.mesos.frameworks.accumulo.configuration.Defaults;
+import aredee.mesos.frameworks.accumulo.configuration.process.BaseProcessConfiguration;
 import aredee.mesos.frameworks.accumulo.configuration.process.ProcessConfiguration;
 import aredee.mesos.frameworks.accumulo.configuration.ServerType;
 import com.google.gson.GsonBuilder;
 
-public abstract class BaseClusterConfiguration implements ClusterConfiguration {
+public class BaseClusterConfiguration implements ClusterConfiguration {
 
     String bindAddress = Defaults.BIND_ADDRESS;
     int httpPort = Defaults.HTTP_PORT;
@@ -179,34 +180,34 @@ public abstract class BaseClusterConfiguration implements ClusterConfiguration {
     
     protected ProcessConfiguration getDefaultTracerServer() {
         // Make it the same as the monitor for now.
-        return new ProcessConfiguration("" + Defaults.MIN_MONITOR_MEM,
+        return new BaseProcessConfiguration("" + Defaults.MIN_MONITOR_MEM,
                          Defaults.DEFAULT_1G_MAX_MEMORY, 
                          "" + Defaults.MIN_MONITOR_CPUS, 
                          ServerType.TRACER.getName());
      }   
     protected ProcessConfiguration getDefaultMasterServer() {
-       return new ProcessConfiguration("" + Defaults.MIN_MASTER_MEM,
+       return new BaseProcessConfiguration("" + Defaults.MIN_MASTER_MEM,
                         Defaults.DEFAULT_8G_MAX_MEMORY, 
                         "" + Defaults.MIN_MASTER_CPUS, 
                         ServerType.MASTER.getName());
     }
     
     protected ProcessConfiguration getDefaultTabletServer() {
-        return new ProcessConfiguration("" + Defaults.MIN_TSERVER_MEM,
+        return new BaseProcessConfiguration("" + Defaults.MIN_TSERVER_MEM,
                         Defaults.DEFAULT_8G_MAX_MEMORY, 
                          "" + Defaults.MIN_TSERVER_CPUS, 
                          ServerType.TABLET_SERVER.getName());
     }   
     
     protected ProcessConfiguration getDefaultMonitorServer() {
-        return new ProcessConfiguration(""+Defaults.MIN_MONITOR_MEM,
+        return new BaseProcessConfiguration(""+Defaults.MIN_MONITOR_MEM,
                         Defaults.DEFAULT_1G_MAX_MEMORY, 
                          ""+Defaults.MIN_MONITOR_CPUS, 
                          ServerType.MONITOR.getName());
     }      
     
     protected ProcessConfiguration getDefaultGCServer() {
-        return new ProcessConfiguration(""+Defaults.MIN_GC_MEM,
+        return new BaseProcessConfiguration(""+Defaults.MIN_GC_MEM,
                         Defaults.DEFAULT_2G_MAX_MEMORY, 
                          ""+Defaults.MIN_GC_CPUS, 
                          ServerType.GARBAGE_COLLECTOR.getName());

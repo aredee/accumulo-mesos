@@ -5,12 +5,13 @@ import static org.junit.Assert.assertEquals;
 import java.util.HashMap;
 import java.util.Map;
 
+import aredee.mesos.frameworks.accumulo.configuration.process.BaseProcessConfiguration;
 import aredee.mesos.frameworks.accumulo.configuration.process.ProcessConfiguration;
 import org.junit.Test;
 
 import com.google.gson.Gson;
 
-public class TestProcessorConfiguration {
+public class TestProcessConfiguration {
 
     static final String MAX = "1024";
     static final String MIN = "512";
@@ -25,14 +26,14 @@ public class TestProcessorConfiguration {
         
         testSettersGetters(getTestConfig(MAX, MIN), MAX, MIN);
         testSettersGetters(getTestConfig(MAXO, MINO), MAXO, MINO);
-        testSettersGetters(new Gson().fromJson(JSON, ProcessConfiguration.class), MAX, MIN);
+        testSettersGetters(new Gson().fromJson(JSON, BaseProcessConfiguration.class), MAX, MIN);
     }
     
     @SuppressWarnings("unused")
     @Test
     public void testPerf() {
         
-        IProcessorConfiguration config = getTestConfig(MAXO, MINO);
+        ProcessConfiguration config = getTestConfig(MAXO, MINO);
 
         long start = System.currentTimeMillis();
         String s;
@@ -84,14 +85,14 @@ public class TestProcessorConfiguration {
     }
     
     
-    public IProcessorConfiguration getTestConfig(String max, String min) {
-        ProcessConfiguration config = new ProcessConfiguration();
+    public ProcessConfiguration getTestConfig(String max, String min) {
+        ProcessConfiguration config = new BaseProcessConfiguration();
         config.setMaxMemory(max);
         config.setMinMemory(min);     
         return config;
     }
     
-    public void testSettersGetters(IProcessorConfiguration config, String max, String min) {
+    public void testSettersGetters(ProcessConfiguration config, String max, String min) {
            
         assertEquals(config.getMaxMemory(),max);
         assertEquals(config.getMinMemory(),min);

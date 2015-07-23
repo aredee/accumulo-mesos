@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import aredee.mesos.frameworks.accumulo.configuration.process.BaseProcessConfiguration;
 import org.apache.commons.cli.CommandLine;
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos;
@@ -23,7 +24,6 @@ import org.junit.Test;
 import aredee.mesos.frameworks.accumulo.configuration.cluster.ClusterConfiguration;
 import aredee.mesos.frameworks.accumulo.configuration.cluster.CommandLineClusterConfiguration;
 import aredee.mesos.frameworks.accumulo.configuration.Environment;
-import aredee.mesos.frameworks.accumulo.configuration.IProcessorConfiguration;
 import aredee.mesos.frameworks.accumulo.configuration.process.ProcessConfiguration;
 import aredee.mesos.frameworks.accumulo.configuration.ServerType;
 import aredee.mesos.frameworks.accumulo.initialize.AccumuloInitializer;
@@ -102,7 +102,7 @@ public class TestStartExecutor {
         String args[] = new String[] {"-P=8711","-b=126.0.0.0","-f=testAccumulo-1","-z=localhost:2181"};        
         
         CommandLine cmd = CommandLineClusterConfiguration.parseArgs(args);
-        ClusterConfiguration config = CommandLineClusterConfiguration.getConfiguration(cmd);
+        ClusterConfiguration config = new CommandLineClusterConfiguration(cmd);
         
         config.setAccumuloTarballUri("file:///usr/local/accumulo/accumulo-dist.tgz");
         config.setExecutorJarUri("file:///usr/local/accumulo/accumulo-executor.jar");
@@ -110,7 +110,7 @@ public class TestStartExecutor {
         config.setMinExecutorMemory(1000.0);
         config.setAccumuloRootPassword("password");
         Map<ServerType, ProcessConfiguration> processors = new HashMap<ServerType, ProcessConfiguration>(2);
-        processors.put(ServerType.MASTER, new ProcessConfiguration("512", "1024","1",ServerType.MASTER.getName()));
+        processors.put(ServerType.MASTER, new BaseProcessConfiguration("512", "1024","1",ServerType.MASTER.getName()));
         config.setProcessorConfigurations(processors);
         return config;
     }
@@ -118,7 +118,7 @@ public class TestStartExecutor {
     public TaskInfo buildTaskInfo(AccumuloServer server, ClusterConfiguration config) {
 
         Map<ServerType, ProcessConfiguration> servers = config.getProcessorConfigurations();
-        IProcessorConfiguration inServerConfig = servers.get(server.getType());
+        ProcessConfiguration inServerConfig = servers.get(server.getType());
         
         List<Protos.CommandInfo.URI> uris = new ArrayList<>();
         System.out.println("Tarball URI ? " + config.getAccumuloTarballUri());

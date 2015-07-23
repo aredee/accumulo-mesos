@@ -1,0 +1,6 @@
+[23/07/15 01:41:50:050 EDT] INFO main aredee.mesos.frameworks.accumulo.configuration.cluster.CommandLineClusterConfiguration - CommandLine? []
+[23/07/15 01:41:50:050 EDT] INFO main aredee.mesos.frameworks.accumulo.configuration.cluster.CommandLineClusterConfiguration - CommandLine? []
+[23/07/15 01:41:50:050 EDT] INFO main aredee.mesos.frameworks.accumulo.configuration.cluster.CommandLineClusterConfiguration - CommandLine? []
+[23/07/15 01:41:52:052 EDT] INFO main aredee.mesos.frameworks.accumulo.configuration.cluster.CommandLineClusterConfiguration - CommandLine? []
+[23/07/15 01:41:52:052 EDT] INFO main aredee.mesos.frameworks.accumulo.initialize.AccumuloInitializer - Checking Framework State
+[23/07/15 01:41:52:052 EDT] INFO main aredee.mesos.frameworks.accumulo.initialize.AccumuloInitializer - Reading from ZooKeeperState: localhost:2181

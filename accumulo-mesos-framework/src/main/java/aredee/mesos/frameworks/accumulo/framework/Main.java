@@ -155,7 +155,7 @@ public final class Main {
         } catch (Exception e) {
             //TODO throw some webserver fail exception?
             LOGGER.error("Failed to instantiate webservice.", e);
-            System.exit(-1);
+            throw new RuntimeException("Unable to launch webserver");
         }
         this.webServer = webServer;
     }
@@ -171,7 +171,7 @@ public final class Main {
                 System.err.println(env);
             }
             System.err.println("Define environment and restart");
-            System.exit(-1);
+            throw new RuntimeException("Invalid Environment");
         }
     }
 }
