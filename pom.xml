@@ -83,7 +83,6 @@
         <module>accumulo-mesos-executor</module>
         <module>accumulo-mesos-framework</module>
         <module>accumulo-mesos-dist</module>
-        <module>accumulo-mesos-tests</module>
     </modules>
 
     <dependencyManagement>
