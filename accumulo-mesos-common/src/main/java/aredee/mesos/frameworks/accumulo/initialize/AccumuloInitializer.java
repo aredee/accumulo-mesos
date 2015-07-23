@@ -25,7 +25,7 @@ import aredee.mesos.frameworks.accumulo.configuration.ConfigNormalizer;
 import aredee.mesos.frameworks.accumulo.configuration.process.ServerProcessConfiguration;
 import aredee.mesos.frameworks.accumulo.process.AccumuloProcessFactory;
 import aredee.mesos.frameworks.accumulo.state.FrameworkStateProtobufPersister;
- 
+
 public class AccumuloInitializer {
     private static final Logger LOGGER = LoggerFactory.getLogger(AccumuloInitializer.class);
 
@@ -37,8 +37,6 @@ public class AccumuloInitializer {
     private FrameworkStateProtobufPersister stateProxy;
     private ServerProcessConfiguration processConfiguration;
     private ClusterConfiguration config;
-    
-   // private static HashMap<String, String> properties;
     
     public AccumuloInitializer(ClusterConfiguration config) throws Exception {
          initializeIfNoInstance(config);
@@ -71,9 +69,11 @@ public class AccumuloInitializer {
     public void setClusterConfiguration(ClusterConfiguration config) {
         this.config = config;
     }
+
     public ClusterConfiguration getClusterConfiguration() {
         return config;
     }
+
     /**
      * Write the accumulo site file and initialize accumulo.
      * 
@@ -237,16 +237,6 @@ public class AccumuloInitializer {
                 .append("$HADOOP_PREFIX/[^.].*.jar,\n")
                 .append("$HADOOP_PREFIX/lib/(?!slf4j)[^.].*.jar\n")
                 .toString();
-    }
-    
-    static {
-        /**
-        properties = new HashMap<String, String>();
-        properties.put("instance.volumes", "");
-        properties.put("instance.zookeeper.host", "localhost:2181");
-        properties.put("instance.secret", "DEFAULT");
-   
-      **/
     }
     
 }
