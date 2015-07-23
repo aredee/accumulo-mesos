@@ -27,6 +27,10 @@ public final class Defaults {
     public final static int MIN_TSERVER_MEM = 4096;
     public final static int MIN_GC_MEM = 1024;
     public final static int MIN_MONITOR_MEM = 500;
+    
+    public final static String DEFAULT_8G_MAX_MEMORY = "8192";
+    public final static String DEFAULT_2G_MAX_MEMORY = "2048";
+    public final static String DEFAULT_1G_MAX_MEMORY = "1024";
 
     // Minimum CPU settings
     public final static int MIN_MASTER_CPUS = 4;
@@ -45,5 +49,7 @@ public final class Defaults {
 
     public final static double MAX_EXECUTOR_MEM = 128;
     public final static double MIN_EXECUTOR_MEM = 16;
-
+    
+    
+    
 }

@@ -1,8 +1,48 @@
 package aredee.mesos.frameworks.accumulo.configuration;
 
+import org.apache.accumulo.master.Master;
+import org.apache.accumulo.tserver.TabletServer;
+import org.apache.accumulo.gc.SimpleGarbageCollector;
+import org.apache.accumulo.monitor.Monitor;
+import org.apache.accumulo.tracer.TraceServer;
+
+@SuppressWarnings("rawtypes")
 public enum ServerType {
-    MASTER("master"), ZOOKEEPER("zookeeper"), TABLET_SERVER("tserver"),
-    GARBAGE_COLLECTOR("gc"), TRACER("tracer"), MONITOR("monitor"), UNKNOWN("unknown");
+    MASTER("master") {
+        public Class getServiceClass() {
+            return Master.class;
+        }
+    }, 
+    TABLET_SERVER("tserver") {
+        public Class getServiceClass() {
+            return TabletServer.class;
+        }          
+    },
+    GARBAGE_COLLECTOR("gc"){
+        public Class getServiceClass() {
+            return SimpleGarbageCollector.class;
+        }         
+    }, 
+    TRACER("tracer") {
+        public Class getServiceClass() {
+            return TraceServer.class;
+        }           
+    },
+    MONITOR("monitor"){
+        public Class getServiceClass() {
+            return Monitor.class;
+        }
+    }, 
+    ZOOKEEPER("zookeeper"){
+        public Class getServiceClass() {
+            return null;
+        }      
+    },   
+    UNKNOWN("unknown"){
+        public Class getServiceClass() {
+            return null;
+        }
+    };
 
     private String name;
 
@@ -21,4 +61,6 @@ public enum ServerType {
         return UNKNOWN;
     }
 
+    public abstract Class getServiceClass();
+    
 }
