@@ -3,6 +3,10 @@ package aredee.mesos.frameworks.accumulo.scheduler.server;
 import aredee.mesos.frameworks.accumulo.configuration.ServerType;
 
 public class Monitor extends BaseServer {
+    
+    public Monitor() {
+        super(getUUIDTask(ServerType.MONITOR));    
+    }
     public Monitor(String taskId, String slaveId) {
         super(taskId, slaveId);
     }
@@ -12,4 +16,8 @@ public class Monitor extends BaseServer {
     @Override
     public ServerType getType(){ return ServerType.MONITOR; }
 
+    public static boolean isMonitor(String id){
+        return id.startsWith(ServerType.MONITOR.getName());
+    }  
+    
 }
