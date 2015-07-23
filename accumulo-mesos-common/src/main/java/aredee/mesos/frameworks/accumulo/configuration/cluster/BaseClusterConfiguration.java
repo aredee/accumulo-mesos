@@ -1,11 +1,14 @@
-package aredee.mesos.frameworks.accumulo.configuration;
+package aredee.mesos.frameworks.accumulo.configuration.cluster;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import aredee.mesos.frameworks.accumulo.configuration.Defaults;
+import aredee.mesos.frameworks.accumulo.configuration.ProcessorConfiguration;
+import aredee.mesos.frameworks.accumulo.configuration.ServerType;
 import com.google.gson.GsonBuilder;
 
-public class BaseClusterConfiguration implements ClusterConfiguration {
+public abstract class BaseClusterConfiguration implements ClusterConfiguration {
 
     String bindAddress = Defaults.BIND_ADDRESS;
     int httpPort = Defaults.HTTP_PORT;

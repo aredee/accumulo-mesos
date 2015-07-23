@@ -14,47 +14,28 @@
  */
 package aredee.mesos.frameworks.accumulo.framework;
 
-import aredee.mesos.frameworks.accumulo.Protos;
-import aredee.mesos.frameworks.accumulo.configuration.*;
-import aredee.mesos.frameworks.accumulo.process.AccumuloProcessFactory;
-import aredee.mesos.frameworks.accumulo.state.FrameworkStateProtobufPersister;
+import aredee.mesos.frameworks.accumulo.configuration.cluster.ClusterConfiguration;
+import aredee.mesos.frameworks.accumulo.configuration.cluster.CommandLineClusterConfiguration;
+import aredee.mesos.frameworks.accumulo.configuration.Constants;
+import aredee.mesos.frameworks.accumulo.configuration.Environment;
+import aredee.mesos.frameworks.accumulo.configuration.cluster.JSONClusterConfiguration;
 import aredee.mesos.frameworks.accumulo.framework.api.WebServer;
 import aredee.mesos.frameworks.accumulo.framework.guice.ApiServletModule;
 import aredee.mesos.frameworks.accumulo.framework.guice.ConfigurationModule;
 import aredee.mesos.frameworks.accumulo.initialize.AccumuloInitializer;
 import aredee.mesos.frameworks.accumulo.scheduler.Cluster;
 import aredee.mesos.frameworks.accumulo.scheduler.Scheduler;
-
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.mesos.MesosSchedulerDriver;
 import org.apache.mesos.Protos.FrameworkInfo;
 import org.apache.mesos.SchedulerDriver;
-import org.apache.mesos.state.ZooKeeperState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerConfigurationException;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.stream.StreamResult;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 
 public final class Main {
 
@@ -71,13 +52,20 @@ public final class Main {
         // TODO check commandline for .yml or properties file
 
         // create injector with command line
-        ClusterConfiguration config = CommandLineClusterConfiguration.getConfiguration(cmdLine);
+        ClusterConfiguration clusterConfiguration;
+        if( cmdLine.hasOption('j') ){
+            // JSON file specified
+            clusterConfiguration = new JSONClusterConfiguration(cmdLine.getOptionValue('j'));
+        } else {
+            // parse all the command line options
+            clusterConfiguration = new CommandLineClusterConfiguration(cmdLine);
+        }
 
         int exitStatus = -1;
         try {
             LOGGER.info("Starting mesos-accumumlo framework version " + Constants.FRAMEWORK_VERSION);
             LOGGER.info("Java Classpath: " + System.getProperty("java.class.path"));
-            exitStatus = new Main().run(config, cmdLine.getArgs());
+            exitStatus = new Main().run(clusterConfiguration, cmdLine.getArgs());
         } catch (Exception e) {
             LOGGER.error("Unhandled exception encountered, exiting: ", e);
         }
@@ -143,8 +131,8 @@ public final class Main {
                 status = 3;
                 break;
         }
-        LOGGER.info("mesos-accumulo stopped with status " + 
-            driverStatus.name() + " " +driverStatus.getNumber());
+        LOGGER.info("mesos-accumulo stopped with status " +
+                driverStatus.name() + " " + driverStatus.getNumber());
 
         webServer.stop();
 

@@ -1,6 +1,6 @@
 package aredee.mesos.frameworks.accumulo.scheduler.launcher;
 
-import aredee.mesos.frameworks.accumulo.configuration.ClusterConfiguration;
+import aredee.mesos.frameworks.accumulo.configuration.cluster.ClusterConfiguration;
 import aredee.mesos.frameworks.accumulo.configuration.Environment;
 import aredee.mesos.frameworks.accumulo.configuration.ServiceProcessConfiguration;
 import aredee.mesos.frameworks.accumulo.scheduler.matcher.Match;

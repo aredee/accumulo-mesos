@@ -1,6 +1,6 @@
 package aredee.mesos.frameworks.accumulo.scheduler.matcher;
 
-import aredee.mesos.frameworks.accumulo.configuration.ClusterConfiguration;
+import aredee.mesos.frameworks.accumulo.configuration.cluster.ClusterConfiguration;
 import aredee.mesos.frameworks.accumulo.configuration.ProcessorConfiguration;
 import aredee.mesos.frameworks.accumulo.configuration.ServerType;
 import aredee.mesos.frameworks.accumulo.scheduler.server.AccumuloServer;

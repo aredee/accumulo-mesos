@@ -1,6 +1,6 @@
 package aredee.mesos.frameworks.accumulo.framework.api;
 
-import aredee.mesos.frameworks.accumulo.configuration.ClusterConfiguration;
+import aredee.mesos.frameworks.accumulo.configuration.cluster.ClusterConfiguration;
 
 import com.google.inject.Inject;
 import com.google.inject.servlet.GuiceFilter;

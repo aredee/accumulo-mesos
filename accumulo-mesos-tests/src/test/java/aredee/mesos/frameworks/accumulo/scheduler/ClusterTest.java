@@ -3,7 +3,7 @@ package aredee.mesos.frameworks.accumulo.scheduler;
 import java.util.HashSet;
 import java.util.Set;
 
-import aredee.mesos.frameworks.accumulo.configuration.ClusterConfiguration;
+import aredee.mesos.frameworks.accumulo.configuration.cluster.ClusterConfiguration;
 import aredee.mesos.frameworks.accumulo.configuration.ServerType;
 import aredee.mesos.frameworks.accumulo.scheduler.server.AccumuloServer;
 import aredee.mesos.frameworks.accumulo.scheduler.server.ServerUtils;
