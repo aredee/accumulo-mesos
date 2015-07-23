@@ -1,0 +1,45 @@
+{
+  "bindAddress": "0.0.0.0",
+  "mesosMaster": "10.0.2.15:5050",
+  "frameworkName": "Accumulo-Mesos",
+  "zkServers": "127.0.0.1:2181",
+  "minTservers": 10,
+  "instanceName": "default-instance",
+  "accumuloTarBallUri": "/usr/local/accumulo/AccumuloDist-1.7.0.tgz",
+  "executorJarUri": "accumulo-mesos-executor-0.1.0-SNAPSHOT.jar",
+  "accumuloRootPassword": "password",
+  "maxExecutorMemory": 512.0,
+  "minExecutorMemory": 128.0,
+  "servers": {
+    "TRACER": {
+      "minMemory": "500",
+      "maxMemory": "1024",
+      "cpus": "1",
+      "type": "tracer"
+    },
+    "TABLET_SERVER": {
+      "minMemory": "4096",
+      "maxMemory": "8192",
+      "cpus": "4",
+      "type": "tserver"
+    },
+    "MASTER": {
+      "minMemory": "4096",
+      "maxMemory": "8192",
+      "cpus": "4",
+      "type": "master"
+    },
+    "MONITOR": {
+      "minMemory": "500",
+      "maxMemory": "1024",
+      "cpus": "1",
+      "type": "monitor"
+    },
+    "GARBAGE_COLLECTOR": {
+      "minMemory": "1024",
+      "maxMemory": "2048",
+      "cpus": "2",
+      "type": "gc"
+    }
+  }
+}
