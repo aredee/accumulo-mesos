@@ -1,5 +1,7 @@
 package aredee.mesos.frameworks.accumulo.configuration;
 
+import java.util.Map;
+
 public interface ClusterConfiguration {
 
     public String getBindAddress();
@@ -25,33 +27,9 @@ public interface ClusterConfiguration {
 
     //TODO get hadoop namenode for accumulo?
 
-    public double getMinMasterMem();
-    public void setMinMasterMem(double minMasterMem);
-
-    public double getMinTserverMem();
-    public void setMinTserverMem(double minTserverMem);
-
-    public double getMinGCMem();
-    public void setMinGCMem(double minGCMem);
-
-    public double getMinMonitorMem();
-    public void setMinMonitorMem(double minMonitorMem);
-
-    public double getMinMasterCpus();
-    public void setMinMasterCpus(double minMasterCpus);
-
-    public double getMinTserverCpus();
-    public void setMinTserverCpus(double minTserverCpus);
-
-    public double getMinGCCpus();
-    public void setMinGCCpus(double minGCCpus);
-
-    public double getMinMonitorCpus();
-    public void setMinMonitorCpus(double minMonitorCpus);
-
-    public int getMinTservers();
-    public void setMinTservers(int minTservers);
-
+    public void setProcessorConfigurations(Map<ServerType, ProcessorConfiguration> processors);
+    public Map<ServerType, ProcessorConfiguration> getProcessorConfigurations();
+   
     public String getAccumuloInstanceName();
     public void setAccumuloInstanceName(String instance);
 
@@ -63,4 +41,8 @@ public interface ClusterConfiguration {
 
     public double getMinExecutorMemory();
     public void setMinExecutorMemory(double minExecutorMemory);
+    
+    public void setMinTservers(int servers);
+    public int getMinTservers();
+    
 }
