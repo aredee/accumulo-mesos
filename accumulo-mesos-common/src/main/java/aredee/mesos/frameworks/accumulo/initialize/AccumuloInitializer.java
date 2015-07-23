@@ -22,7 +22,7 @@ import org.w3c.dom.Element;
 import aredee.mesos.frameworks.accumulo.Protos;
 import aredee.mesos.frameworks.accumulo.configuration.cluster.ClusterConfiguration;
 import aredee.mesos.frameworks.accumulo.configuration.ConfigNormalizer;
-import aredee.mesos.frameworks.accumulo.configuration.ServiceProcessConfiguration;
+import aredee.mesos.frameworks.accumulo.configuration.process.ServerProcessConfiguration;
 import aredee.mesos.frameworks.accumulo.process.AccumuloProcessFactory;
 import aredee.mesos.frameworks.accumulo.state.FrameworkStateProtobufPersister;
  
@@ -35,7 +35,7 @@ public class AccumuloInitializer {
     private String frameworkName = "";    
     private State frameworkState;
     private FrameworkStateProtobufPersister stateProxy;
-    private ServiceProcessConfiguration processConfiguration;
+    private ServerProcessConfiguration processConfiguration;
     private ClusterConfiguration config;
     
    // private static HashMap<String, String> properties;
@@ -64,7 +64,7 @@ public class AccumuloInitializer {
         return frameworkId;
     }
     
-    public ServiceProcessConfiguration getProcessConfiguration() {
+    public ServerProcessConfiguration getProcessConfiguration() {
         return processConfiguration;
     }
     

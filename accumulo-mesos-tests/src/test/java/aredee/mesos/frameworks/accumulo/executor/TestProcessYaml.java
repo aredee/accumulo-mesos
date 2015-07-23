@@ -17,7 +17,7 @@ import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
-import aredee.mesos.frameworks.accumulo.configuration.ServiceProcessConfiguration;
+import aredee.mesos.frameworks.accumulo.configuration.process.ServerProcessConfiguration;
 
 public class TestProcessYaml {
 
@@ -28,7 +28,7 @@ public class TestProcessYaml {
     
     @Test
     public void writeJson() {
-        ServiceProcessConfiguration config = new ServiceProcessConfiguration();
+        ServerProcessConfiguration config = new ServerProcessConfiguration();
         
         Map props = System.getProperties();
         
@@ -53,7 +53,7 @@ public class TestProcessYaml {
             
             input = new FileInputStream(Paths.get("./", "/accumulo-mesos-executor/src/main/resources/accumulo.yaml").toFile());
             
-            ServiceProcessConfiguration config = y.loadAs(input,ServiceProcessConfiguration.class);
+            ServerProcessConfiguration config = y.loadAs(input,ServerProcessConfiguration.class);
             
 
             System.out.println(config);
@@ -76,7 +76,7 @@ public class TestProcessYaml {
             GsonBuilder gbld = new GsonBuilder();
             gbld.registerTypeAdapter(File.class, new FileTypeAdapter());
             
-            ServiceProcessConfiguration config = gbld.create().fromJson(new FileReader(f), ServiceProcessConfiguration.class);
+            ServerProcessConfiguration config = gbld.create().fromJson(new FileReader(f), ServerProcessConfiguration.class);
             
             
             if (config.getZooKeeperDir() != null) {

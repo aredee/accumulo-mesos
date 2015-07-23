@@ -1,6 +1,6 @@
 package aredee.mesos.frameworks.accumulo.scheduler.server;
 
-import aredee.mesos.frameworks.accumulo.configuration.ProcessorConfiguration;
+import aredee.mesos.frameworks.accumulo.configuration.process.ProcessConfiguration;
 import aredee.mesos.frameworks.accumulo.configuration.ServerType;
 
 import java.util.HashMap;
@@ -18,17 +18,17 @@ public class ServerUtils {
     // Don't allow instantiation
     private ServerUtils(){}
 
-    public static void addServer(Set<AccumuloServer> launchable, ProcessorConfiguration config ) {
+    public static void addServer(Set<AccumuloServer> launchable, ProcessConfiguration config ) {
         launchable.add(ServerUtils.newServer(config));
     }
     
-    public static AccumuloServer newServer(ProcessorConfiguration config) {
+    public static AccumuloServer newServer(ProcessConfiguration config) {
         AccumuloServer server = ServerUtils.newServer(config.toServerType());
         server.setMaxMemorySize(config.getMaxMemorySize());
         server.setMinMemorySize(config.getMinMemorySize());        
         return server;
     }
-    public static AccumuloServer newServer(ProcessorConfiguration config, String taskId, String slaveId) {
+    public static AccumuloServer newServer(ProcessConfiguration config, String taskId, String slaveId) {
         AccumuloServer server = ServerUtils.newServer(config.toServerType(),taskId, slaveId);
         server.setMaxMemorySize(config.getMaxMemorySize());
         server.setMinMemorySize(config.getMinMemorySize());        

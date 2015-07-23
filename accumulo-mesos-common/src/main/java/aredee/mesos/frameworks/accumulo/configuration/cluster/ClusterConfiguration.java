@@ -1,6 +1,6 @@
 package aredee.mesos.frameworks.accumulo.configuration.cluster;
 
-import aredee.mesos.frameworks.accumulo.configuration.ProcessorConfiguration;
+import aredee.mesos.frameworks.accumulo.configuration.process.ProcessConfiguration;
 import aredee.mesos.frameworks.accumulo.configuration.ServerType;
 
 import java.util.Map;
@@ -30,8 +30,8 @@ public interface ClusterConfiguration {
 
     //TODO get hadoop namenode for accumulo?
 
-    public void setProcessorConfigurations(Map<ServerType, ProcessorConfiguration> processors);
-    public Map<ServerType, ProcessorConfiguration> getProcessorConfigurations();
+    public void setProcessorConfigurations(Map<ServerType, ProcessConfiguration> processors);
+    public Map<ServerType, ProcessConfiguration> getProcessorConfigurations();
    
     public String getAccumuloInstanceName();
     public void setAccumuloInstanceName(String instance);

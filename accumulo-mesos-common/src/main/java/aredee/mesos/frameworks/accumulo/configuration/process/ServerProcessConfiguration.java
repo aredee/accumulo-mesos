@@ -1,4 +1,4 @@
-package aredee.mesos.frameworks.accumulo.configuration;
+package aredee.mesos.frameworks.accumulo.configuration.process;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -6,10 +6,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import aredee.mesos.frameworks.accumulo.configuration.ServerType;
+import aredee.mesos.frameworks.accumulo.configuration.process.ProcessConfiguration;
 import com.google.gson.Gson;
 
 
-public class ServiceProcessConfiguration extends ProcessorConfiguration {
+public class ServerProcessConfiguration extends BaseProcessConfiguration {
     
     private File executorDir = null;
     private File accumuloLibDir;
@@ -30,7 +32,7 @@ public class ServiceProcessConfiguration extends ProcessorConfiguration {
     private Map<String,String> systemProperties = new HashMap<String,String>();
     private Map<ServerType,Integer> serverMemory = new HashMap<ServerType,Integer>();
 
-    public ServiceProcessConfiguration(){
+    public ServerProcessConfiguration(){
         super();
     }
 

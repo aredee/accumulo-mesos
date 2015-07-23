@@ -6,51 +6,26 @@ import org.apache.accumulo.gc.SimpleGarbageCollector;
 import org.apache.accumulo.monitor.Monitor;
 import org.apache.accumulo.tracer.TraceServer;
 
-@SuppressWarnings("rawtypes")
 public enum ServerType {
-    MASTER("master") {
-        public Class getServiceClass() {
-            return Master.class;
-        }
-    }, 
-    TABLET_SERVER("tserver") {
-        public Class getServiceClass() {
-            return TabletServer.class;
-        }          
-    },
-    GARBAGE_COLLECTOR("gc"){
-        public Class getServiceClass() {
-            return SimpleGarbageCollector.class;
-        }         
-    }, 
-    TRACER("tracer") {
-        public Class getServiceClass() {
-            return TraceServer.class;
-        }           
-    },
-    MONITOR("monitor"){
-        public Class getServiceClass() {
-            return Monitor.class;
-        }
-    }, 
-    ZOOKEEPER("zookeeper"){
-        public Class getServiceClass() {
-            return null;
-        }      
-    },   
-    UNKNOWN("unknown"){
-        public Class getServiceClass() {
-            return null;
-        }
-    };
+    MASTER("master", Master.class),
+    TABLET_SERVER("tserver", TabletServer.class),
+    GARBAGE_COLLECTOR("gc", SimpleGarbageCollector.class),
+    TRACER("tracer", TraceServer.class),
+    MONITOR("monitor", Monitor.class),
+    ZOOKEEPER("zookeeper", null),
+    UNKNOWN("unknown", null);
 
     private String name;
+    private Class serviceClass;
 
-    ServerType(String name){
+    ServerType(String name, Class serviceClass){
         this.name = name;
+        this.serviceClass = serviceClass;
     }
 
     public String getName(){ return this.name; }
+
+    public Class getServiceClass() { return this.serviceClass; }
 
     public static ServerType getTypeFromName(String name){
         for( ServerType server: ServerType.values()){
@@ -61,6 +36,4 @@ public enum ServerType {
         return UNKNOWN;
     }
 
-    public abstract Class getServiceClass();
-    
 }

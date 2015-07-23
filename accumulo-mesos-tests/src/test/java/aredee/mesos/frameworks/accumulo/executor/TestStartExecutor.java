@@ -24,7 +24,7 @@ import aredee.mesos.frameworks.accumulo.configuration.cluster.ClusterConfigurati
 import aredee.mesos.frameworks.accumulo.configuration.cluster.CommandLineClusterConfiguration;
 import aredee.mesos.frameworks.accumulo.configuration.Environment;
 import aredee.mesos.frameworks.accumulo.configuration.IProcessorConfiguration;
-import aredee.mesos.frameworks.accumulo.configuration.ProcessorConfiguration;
+import aredee.mesos.frameworks.accumulo.configuration.process.ProcessConfiguration;
 import aredee.mesos.frameworks.accumulo.configuration.ServerType;
 import aredee.mesos.frameworks.accumulo.initialize.AccumuloInitializer;
 import aredee.mesos.frameworks.accumulo.scheduler.server.AccumuloServer;
@@ -109,15 +109,15 @@ public class TestStartExecutor {
         config.setMaxExecutorMemory(2048.0);
         config.setMinExecutorMemory(1000.0);
         config.setAccumuloRootPassword("password");
-        Map<ServerType, ProcessorConfiguration> processors = new HashMap<ServerType, ProcessorConfiguration>(2);
-        processors.put(ServerType.MASTER, new ProcessorConfiguration("512", "1024","1",ServerType.MASTER.getName()));
+        Map<ServerType, ProcessConfiguration> processors = new HashMap<ServerType, ProcessConfiguration>(2);
+        processors.put(ServerType.MASTER, new ProcessConfiguration("512", "1024","1",ServerType.MASTER.getName()));
         config.setProcessorConfigurations(processors);
         return config;
     }
     
     public TaskInfo buildTaskInfo(AccumuloServer server, ClusterConfiguration config) {
 
-        Map<ServerType, ProcessorConfiguration> servers = config.getProcessorConfigurations();
+        Map<ServerType, ProcessConfiguration> servers = config.getProcessorConfigurations();
         IProcessorConfiguration inServerConfig = servers.get(server.getType());
         
         List<Protos.CommandInfo.URI> uris = new ArrayList<>();
