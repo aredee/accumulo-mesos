@@ -74,7 +74,7 @@
         <version.snake>1.15</version.snake>
         <version.gson>2.3.1</version.gson>
         <version.commons-lang3>3.4</version.commons-lang3>
-
+        <accumulo.bin.md5>898ec8e2c9d048be554a32a344dd6170</accumulo.bin.md5>
     </properties>
 
     <modules>
