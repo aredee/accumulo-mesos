@@ -67,7 +67,7 @@ public class CommandLineClusterConfiguration extends BaseClusterConfiguration {
             System.err.println(e);
             printHelpAndExit();
         }
-        LOGGER.info("CommandLine? " + cmdLine.getArgList());
+        
         return cmdLine;
     }
 
@@ -79,7 +79,7 @@ public class CommandLineClusterConfiguration extends BaseClusterConfiguration {
             printHelpAndExit();
         }
         if (cmdLine.hasOption('v')){
-            System.out.format("%s : %s", Constants.EXE_NAME, Constants.FRAMEWORK_VERSION);
+            System.out.format("%s : %s\n", Constants.EXE_NAME, Constants.FRAMEWORK_VERSION);
             System.exit(0);
         }
     }
