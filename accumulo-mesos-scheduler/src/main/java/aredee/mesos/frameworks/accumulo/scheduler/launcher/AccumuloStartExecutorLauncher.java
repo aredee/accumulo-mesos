@@ -1,5 +1,6 @@
 package aredee.mesos.frameworks.accumulo.scheduler.launcher;
 
+import aredee.mesos.frameworks.accumulo.configuration.Constants;
 import aredee.mesos.frameworks.accumulo.configuration.cluster.ClusterConfiguration;
 import aredee.mesos.frameworks.accumulo.configuration.Environment;
 import aredee.mesos.frameworks.accumulo.configuration.process.ServerProcessConfiguration;
@@ -18,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -52,22 +54,13 @@ public class AccumuloStartExecutorLauncher implements Launcher {
 
         List<Protos.CommandInfo.URI> uris = new ArrayList<>();
         Protos.CommandInfo.URI tarballUri = Protos.CommandInfo.URI.newBuilder()
-                .setValue(this.config.getAccumuloTarballUri())
-                .setExtract(true)
-                .setExecutable(false)
-                .build();
-
-        Protos.CommandInfo.URI executorJarUri = Protos.CommandInfo.URI.newBuilder()
-                .setValue(this.config.getExecutorJarUri())
+                .setValue(this.config.getTarballUri())
                 .setExtract(true)
                 .setExecutable(false)
                 .build();
 
         uris.add(tarballUri);
-        uris.add(executorJarUri);
 
-        LOGGER.info("Executor jar location " + executorJarUri);
-   
         // TODO get java -XX stuff from config
         // TODO get executor jar name from URI
         // The "m" is hard coded here to get the cluster up...should be handled in another manner, maybe another method that
@@ -77,13 +70,15 @@ public class AccumuloStartExecutorLauncher implements Launcher {
         // Since JAVA_HOME is usually installed here...hard code it for now. Should we pass it in or instead
         // of launching it directly use a script that checks the local server(environment) for JAVA_HOME...and
         // the rest of the environment var?
-        StringBuilder sb = new StringBuilder("/usr/bin/java")
+        StringBuilder sb = new StringBuilder("env ; /usr/bin/java")
                 .append(" -Dserver=").append(server.getType().getName())
                 .append(" -Xmx").append(((int)this.config.getMaxExecutorMemory())+"m")
                 .append(" -Xms").append(((int)this.config.getMinExecutorMemory())+"m")
-                .append(" -jar ").append(getExecutorJarFromURI(this.config.getExecutorJarUri()));
+                //.append(" -jar ").append(getExecutorJarFromURI(this.config.getExecutorJarUri()));
+                .append(" -jar $MESOS_DIRECTORY/accumulo-mesos-dist-").append(Constants.FRAMEWORK_VERSION)
+                .append("/").append(Constants.EXECUTOR_JAR);
 
-        Builder varBuilder = Protos.Environment.Variable.newBuilder();
+                        Builder varBuilder = Protos.Environment.Variable.newBuilder();
         Protos.Environment env = Protos.Environment.newBuilder()
                 .addVariables(varBuilder
                         .setName(Environment.HADOOP_PREFIX)
