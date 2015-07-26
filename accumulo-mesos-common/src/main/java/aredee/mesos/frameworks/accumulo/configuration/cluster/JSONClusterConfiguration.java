@@ -86,23 +86,13 @@ public class JSONClusterConfiguration implements ClusterConfiguration {
     }
 
     @Override
-    public String getAccumuloTarballUri() {
-        return jsonAdaptor.getAccumuloTarballUri();
+    public String getTarballUri() {
+        return jsonAdaptor.getTarballUri();
     }
 
     @Override
-    public void setAccumuloTarballUri(String uriString) {
-        jsonAdaptor.setAccumuloTarballUri(uriString);
-    }
-
-    @Override
-    public String getExecutorJarUri() {
-        return jsonAdaptor.getExecutorJarUri();
-    }
-
-    @Override
-    public void setExecutorJarUri(String uriString) {
-        jsonAdaptor.setExecutorJarUri(uriString);
+    public void setTarballUri(String uriString) {
+        jsonAdaptor.setTarballUri(uriString);
     }
 
     @Override

@@ -22,11 +22,8 @@ public interface ClusterConfiguration {
     public String getZkServers();
     public void setZkServers(String servers);
 
-    public String getAccumuloTarballUri();
-    public void setAccumuloTarballUri(String uriString);
-
-    public String getExecutorJarUri();
-    public void setExecutorJarUri(String uriString);
+    public String getTarballUri();
+    public void setTarballUri(String uriString);
 
     //TODO get hadoop namenode for accumulo?
 
