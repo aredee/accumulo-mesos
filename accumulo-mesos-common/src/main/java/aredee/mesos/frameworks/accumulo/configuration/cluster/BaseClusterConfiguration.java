@@ -20,8 +20,9 @@ public class BaseClusterConfiguration implements ClusterConfiguration {
     int minTservers = Defaults.MIN_TSERVERS;
 
     String instanceName = "default-instance";
-    String accumuloTarBallUri = null;
-    String executorJarUri = Defaults.EXECUTOR_JAR;
+    //String accumuloTarBallUri = null;
+    //String executorJarUri = Defaults.EXECUTOR_JAR;
+    String tarballUri;
     String accumuloRootPassword = Defaults.ROOT_PASSWORD;
 
     double maxExecutorMemory = Defaults.MAX_EXECUTOR_MEM;
@@ -134,7 +135,18 @@ public class BaseClusterConfiguration implements ClusterConfiguration {
         this.zkServers = servers;
     }
 
+    @Override
+    public String getTarballUri() {
+        return this.tarballUri;
+    }
+
+    @Override
+    public void setTarballUri(String uriString) {
+        this.tarballUri = uriString;
+    }
+
     // TODO implement below this line
+/*
     @Override
     public String getAccumuloTarballUri() {
         return accumuloTarBallUri;
@@ -154,7 +166,7 @@ public class BaseClusterConfiguration implements ClusterConfiguration {
     public void setExecutorJarUri(String uriString) {
         this.executorJarUri = uriString;
     }
-
+*/
     @Override
     public String getAccumuloRootPassword() { 
         return this.accumuloRootPassword; 

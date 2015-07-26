@@ -24,6 +24,7 @@ public class CommandLineClusterConfiguration extends BaseClusterConfiguration {
         options.addOption("m", "master", true, "Location of mesos master to connect to");
         options.addOption("f", "framework-name", true, "Name of this mesos framework");
         options.addOption("z", "zookeepers", true, "List of Zookeeper servers");
+        options.addOption("t", "tarball", true, "URI of framework tarball");
         options.addOption("j", "json", true, "JSON file containing configuration");
     }
 
@@ -57,6 +58,10 @@ public class CommandLineClusterConfiguration extends BaseClusterConfiguration {
         if (cmdLine.hasOption('z') ){
             this.setZkServers( cmdLine.getOptionValue('z'));
         }
+
+        if (cmdLine.hasOption('t')){
+            this.setTarballUri( cmdLine.getOptionValue('t'));
+        }
     }
 
     public static CommandLine parseArgs(String args[]) {
@@ -67,7 +72,6 @@ public class CommandLineClusterConfiguration extends BaseClusterConfiguration {
             System.err.println(e);
             printHelpAndExit();
         }
-        
         return cmdLine;
     }
 
