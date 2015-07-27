@@ -1,0 +1,10 @@
+#!/bin/bash
+
+export ACCUMULO_HOME=/vagrant/accumulo-install
+export ACCUMULO_CLIENT_CONF_PATH=$ACCUMULO_HOME/conf/accumulo-site.xml
+export HADOOP_PREFIX=/usr/local/hadoop
+export HADOOP_CONF_DIR=$HADOOP_PREFIX/etc/hadoop
+export ZOOKEEPER_HOME=/etc/zookeeper
+
+
+java -jar accumulo-mesos-dist/target/lib/accumulo-mesos-framework-0.1.0-SNAPSHOT-jar-with-dependencies.jar -j conf/DefaultCluster.json
