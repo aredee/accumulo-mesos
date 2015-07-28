@@ -92,6 +92,7 @@ public class AccumuloProcessFactory {
                 "-XX:+AlwaysPreTouch",
                 org.apache.accumulo.start.Main.class.getName(), className));
         // @formatter:on
+
         argList.addAll(Arrays.asList(args));
 
         LOGGER.info("Launching with args? " + argList);

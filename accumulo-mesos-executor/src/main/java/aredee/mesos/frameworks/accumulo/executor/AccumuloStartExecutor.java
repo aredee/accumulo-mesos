@@ -253,7 +253,7 @@ public class AccumuloStartExecutor implements Executor {
     }
 
     private ServerProcessConfiguration createProcessorConfig(Protos.TaskInfo taskInfo) {
-         ServerProcessConfiguration config = new ServerProcessConfiguration();
+         ServerProcessConfiguration config = null;
          try {
              config = new ConfigNormalizer(aredee.mesos.frameworks.accumulo.Protos.ServerProcessConfiguration.parseFrom(taskInfo.getData())).getServiceConfiguration();
  

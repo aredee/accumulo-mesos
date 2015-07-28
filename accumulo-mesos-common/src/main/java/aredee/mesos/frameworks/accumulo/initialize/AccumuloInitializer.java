@@ -211,7 +211,7 @@ public class AccumuloInitializer {
     
     private static void logErrorAndDie(String message, Exception e){
         LOGGER.error(message,e);
-        System.exit(-1);
+        throw new RuntimeException(e);
     }
 
     private static final String getGeneralClasspathsLiteral(){

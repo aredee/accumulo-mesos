@@ -71,22 +71,21 @@ public class AccumuloStartExecutorLauncher implements Launcher {
         // of launching it directly use a script that checks the local server(environment) for JAVA_HOME...and
         // the rest of the environment var?
         StringBuilder sb = new StringBuilder("env ; /usr/bin/java")
-                .append(" -Dserver=").append(server.getType().getName())
+                .append(" -Dserver=").append(server.getType().getName())  // this is just candy to see what's running using jps or ps
                 .append(" -Xmx").append(((int)this.config.getMaxExecutorMemory())+"m")
                 .append(" -Xms").append(((int)this.config.getMinExecutorMemory())+"m")
                 //.append(" -jar ").append(getExecutorJarFromURI(this.config.getExecutorJarUri()));
                 .append(" -jar $MESOS_DIRECTORY/accumulo-mesos-dist-").append(Constants.FRAMEWORK_VERSION)
                 .append("/").append(Constants.EXECUTOR_JAR);
 
-                        Builder varBuilder = Protos.Environment.Variable.newBuilder();
         Protos.Environment env = Protos.Environment.newBuilder()
-                .addVariables(varBuilder
+                .addVariables(Protos.Environment.Variable.newBuilder()
                         .setName(Environment.HADOOP_PREFIX)
                         .setValue(serviceConfig.getHadoopHomeDir().getAbsolutePath()))
-                .addVariables(varBuilder
+                .addVariables(Protos.Environment.Variable.newBuilder()
                         .setName(Environment.HADOOP_CONF_DIR)
                         .setValue(serviceConfig.getAccumuloConfDir().getAbsolutePath()))
-                 .addVariables(varBuilder
+                 .addVariables(Protos.Environment.Variable.newBuilder()
                         .setName(Environment.ZOOKEEPER_HOME)
                         .setValue(serviceConfig.getZooKeeperDir().getAbsolutePath()))
                 .build();
