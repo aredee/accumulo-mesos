@@ -23,7 +23,8 @@ public class ConfigNormalizer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConfigNormalizer.class);
     private ServiceProcessConfiguration serviceConfiguration;
-  
+    private String siteXml;
+    
     /**
      * Used in the scheduler
      * @param config
@@ -56,14 +57,21 @@ public class ConfigNormalizer {
         
         return value;
     }
+    /**
+     * This will only be non-null when a Proto.ServerProcessConfiguration is used as input.
+     * @return accumulo site xml.
+     */
+    public String getSiteXml() {
+        return siteXml;
+    }
     
     private void toServiceConfiguration(ClusterConfiguration config) {
         serviceConfiguration = new ServiceProcessConfiguration();
         
         // Memory for the initialization process.
-        serviceConfiguration.setMaxMemory("1024m");
-        serviceConfiguration.setMinMemory("512m");
-        setCommonEnvironment();      
+        serviceConfiguration.setMaxMemory("512m");
+        serviceConfiguration.setMinMemory("128m");
+        setCommonEnvironment();
     }
     
     /**
@@ -85,6 +93,10 @@ public class ConfigNormalizer {
             serviceConfiguration.setMaxMemory("" + server.getMaxMemory() + "m");
             serviceConfiguration.setMinMemory("" + server.getMinMemory() + "m");
             serviceConfiguration.setType(server.getServerType());
+            if (server.hasAccumuloSiteXml()) {
+                siteXml = server.getAccumuloSiteXml();
+                LOGGER.info("toServiceConfiguration: siteXml? " + siteXml);
+            }
             setCommonEnvironment();
          } catch (Exception e) {
             LOGGER.error("Failed to create service configuration",e);

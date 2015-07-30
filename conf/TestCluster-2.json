@@ -9,19 +9,19 @@
   "accumuloTarBallUri": "file:///usr/local/accumulo/AccumuloDist-1.7.0.tgz",
   "executorJarUri": "/usr/local/accumulo/accumulo-mesos-executor-0.1.0-SNAPSHOT.jar",
   "accumuloRootPassword": "password",
-  "maxExecutorMemory": 1024.0,
+  "maxExecutorMemory": 512.0,
   "minExecutorMemory": 128.0,
   "servers": {
     "TABLET_SERVER": {
       "minMemory": "128",
-      "maxMemory": "512",
-      "cpus": "1",
+      "maxMemory": "1024",
+      "cpus": "0.5",
       "type": "tserver"
     },
     "MASTER": {
       "minMemory": "128",
-      "maxMemory": "512",
-      "cpus": "1",
+      "maxMemory": "1024",
+      "cpus": "0.5",
       "type": "master"
     }
   }

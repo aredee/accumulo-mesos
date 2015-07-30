@@ -276,6 +276,11 @@
                 <artifactId>${slf4j.binding}</artifactId>
                 <version>${version.slf4j}</version>
             </dependency>
+	    <dependency>
+  	        <groupId>com.jcabi</groupId>
+                <artifactId>jcabi-xml</artifactId>
+                <version>0.16.2</version>
+	    </dependency>
             <!-- Test Libraries -->
             <dependency>
                 <groupId>junit</groupId>
@@ -283,6 +288,7 @@
                 <version>${version.junit}</version>
                 <scope>compile</scope>
             </dependency>
+
        </dependencies>
     </dependencyManagement>
 

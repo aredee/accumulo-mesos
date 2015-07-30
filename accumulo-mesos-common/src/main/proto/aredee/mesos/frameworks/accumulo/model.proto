@@ -78,6 +78,7 @@ message ServerProcessConfiguration {
 
   optional string accumuloDir = 4;
   optional string hadoopConfDir = 5;
+  optional string accumuloSiteXml = 6;
 
 }
 // cluster state?

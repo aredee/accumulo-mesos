@@ -65,9 +65,9 @@ public class AccumuloProcessFactory {
        
         String classpath = getClasspath();
         String className = clazz.getName();
-
+        String simpleName = clazz.getSimpleName();
         ArrayList<String> argList = new ArrayList<>();
-        argList.addAll(Arrays.asList(javaBin, "-Dproc=" + clazz.getSimpleName()));
+        argList.addAll(Arrays.asList(javaBin, "-Dproc=" + simpleName));
         argList.addAll(extraJvmOpts);
         
         String prop;

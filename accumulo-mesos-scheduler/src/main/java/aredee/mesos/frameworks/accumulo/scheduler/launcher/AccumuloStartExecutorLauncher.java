@@ -3,6 +3,7 @@ package aredee.mesos.frameworks.accumulo.scheduler.launcher;
 import aredee.mesos.frameworks.accumulo.configuration.ClusterConfiguration;
 import aredee.mesos.frameworks.accumulo.configuration.Environment;
 import aredee.mesos.frameworks.accumulo.configuration.ServiceProcessConfiguration;
+import aredee.mesos.frameworks.accumulo.initialize.AccumuloInitializer;
 import aredee.mesos.frameworks.accumulo.scheduler.matcher.Match;
 import aredee.mesos.frameworks.accumulo.scheduler.server.AccumuloServer;
 
@@ -31,12 +32,19 @@ public class AccumuloStartExecutorLauncher implements Launcher {
     
     private ClusterConfiguration config;
     private ServiceProcessConfiguration serviceConfig;
+    private AccumuloInitializer initializer;
     
     public AccumuloStartExecutorLauncher(ServiceProcessConfiguration serviceConfig, ClusterConfiguration config){
         this.config = config;
         this.serviceConfig = serviceConfig;
     }
-
+    
+    public AccumuloStartExecutorLauncher(AccumuloInitializer initializer) {
+        this.initializer = initializer; 
+        this.config = initializer.getClusterConfiguration();;
+        this.serviceConfig = initializer.getProcessConfiguration();     
+    }
+    
     /**
      * Interface used to launch Accumulo Server tasks.
      *
@@ -108,26 +116,29 @@ public class AccumuloStartExecutorLauncher implements Launcher {
                 .setServerType(server.getType().getName())
                 .setMaxMemory(server.getMaxMemorySize())
                 .setMinMemory(server.getMinMemorySize())
+                .setAccumuloSiteXml(initializer.getSiteXml().toXml())
                 .build();      
         
         Scalar executorMem = Value.Scalar.newBuilder().setValue(config.getMaxExecutorMemory()).build();
-
+        long eid=System.currentTimeMillis()%100;
+        String executorId = "accumuloExecutor-"+server.getType().getName()+"-"+eid;
+        
         // TODO only get desired resources of offer
         Protos.ExecutorInfo executorInfo = Protos.ExecutorInfo.newBuilder()
-                .setExecutorId(ExecutorID.newBuilder().setValue(match.getServer().getSlaveId()))
+                .setExecutorId(ExecutorID.newBuilder().setValue(executorId))
                 .setCommand(commandInfo)
                 .setData(serverConfig.toByteString())  // serialize model here.
                          .addResources(Resource.newBuilder()
                               .setName("cpus")
                               .setType(Type.SCALAR)
-                              .setScalar(Scalar.newBuilder().setValue(1))
+                              .setScalar(Scalar.newBuilder().setValue(0.5))
                               .setRole("*"))
                           .addResources(Resource.newBuilder()
                               .setName("mem")
                               .setType(Type.SCALAR)
                               .setScalar(executorMem)
                               .setRole("*"))
-                .setName("accumuloExecutor-1")
+                .setName(executorId)
                 .build();
 
         Protos.TaskInfo taskInfo = Protos.TaskInfo.newBuilder()
@@ -138,7 +149,7 @@ public class AccumuloStartExecutorLauncher implements Launcher {
                          .addResources(Resource.newBuilder()
                               .setName("cpus")
                               .setType(Type.SCALAR)
-                              .setScalar(Scalar.newBuilder().setValue(1))
+                              .setScalar(Scalar.newBuilder().setValue(0.5))
                               .setRole("*"))
                           .addResources(Resource.newBuilder()
                               .setName("mem")

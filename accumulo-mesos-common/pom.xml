@@ -111,7 +111,10 @@
 		<groupId>com.google.code.gson</groupId>
 		<artifactId>gson</artifactId>
             </dependency>
-
+           <dependency>
+                <groupId>com.jcabi</groupId>
+                <artifactId>jcabi-xml</artifactId>
+            </dependency>
 
     </dependencies>
 

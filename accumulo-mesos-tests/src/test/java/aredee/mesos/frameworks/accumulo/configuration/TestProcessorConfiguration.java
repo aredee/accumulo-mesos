@@ -1,12 +1,36 @@
 package aredee.mesos.frameworks.accumulo.configuration;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
-import org.junit.Test;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathFactory;
 
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.ConfigurationFactory;
+import org.apache.commons.configuration.XMLConfiguration;
+//import org.apache.commons.configuration.XMLConfiguration;
+import org.junit.Test;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+
+import com.google.common.base.Optional;
 import com.google.gson.Gson;
 
 public class TestProcessorConfiguration {
@@ -19,6 +43,76 @@ public class TestProcessorConfiguration {
     static final String JSON = "{'minMemory':'512','maxMemory':'1024'}";
     static final int MAX_TRIES = 10000000;
     
+    @Test
+    public void testXmlConfiguration() {
+        
+        Optional<String> value;
+        
+        try {
+            AccumuloSiteXml xmlSite = new AccumuloSiteXml();
+            System.out.println(xmlSite.toXml());
+  
+            value = xmlSite.getPassword();
+            assertTrue(value.isPresent());
+            assertTrue(value.get().equalsIgnoreCase("DEFAULT"));
+            
+            xmlSite.setPassword("newpassword");
+            System.out.println(xmlSite.toXml());
+            value = xmlSite.getPassword();
+            assertTrue(value.isPresent());
+            assertTrue(value.get().equalsIgnoreCase("newpassword"));            
+           
+            value = xmlSite.getPropertyValue("instance.volumes");
+            assertTrue(value.isPresent());
+            
+            value = xmlSite.getPropertyValue("xyz.volumes");  
+            assertTrue(!value.isPresent());
+            
+            xmlSite.addProperty("BLAH", "BLAHBLAH");
+            
+            System.out.println(xmlSite.toXml());          
+            
+            value = xmlSite.getPropertyValue("BLAH");  
+            assertTrue(value.isPresent());
+  
+            String xml = xmlSite.toString();
+            
+            AccumuloSiteXml xmlSite2 = new AccumuloSiteXml(new ByteArrayInputStream(xml.getBytes()));
+            xmlSite2.writeSiteFile(new File("./MyNewSiteFile.xml"));
+       
+            
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        
+        /**
+        try {
+            
+            InputStream file = new URL("file:./conf/default-accumulo-site.xml").openStream();
+            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+            DocumentBuilder db = dbf.newDocumentBuilder();
+            Document document = db.parse(file);
+            
+            XPath xPath = XPathFactory.newInstance().newXPath();
+            Node node = (Node) xPath.evaluate("//property/name[. = 'instance.zookeeper.host']", document, XPathConstants.NODE);
+            if (node != null)
+            {
+                node = node.getNextSibling();
+                System.out.println(node + " name " +node.getNodeName() + " text ? "+node.getTextContent());  
+                node.setTextContent("10.0.0.0");
+             }
+             
+            
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+      
+        **/
+  
+
+    }
     @Test
     public void testSettersGetters() {
         

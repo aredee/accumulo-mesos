@@ -1,22 +1,12 @@
 package aredee.mesos.frameworks.accumulo.executor;
 
+import aredee.mesos.frameworks.accumulo.configuration.AccumuloSiteXml;
 import aredee.mesos.frameworks.accumulo.configuration.ConfigNormalizer;
 import aredee.mesos.frameworks.accumulo.configuration.ServiceProcessConfiguration;
 import aredee.mesos.frameworks.accumulo.configuration.ServerType;
 import aredee.mesos.frameworks.accumulo.initialize.AccumuloInitializer;
 import aredee.mesos.frameworks.accumulo.process.AccumuloProcessFactory;
 import aredee.mesos.frameworks.accumulo.Protos.ServerProcessConfiguration;
-
-
-
-
-
-import org.apache.commons.lang3.StringUtils;
-//import org.apache.accumulo.tserver.TabletServer;
-//import org.apache.accumulo.master.Master;
-//import org.apache.accumulo.gc.SimpleGarbageCollector;
-//import org.apache.accumulo.monitor.Monitor;
-//import org.apache.accumulo.tracer.TraceServer;
 import org.apache.mesos.Executor;
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos;
@@ -24,9 +14,7 @@ import org.apache.mesos.SchedulerDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Path;
+import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -42,7 +30,8 @@ public class AccumuloStartExecutor implements Executor {
     private Protos.FrameworkInfo frameworkInfo = null;
     private Protos.SlaveInfo slaveInfo = null;
     private Protos.TaskInfo taskInfo = null;
-
+    private String siteXml;
+    
     /**
      * Invoked once the executor driver has been able to successfully
      * connect with Mesos. In particular, a scheduler can pass some
@@ -114,20 +103,24 @@ public class AccumuloStartExecutor implements Executor {
 
         // If there is another executor then exit?!
         checkForRunningExecutor();
-        ServiceProcessConfiguration process = createProcessorConfig(taskInfo); 
-
-        AccumuloInitializer.writeAccumuloSiteFile(process.getAccumuloDir().getAbsolutePath(), "password", "localhost:2181");
         
-        AccumuloProcessFactory factory = new AccumuloProcessFactory(process);
+        /**
+         * A by product of this is the siteXml will be set
+         */
+        ServiceProcessConfiguration process = createProcessorConfig(taskInfo); 
 
         //TODO get jvmArgs and args from protobuf?
         List<String> jvmArgs = new ArrayList<>();
         String[] args = new String[0];
    
         try {
+            // accumulo-site.xml is sent in from scheduler
+            AccumuloInitializer.writeAccumuloSiteFile(process.getAccumuloDir().getAbsolutePath(),
+                    new AccumuloSiteXml(new ByteArrayInputStream(siteXml.getBytes())));
+            AccumuloProcessFactory factory = new AccumuloProcessFactory(process);          
             this.serverProcess = factory.exec(discoverServerClass(process), jvmArgs, args);
-        } catch (IOException e) {
-            LOGGER.error("Unable to launch server process!");
+        } catch (Exception e) {
+            LOGGER.error("Unable to launch server process!", e);
             System.exit(-1);
         }
 
@@ -262,8 +255,9 @@ public class AccumuloStartExecutor implements Executor {
     private ServiceProcessConfiguration createProcessorConfig(Protos.TaskInfo taskInfo) {
          ServiceProcessConfiguration config = new ServiceProcessConfiguration();
          try {
-             config = new ConfigNormalizer(ServerProcessConfiguration.parseFrom(taskInfo.getData())).getServiceConfiguration();
- 
+            ConfigNormalizer normalizer =  new ConfigNormalizer(ServerProcessConfiguration.parseFrom(taskInfo.getData()));
+            config = normalizer.getServiceConfiguration();
+            siteXml = normalizer.getSiteXml();
          } catch (Exception e) {
             LOGGER.error("Failed to parse AccumuloServer protobuf",e);
             throw new RuntimeException("Failed to parse server configuration: " + e.getMessage());

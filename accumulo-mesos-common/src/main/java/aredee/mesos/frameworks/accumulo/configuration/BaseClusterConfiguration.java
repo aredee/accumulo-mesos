@@ -19,7 +19,8 @@ public class BaseClusterConfiguration implements ClusterConfiguration {
     String accumuloTarBallUri = null;
     String executorJarUri = Defaults.EXECUTOR_JAR;
     String accumuloRootPassword = Defaults.ROOT_PASSWORD;
-
+    String accumuloSiteUri = Defaults.ACCUMULO_SITE_URI;
+    
     double maxExecutorMemory = Defaults.MAX_EXECUTOR_MEM;
     double minExecutorMemory = Defaults.MIN_EXECUTOR_MEM;
     
@@ -163,6 +164,14 @@ public class BaseClusterConfiguration implements ClusterConfiguration {
 
     public String toString() {
         return new GsonBuilder().setPrettyPrinting().create().toJson(this);
+    }
+    
+    public void setAccumuloSiteUri(String uri) {
+        accumuloSiteUri = uri;
+    }
+    
+    public String getAccumuloSiteUri() {
+        return accumuloSiteUri;
     }
     
     protected void setDefaultServers() {

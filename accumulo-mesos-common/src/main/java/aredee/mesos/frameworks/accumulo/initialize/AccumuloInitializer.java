@@ -1,5 +1,6 @@
 package aredee.mesos.frameworks.accumulo.initialize;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -14,6 +15,7 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
 import org.apache.accumulo.server.init.Initialize;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.mesos.state.ZooKeeperState;
 import org.apache.mesos.state.State;
 import org.slf4j.Logger;
@@ -25,6 +27,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 
 import aredee.mesos.frameworks.accumulo.Protos;
 import aredee.mesos.frameworks.accumulo.Protos.ServerProcessConfiguration;
+import aredee.mesos.frameworks.accumulo.configuration.AccumuloSiteXml;
 import aredee.mesos.frameworks.accumulo.configuration.ClusterConfiguration;
 import aredee.mesos.frameworks.accumulo.configuration.Environment;
 import aredee.mesos.frameworks.accumulo.configuration.ConfigNormalizer;
@@ -44,6 +47,7 @@ public class AccumuloInitializer {
     private FrameworkStateProtobufPersister stateProxy;
     private ServiceProcessConfiguration processConfiguration;
     private ClusterConfiguration config;
+    private AccumuloSiteXml siteXml;
     
    // private static HashMap<String, String> properties;
     
@@ -89,8 +93,9 @@ public class AccumuloInitializer {
      * 
      * @param config
      * @return accumulo instance name
+     * @throws Exception 
      */
-    public String initializeAccumuloInstance(ClusterConfiguration config){
+    public String initializeAccumuloInstance(ClusterConfiguration config) throws Exception{
         
         setClusterConfiguration(config);
         
@@ -101,17 +106,20 @@ public class AccumuloInitializer {
         
         String accumuloHome = processConfiguration.getAccumuloDir().getAbsolutePath();
         
-        File accumuloSiteFile = writeAccumuloSiteFile(accumuloHome, config.getAccumuloRootPassword(), config.getZkServers());
-
-        LOGGER.info("New site file at " + accumuloSiteFile.getAbsolutePath());
+        siteXml = createAccumuloSiteXml(config.getAccumuloSiteUri(),
+                                        config.getAccumuloRootPassword(),
+                                        config.getZkServers());
         
+        writeAccumuloSiteFile(accumuloHome, siteXml);
+
         String accumuloInstanceName = config.getAccumuloInstanceName();
         LinkedList<String> initArgs  = new LinkedList<>();
         initArgs.add("--instance-name");
         initArgs.add(accumuloInstanceName);
         initArgs.add("--password");
         initArgs.add(config.getAccumuloRootPassword());
-        
+        initArgs.add("--clear-instance-name");
+       
         AccumuloProcessFactory processFactory = new AccumuloProcessFactory(processConfiguration);
        
         Process initProcess = null;
@@ -126,51 +134,43 @@ public class AccumuloInitializer {
         return accumuloInstanceName;
     }
     
-    public static File writeAccumuloSiteFile(String accumuloHomeDir, String secret, String zooHosts) {
-        File accumuloSiteFile = null;
-
+    public AccumuloSiteXml getSiteXml() {
+        return siteXml;
+    }
+    
+    public static AccumuloSiteXml createAccumuloSiteXml(String xml) throws Exception {
+        return new AccumuloSiteXml(new ByteArrayInputStream(xml.getBytes()));
+    }
+    
+    public static AccumuloSiteXml createAccumuloSiteXml(String siteUri, String password, String zooKeepers) throws Exception {
+       AccumuloSiteXml siteXml;
+        
+        if (!StringUtils.isEmpty(siteUri)) {
+            siteXml = new AccumuloSiteXml(siteUri);
+        } else {
+            siteXml = new AccumuloSiteXml();
+        }
+        if (!StringUtils.isEmpty(password)) {
+            siteXml.setPassword(password);
+        }
+        if (!StringUtils.isEmpty(zooKeepers)) {
+            siteXml.setZookeeper(zooKeepers);
+        }
+        return siteXml;
+        
+    }
+    public static void writeAccumuloSiteFile(String accumuloHomeDir, AccumuloSiteXml siteXml) {       
         LOGGER.info("ACCUMULO HOME? " + accumuloHomeDir);
         try {
-
-            DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
-
-            Document doc = docBuilder.newDocument();
-            Element rootElement = doc.createElement("configuration");
-            doc.appendChild(rootElement);
-            
-            addDocProperty("instance.secret",secret,doc,rootElement);
-            addDocProperty("instance.zookeeper.host",zooHosts,doc,rootElement);
-            addDocProperty("general.classpaths",getGeneralClasspathsLiteral(),doc,rootElement);
-
-            TransformerFactory transformerFactory = TransformerFactory.newInstance();
-            Transformer transformer = transformerFactory.newTransformer();
-            DOMSource source = new DOMSource(doc);
-
-            accumuloSiteFile = new File(accumuloHomeDir + File.separator +
+ 
+            File accumuloSiteFile = new File(accumuloHomeDir + File.separator +
                     "conf" + File.separator + "accumulo-site.xml");
-            StreamResult result = new StreamResult(accumuloSiteFile);
-
-            transformer.transform(source, result);
-
+ 
+            siteXml.writeSiteFile(accumuloSiteFile);
+            
         } catch (Exception e) {
             logErrorAndDie("Error Creating accumulo-site.xml\n",e);
         } 
-
-        return accumuloSiteFile;      
-    }
-    
-    private static void addDocProperty(String name, String value, Document doc, Element rootElement) {
-        Element propertyElement = doc.createElement("property");
-        rootElement.appendChild(propertyElement);
-
-        Element nameElement = doc.createElement("name");
-        nameElement.appendChild(doc.createTextNode(name));
-        propertyElement.appendChild(nameElement);
-
-        Element valueElement = doc.createElement("value");
-        valueElement.appendChild(doc.createTextNode(value));
-        propertyElement.appendChild(valueElement);       
     }
     
     private void initializeIfNoInstance(ClusterConfiguration config) throws Exception {
@@ -195,7 +195,7 @@ public class AccumuloInitializer {
         initializeAccumulo(config);
     }
     
-    private void initializeAccumulo(ClusterConfiguration config) {
+    private void initializeAccumulo(ClusterConfiguration config) throws Exception {
         if( exists ){
             LOGGER.info("Found Existing Accumulo Instance");
             try {
@@ -221,30 +221,7 @@ public class AccumuloInitializer {
         System.exit(-1);
     }
 
-    private static final String getGeneralClasspathsLiteral(){
-        return (new StringBuilder())
-                .append("\n$ACCUMULO_HOME/lib/accumulo-server.jar,\n")
-                .append("$ACCUMULO_HOME/lib/accumulo-core.jar,\n")
-                .append("$ACCUMULO_HOME/lib/accumulo-start.jar,\n")
-                .append("$ACCUMULO_HOME/lib/accumulo-fate.jar,\n")
-                .append("$ACCUMULO_HOME/lib/accumulo-proxy.jar,\n")
-                .append("$ACCUMULO_HOME/lib/[^.].*.jar,\n")
-                .append("$ZOOKEEPER_HOME/zookeeper[^.].*.jar,\n")
-                .append("$HADOOP_CONF_DIR,\n")
-                .append("$HADOOP_PREFIX/share/hadoop/common/[^.].*.jar,\n")
-                .append("$HADOOP_PREFIX/share/hadoop/common/lib/(?!slf4j)[^.].*.jar,\n")
-                .append("$HADOOP_PREFIX/share/hadoop/hdfs/[^.].*.jar,\n")
-                .append("$HADOOP_PREFIX/share/hadoop/mapreduce/[^.].*.jar,\n")
-                .append("$HADOOP_PREFIX/share/hadoop/yarn/[^.].*.jar,\n")
-                .append("/usr/lib/hadoop/[^.].*.jar,\n")
-                .append("/usr/lib/hadoop/lib/[^.].*.jar,\n")
-                .append("/usr/lib/hadoop-hdfs/[^.].*.jar,\n")
-                .append("/usr/lib/hadoop-mapreduce/[^.].*.jar,\n")
-                .append("/usr/lib/hadoop-yarn/[^.].*.jar,\n")
-                .append("$HADOOP_PREFIX/[^.].*.jar,\n")
-                .append("$HADOOP_PREFIX/lib/(?!slf4j)[^.].*.jar\n")
-                .toString();
-    }
+  
     
     static {
         /**
