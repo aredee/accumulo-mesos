@@ -1,4 +1,5 @@
 {
+  "accumuloVersion": "1.7.0",
   "bindAddress": "0.0.0.0",
   "httpPort": 18120,
   "mesosMaster": "10.0.2.15:5050",

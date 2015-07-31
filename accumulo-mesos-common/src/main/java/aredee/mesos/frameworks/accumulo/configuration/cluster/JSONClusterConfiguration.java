@@ -2,7 +2,9 @@ package aredee.mesos.frameworks.accumulo.configuration.cluster;
 
 import aredee.mesos.frameworks.accumulo.configuration.process.ProcessConfiguration;
 import aredee.mesos.frameworks.accumulo.configuration.ServerType;
+
 import com.google.gson.Gson;
+
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,11 +29,12 @@ public class JSONClusterConfiguration implements ClusterConfiguration {
             jsonReader = new FileReader(new File(fileLocation));
             
             JsonBaseClusterConfiguration json = new Gson().fromJson(jsonReader, JsonBaseClusterConfiguration.class);
-            jsonAdaptor = (BaseClusterConfiguration)json;
+            jsonAdaptor = new BaseClusterConfiguration(json);
             
             // TODO verify JSON contains everything needed to get the job done
         } catch(Exception e) {
             LOGGER.error("Failed to find input json configuration: " + fileLocation, e);
+            throw new RuntimeException("Failed to find or parse input json config", e);
         } finally {
             IOUtils.closeQuietly(jsonReader);
         }
@@ -156,5 +159,18 @@ public class JSONClusterConfiguration implements ClusterConfiguration {
     public int getMinTservers() {
         return jsonAdaptor.getMinTservers();
     }
-     
+
+    public void setAccumuloSiteUri(String uri) {
+        jsonAdaptor.setAccumuloSiteUri(uri);
+    }
+
+    public String getAccumuloSiteUri() {
+        return jsonAdaptor.getAccumuloSiteUri();
+    }
+    public void setAccumuloVersion(String version) {
+        jsonAdaptor.setAccumuloVersion(version);
+    }
+    public String getAccumuloVersion() {
+        return jsonAdaptor.getAccumuloVersion();
+    }
 }

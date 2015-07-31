@@ -3,7 +3,6 @@ package aredee.mesos.frameworks.accumulo.configuration.cluster;
 import java.util.HashMap;
 import java.util.Map;
 
-import aredee.mesos.frameworks.accumulo.configuration.Defaults;
 import aredee.mesos.frameworks.accumulo.configuration.process.BaseProcessConfiguration;
 import aredee.mesos.frameworks.accumulo.configuration.process.ProcessConfiguration;
 import aredee.mesos.frameworks.accumulo.configuration.ServerType;
@@ -18,7 +17,22 @@ public class BaseClusterConfiguration extends JsonBaseClusterConfiguration imple
     public BaseClusterConfiguration() {
         super();    
     }
-  
+    public BaseClusterConfiguration(JsonBaseClusterConfiguration json) {
+        this.setAccumuloInstanceName(json.getAccumuloInstanceName());
+        this.setAccumuloRootPassword(json.getAccumuloRootPassword());
+        this.setAccumuloSiteUri(json.getAccumuloSiteUri());
+        this.setAccumuloVersion(json.getAccumuloVersion());
+        this.setBindAddress(json.getBindAddress());
+        this.setServers(json.getServers());
+        this.setFrameworkName(json.getFrameworkName());
+        this.setHttpPort(json.getHttpPort());
+        this.setMaxExecutorMemory(json.getMaxExecutorMemory());
+        this.setMesosMaster(json.getMesosMaster());
+        this.setMinExecutorMemory(json.getMinExecutorMemory());
+        this.setMinTservers(json.getMinTservers());
+        this.setTarballUri(json.getTarballUri());
+        this.setZkServers(json.getZkServers());
+    }
     @SuppressWarnings("unchecked")
     @Override
     public void setProcessorConfigurations(Map<ServerType, ProcessConfiguration> processors) {
