@@ -50,6 +50,8 @@ public final class Defaults {
     public final static double MAX_EXECUTOR_MEM = 128;
     public final static double MIN_EXECUTOR_MEM = 16;
     
+    // Default location of the accumulo-site.xml file
+    public final static String ACCUMULO_SITE_URI = "file:./conf/default-accumulo-site.xml";
     
     
 }

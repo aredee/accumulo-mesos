@@ -29,6 +29,10 @@ public class BaseProcessConfiguration implements ProcessConfiguration {
         this.type = type;
     }
     
+    public BaseProcessConfiguration(ProcessConfiguration process) {
+        this(process.getMinMemory(),process.getMaxMemory(),process.getCpus(),process.getType());
+    }
+
     @Override
     public void setType(String type) {
         this.type = type;
