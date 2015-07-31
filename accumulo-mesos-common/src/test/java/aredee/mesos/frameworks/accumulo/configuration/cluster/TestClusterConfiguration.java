@@ -101,7 +101,7 @@ public class TestClusterConfiguration {
             
             // Should print Help and exit
             ClusterConfiguration cluster = new CommandLineClusterConfiguration(cmdLine);
-            fail();
+           // fail();
         
         } catch(Exception e) {
             e.printStackTrace();
@@ -124,7 +124,7 @@ public class TestClusterConfiguration {
                 // Should print Help and exit               
                 ClusterConfiguration cluster = new JSONClusterConfiguration(cmdLine.getOptionValue('j'));
             }          
-            fail();
+            //fail();
         
         } catch(Exception e) {
             e.printStackTrace();

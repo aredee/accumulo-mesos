@@ -24,8 +24,6 @@ public class JsonBaseClusterConfiguration {
     int minTservers = Defaults.MIN_TSERVERS;
 
     String instanceName = "default-instance";
-    //String accumuloTarBallUri = null;
-    //String executorJarUri = Defaults.EXECUTOR_JAR;
     String tarballUri;
     String accumuloRootPassword = Defaults.ROOT_PASSWORD;
 
@@ -34,9 +32,19 @@ public class JsonBaseClusterConfiguration {
     
     Map<ServerType, BaseProcessConfiguration> servers;
     
+    String accumuloSiteUri = Defaults.ACCUMULO_SITE_URI;
+    String accumuloVersion;
     
     public JsonBaseClusterConfiguration() {
         setDefaultServers();    
+    }
+    
+    public void setAccumuloVersion(String version) {
+        accumuloVersion = version;
+    }
+    
+    public String getAccumuloVersion() {
+        return accumuloVersion;
     }
     
     public double getMaxExecutorMemory() {
@@ -135,6 +143,14 @@ public class JsonBaseClusterConfiguration {
         this.accumuloRootPassword = password;
     }
 
+    public void setAccumuloSiteUri(String uri) {
+        accumuloSiteUri = uri;
+    }
+    
+    public String getAccumuloSiteUri() {
+        return accumuloSiteUri;
+    }
+    
     public String toString() {
         return new GsonBuilder().setPrettyPrinting().create().toJson(this);
     }

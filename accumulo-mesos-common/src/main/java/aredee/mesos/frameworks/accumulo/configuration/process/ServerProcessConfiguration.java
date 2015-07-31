@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 
 import aredee.mesos.frameworks.accumulo.configuration.ServerType;
-import aredee.mesos.frameworks.accumulo.configuration.process.ProcessConfiguration;
 import com.google.gson.Gson;
 
 

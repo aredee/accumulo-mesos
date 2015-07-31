@@ -1,4 +1,5 @@
 {
+  "accumuloVersion": "1.7.0",
   "bindAddress": "10.141.141.20",
   "httpPort": 18120,
   "mesosMaster": "10.141.141.20:5050",
@@ -6,8 +7,7 @@
   "zkServers": "10.141.141.20:2181",
   "minTservers": 1,
   "instanceName": "default-instance",
-  "accumuloTarBallUri": "file:///usr/local/accumulo/AccumuloDist-1.7.0.tgz",
-  "executorJarUri": "/usr/local/accumulo/accumulo-mesos-executor-0.1.0-SNAPSHOT.jar",
+  "tarBallUri": "/vagrant/accumulo-mesos-dist/target/accumulo-mesos-dist-0.1.0-SNAPSHOT.tar.gz",
   "accumuloRootPassword": "password",
   "maxExecutorMemory": 512.0,
   "minExecutorMemory": 128.0,
