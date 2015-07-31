@@ -23,10 +23,12 @@ public class JSONClusterConfiguration implements ClusterConfiguration {
     public JSONClusterConfiguration(String fileLocation) {
 
         FileReader jsonReader = null;
-        ClusterConfiguration jsonAdaptor = null;
         try {
             jsonReader = new FileReader(new File(fileLocation));
-            jsonAdaptor = new Gson().fromJson(jsonReader, BaseClusterConfiguration.class);
+            
+            JsonBaseClusterConfiguration json = new Gson().fromJson(jsonReader, JsonBaseClusterConfiguration.class);
+            jsonAdaptor = (BaseClusterConfiguration)json;
+            
             // TODO verify JSON contains everything needed to get the job done
         } catch(Exception e) {
             LOGGER.error("Failed to find input json configuration: " + fileLocation, e);
@@ -154,4 +156,5 @@ public class JSONClusterConfiguration implements ClusterConfiguration {
     public int getMinTservers() {
         return jsonAdaptor.getMinTservers();
     }
+     
 }
