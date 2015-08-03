@@ -5,15 +5,27 @@ import aredee.mesos.frameworks.accumulo.scheduler.launcher.Launcher;
 import aredee.mesos.frameworks.accumulo.scheduler.matcher.Match;
 import aredee.mesos.frameworks.accumulo.scheduler.matcher.Matcher;
 import aredee.mesos.frameworks.accumulo.scheduler.matcher.MinCpuMinRamFIFOMatcher;
-import aredee.mesos.frameworks.accumulo.scheduler.server.*;
+import aredee.mesos.frameworks.accumulo.scheduler.server.AccumuloServer;
+import aredee.mesos.frameworks.accumulo.scheduler.server.GarbageCollector;
+import aredee.mesos.frameworks.accumulo.scheduler.server.Master;
+import aredee.mesos.frameworks.accumulo.scheduler.server.Monitor;
+import aredee.mesos.frameworks.accumulo.scheduler.server.ServerUtils;
+import aredee.mesos.frameworks.accumulo.scheduler.server.TabletServer;
+import aredee.mesos.frameworks.accumulo.scheduler.server.Tracer;
+
 import org.apache.mesos.Protos;
 import org.apache.mesos.SchedulerDriver;
 import org.apache.mesos.state.State;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import aredee.mesos.frameworks.accumulo.configuration.ClusterConfiguration;
+
+import aredee.mesos.frameworks.accumulo.configuration.cluster.ClusterConfiguration;
+import aredee.mesos.frameworks.accumulo.configuration.process.ProcessConfiguration;
+import aredee.mesos.frameworks.accumulo.configuration.ServerType;
+import aredee.mesos.frameworks.accumulo.initialize.AccumuloInitializer;
 
 import java.util.*;
+import java.util.Map.Entry;
 
 public class Cluster {
     private static final Logger LOGGER = LoggerFactory.getLogger(Cluster.class);
@@ -22,35 +34,44 @@ public class Cluster {
 
     private String frameworkId;
     private State state;
-
+    private AccumuloInitializer initializer;
+    
     private Master master = null;
     private GarbageCollector gc = null;
     private Monitor monitor = null;
-    // TODO tracer?
-    private Set<AccumuloServer> tservers = new HashSet<>();
+    private Tracer tracer = null;
+    private Set<AccumuloServer> tservers = new HashSet<AccumuloServer>();
 
-    private Set<Protos.TaskStatus> runningServers = new HashSet<>();
-    private Set<AccumuloServer> serversToLaunch = new HashSet<>();
+    private Set<Protos.TaskStatus> runningServers = new HashSet<Protos.TaskStatus>();
+    private Set<AccumuloServer> serversToLaunch = new HashSet<AccumuloServer>();
+    private Map<ServerType, ProcessConfiguration> clusterServers;
 
     private Matcher matcher;
     private Launcher launcher;
 
-    public Cluster(final State state, final ClusterConfiguration config){
-        this.state = state;
-        this.config = config;
-        this.launcher = new AccumuloStartExecutorLauncher(config);
+    @SuppressWarnings("unchecked")
+    public Cluster(AccumuloInitializer initializer){
+        this.initializer = initializer;
+        this.state = initializer.getFrameworkState();
+        this.config = initializer.getClusterConfiguration();
+        this.launcher = new AccumuloStartExecutorLauncher(initializer);
         this.matcher = new MinCpuMinRamFIFOMatcher(config);
-
-        // Launch servers
-        // TODO need to populate this from Cluster state for recovery purposes
-        this.serversToLaunch.add(ServerUtils.newMaster());
-        this.serversToLaunch.add(ServerUtils.newGarbageCollector());
-        this.serversToLaunch.add(ServerUtils.newMonitor());
-        for(int ii = 0; ii < config.getMinTservers(); ii++) {
-            this.serversToLaunch.add(ServerUtils.newTabletServer());
+        
+        clusterServers = config.getProcessorConfigurations();
+           
+        LOGGER.info("Servers in the cluster? " + clusterServers);
+        
+        // Take the cluster configuration from the input cluster configuration.
+        for(Entry<ServerType, ProcessConfiguration> entry : clusterServers.entrySet()) {
+            if (entry.getKey() == ServerType.TABLET_SERVER) {
+                for(int ii = 0; ii < config.getMinTservers(); ii++) {
+                    ServerUtils.addServer(serversToLaunch, entry.getValue());              
+                }
+            } else {
+                ServerUtils.addServer(serversToLaunch, entry.getValue());
+            }
         }
-
-    }
+     }
 
     public void setFrameworkId(String fid){
         this.frameworkId = fid;
@@ -58,35 +79,31 @@ public class Cluster {
         //TODO persist configuration
     }
 
+    @SuppressWarnings("unchecked")
     public void handleOffers(SchedulerDriver driver, List<Protos.Offer> offers){
 
-        LOGGER.info("Mesos Accumulo Cluster handling offers");
+        LOGGER.info("Mesos Accumulo Cluster handling offers: for servers " + serversToLaunch);
 
         List<Match> matchedServers = matcher.matchOffers(serversToLaunch, offers);
         LOGGER.info("Found {} matches for servers from {} offers", matchedServers.size(), offers.size());
 
-        List<Match> unlaunchedServers = new ArrayList<>();
-        List<AccumuloServer> launchedServers = new ArrayList<>();
+         List<AccumuloServer> launchedServers = new ArrayList<>();
+         LOGGER.info("serversToLaunch before launching? " + serversToLaunch);
 
+        // Launch all the matched servers.
         for (Match match: matchedServers){
-            if( match.hasServer() && match.hasOffer() ){
-                LOGGER.info("Launching Server: {} on {}", match.getServer().getType().getName(), match.getOffer().getSlaveId() );
-                Protos.TaskInfo taskInfo = launcher.launch(driver, match);
-                LOGGER.info("Created Task {} on {}", taskInfo.getTaskId(), taskInfo.getSlaveId());
-                launchedServers.add(match.getServer());
-            } else {
-                unlaunchedServers.add(match);
-            }
+             
+            LOGGER.info("Launching Server: {} on {}", match.getServer().getType().getName(), 
+                    match.getOffer().getSlaveId() );
+            
+            Protos.TaskInfo taskInfo = launcher.launch(driver, match);
+            
+            LOGGER.info("Created Task {} on {}", taskInfo.getTaskId(), taskInfo.getSlaveId());
+            
+            launchedServers.add(match.getServer());
+            serversToLaunch.remove(match.getServer());
         }
-        for( AccumuloServer server: launchedServers) {
-            serversToLaunch.remove(server);
-        }
-
-        for( Match match: unlaunchedServers) {
-            serversToLaunch.add(match.getServer());
-        }
-
-        LOGGER.info("Still need to launch {} servers", serversToLaunch.size());
+        LOGGER.info("serversToLaunch after launching? " + serversToLaunch);
 
         declineUnmatchedOffers(driver, offers, matchedServers);
         // TODO call restore here?
@@ -120,14 +137,16 @@ public class Cluster {
             String slaveId = status.getSlaveId().getValue();
             String taskId = status.getTaskId().getValue();
 
-            if( ServerUtils.isMaster(taskId)){
-                master = new Master(slaveId, taskId);
-            } else if( ServerUtils.isTabletServer(taskId)) {
-                tservers.add(new TabletServer(slaveId, taskId));
-            } else if( ServerUtils.isGarbageCollector(taskId)) {
-                gc = new GarbageCollector(slaveId, taskId);
-            } else if( ServerUtils.isMonitor(taskId)){
-                monitor = new Monitor(slaveId, taskId);
+            if( Master.isMaster(taskId)){
+                master = (Master)ServerUtils.newServer(clusterServers.get(ServerType.MASTER), taskId, slaveId);
+            } else if( TabletServer.isTabletServer(taskId)) {
+                tservers.add((TabletServer)ServerUtils.newServer(clusterServers.get(ServerType.TABLET_SERVER), taskId, slaveId));
+            } else if( GarbageCollector.isGarbageCollector(taskId)) {
+                gc = (GarbageCollector)ServerUtils.newServer(clusterServers.get(ServerType.GARBAGE_COLLECTOR), taskId, slaveId);
+            } else if(Monitor.isMonitor(taskId)){
+                monitor = (Monitor)ServerUtils.newServer(clusterServers.get(ServerType.MONITOR), taskId, slaveId);
+            } else if (Tracer.isTacer(taskId)) {
+                tracer = (Tracer)ServerUtils.newServer(clusterServers.get(ServerType.TRACER), taskId, slaveId);
             }
         }
 
@@ -143,7 +162,7 @@ public class Cluster {
 
         String slaveId = status.getSlaveId().getValue();
         String taskId = status.getTaskId().getValue();
-        LOGGER.info("Task Status Update: Slave: {} Task: {}", slaveId, taskId);
+        LOGGER.info("Task Status Update: Status: {} Slave: {} Task: {}", status.getState(), slaveId, taskId);
 
         switch (status.getState()){
             case TASK_RUNNING:
@@ -155,17 +174,18 @@ public class Cluster {
             case TASK_LOST:
                 runningServers.remove(status);
                 // re-queue tasks when servers are lost.
-                if( ServerUtils.isMaster(taskId)){
-                    serversToLaunch.add(ServerUtils.newMaster());
+                if( Master.isMaster(taskId)){
+                    // Don't save the slave id, it maybe re-assigned to a new slave 
+                    serversToLaunch.add(ServerUtils.newServer(clusterServers.get(ServerType.MASTER), taskId, null));
                     clearMaster();
-                } else if (ServerUtils.isTabletServer(taskId)) {
+                } else if (TabletServer.isTabletServer(taskId)) {
                     tservers.remove(new TabletServer(taskId, slaveId));
-                    serversToLaunch.add(ServerUtils.newTabletServer());
-                } else if (ServerUtils.isMonitor(taskId)) {
-                    serversToLaunch.add(ServerUtils.newMonitor());
+                    serversToLaunch.add(ServerUtils.newServer(clusterServers.get(ServerType.TABLET_SERVER), taskId, null));
+                } else if (Monitor.isMonitor(taskId)) {
+                    serversToLaunch.add(ServerUtils.newServer(clusterServers.get(ServerType.MONITOR), taskId, null));
                     clearMonitor();
-                } else if (ServerUtils.isGarbageCollector(taskId)) {
-                    serversToLaunch.add(ServerUtils.newGarbageCollector());
+                } else if (GarbageCollector.isGarbageCollector(taskId)) {
+                    serversToLaunch.add(ServerUtils.newServer(clusterServers.get(ServerType.GARBAGE_COLLECTOR), taskId, null));
                     clearGC();
                 }
                 break;

@@ -64,7 +64,7 @@
             <groupId>org.apache.mesos</groupId>
             <artifactId>mesos</artifactId>
         </dependency>
-        <dependency>
+	<dependency>
             <groupId>org.apache.accumulo</groupId>
             <artifactId>accumulo-server-base</artifactId>
         </dependency>

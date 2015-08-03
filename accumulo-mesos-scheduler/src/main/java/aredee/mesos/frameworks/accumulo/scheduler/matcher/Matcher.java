@@ -1,6 +1,7 @@
 package aredee.mesos.frameworks.accumulo.scheduler.matcher;
 
 import aredee.mesos.frameworks.accumulo.scheduler.server.AccumuloServer;
+
 import org.apache.mesos.Protos;
 
 import java.util.List;
