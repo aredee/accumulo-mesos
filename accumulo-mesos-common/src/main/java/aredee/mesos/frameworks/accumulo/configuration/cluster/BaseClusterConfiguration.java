@@ -1,5 +1,6 @@
 package aredee.mesos.frameworks.accumulo.configuration.cluster;
 
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -28,7 +29,7 @@ public class BaseClusterConfiguration implements ClusterConfiguration {
     double maxExecutorMemory = Defaults.MAX_EXECUTOR_MEM;
     double minExecutorMemory = Defaults.MIN_EXECUTOR_MEM;
     
-    Map<ServerType, ProcessConfiguration> servers;
+    EnumMap<ServerType, ProcessConfiguration> servers = new EnumMap(ServerType.class);
     
     
     public BaseClusterConfiguration() {
