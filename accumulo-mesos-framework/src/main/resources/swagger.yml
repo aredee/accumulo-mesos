@@ -1,0 +1,345 @@
+# Example YAML to get you started quickly.
+# Be aware that YAML has indentation based scoping.
+# Code completion support is available so start typing for available options.
+swagger: '2.0'
+
+# This is your document metadata
+info:
+  version: "0.1.0-SNAPSHOT"
+  title: accumulo-mesos API
+  description: API that the accumulo-mesos framework will serve
+  
+schemes: [http]
+
+consumes: [application/json]
+produces: [application/json]
+
+
+basePath: /v0.1.0-SNAPSHOT
+
+# Describe your paths here
+paths:
+  # This is a path endpoint. Change it.
+  /:
+    # This is a HTTP operation
+    get:
+      # Describe this verb here. Note: you can use markdown
+      description: |
+        Gets `Person` objects.
+        Optional query param of **size** determines
+        size of returned array
+      # This is array of GET operation parameters:
+      parameters:
+        # An example parameter that is in query and is required
+        -
+          name: size
+          in: query
+          description: Size of array
+          required: true
+          type: number
+          format: double
+      # Expected responses for this operation:
+      responses:
+        # Response code
+        200:
+          description: Successful response
+          # A schema describing your response object.
+          # Use JSON Schema format
+          schema:
+            title: ArrayOfPersons
+            type: array
+            items:
+              title: Person
+              type: object
+              properties:
+                name:
+                  type: string
+                single:
+                  type: boolean
+                  
+# Data objects used in multiple places.
+definitions:
+  Framework:
+    type: object
+    properties:
+      bindAddress:
+        type: string
+      httpPort:
+        type: integer
+      mesosMaster:
+        type: string
+      frameworkName:
+        type: string
+      executorMemory:
+        type: integer
+      name:
+        type: string
+      id: 
+        type: string
+      clusters:
+        type: array
+        items:
+          $ref: '#/definitions/Cluster'
+  Cluster:
+    type: object
+    properties:
+      minTservers:
+        type: integer
+      numTservers:
+        type: integer
+      tarballUri:
+        type: string
+      accumuloRootPassword:
+        type: string
+      servers:
+        type: array
+        items:
+          type: object
+          properties:
+            count:
+              type: integer
+            profile:
+              $ref: '#/definitions/ServerProfile'
+      name:
+        type: string
+      id:
+        type: string
+      description:
+        type: string
+      tarballURI:
+        type: string
+      accumulo:
+        type: object
+        $ref: '#/definitions/Accumulo'
+  Accumulo:
+    type: object
+    properties:
+      instance:
+        type: string
+      rootUser:
+        type: string
+      rootPassword:
+        type: string
+      initLocation:
+        type: string
+        description: |
+          URI of the rfiles for this instance
+      zkServers:
+        type: string
+  ServerProfile:
+    type: object
+    properties:
+      name:
+        type: string
+      description:
+        type: string
+      type:
+        type: string
+        enum: ["master", "tserver", "gc", "tracer", "monitor"]
+      memory:
+        type: integer
+      cpus:
+        type: number
+      launcher:
+        type: string
+        description: |
+          Fully qualified class name of launcher class to launch with.
+      user:
+        type: string
+  Executor:
+    type: object
+    properties:
+      executorID:
+        type: string
+      frameworkID:
+        type: string
+      name:
+        type: string
+  Slave:
+    type: object
+    properties:
+      hostname:
+        type: string
+      ID:
+        type: string
+  Task:
+    type: object
+    properties:
+      executor:
+        $ref : '#/definitions/Executor'
+      slave:
+        $ref : '#/definitions/Slave'
+#
+#
+#
+# Example YAML to get you started quickly.
+# Be aware that YAML has indentation based scoping.
+# Code completion support is available so start typing for available options.
+swagger: '2.0'
+
+# This is your document metadata
+info:
+  version: "0.1.0-SNAPSHOT"
+  title: accumulo-mesos API
+  description: API that the accumulo-mesos framework will serve
+  
+schemes: [http]
+
+consumes: [application/json]
+produces: [application/json]
+
+basePath: /v0.1.0-SNAPSHOT
+
+# Describe your paths here
+paths:
+  # This is a path endpoint. Change it.
+  /:
+    # This is a HTTP operation
+    get:
+      # Describe this verb here. Note: you can use markdown
+      description: |
+        Gets `Person` objects.
+        Optional query param of **size** determines
+        size of returned array
+      # This is array of GET operation parameters:
+      parameters:
+        # An example parameter that is in query and is required
+        -
+          name: size
+          in: query
+          description: Size of array
+          required: true
+          type: number
+          format: double
+      # Expected responses for this operation:
+      responses:
+        # Response code
+        200:
+          description: Successful response
+          # A schema describing your response object.
+          # Use JSON Schema format
+          schema:
+            title: ArrayOfPersons
+            type: array
+            items:
+              title: Person
+              type: object
+              properties:
+                name:
+                  type: string
+                single:
+                  type: boolean
+                  
+# Data objects used in multiple places.
+definitions:
+  Framework:
+    type: object
+    properties:
+      bindAddress:
+        type: string
+      httpPort:
+        type: integer
+      mesosMaster:
+        type: string
+      frameworkName:
+        type: string
+      executorMemory:
+        type: integer
+      name:
+        type: string
+      id: 
+        type: string
+      clusters:
+        type: array
+        items:
+          $ref: '#/definitions/Cluster'
+  Cluster:
+    type: object
+    properties:
+      minTservers:
+        type: integer
+      numTservers:
+        type: integer
+      tarballUri:
+        type: string
+      accumuloRootPassword:
+        type: string
+      servers:
+        type: array
+        items:
+          type: object
+          properties:
+            count:
+              type: integer
+            profile:
+              $ref: '#/definitions/ServerProfile'
+      name:
+        type: string
+      id:
+        type: string
+      description:
+        type: string
+      tarballURI:
+        type: string
+      accumulo:
+        type: object
+        $ref: '#/definitions/Accumulo'
+  Accumulo:
+    type: object
+    properties:
+      instance:
+        type: string
+      rootUser:
+        type: string
+      rootPassword:
+        type: string
+      initLocation:
+        type: string
+        description: |
+          URI of the rfiles for this instance
+      zkServers:
+        type: string
+  ServerProfile:
+    type: object
+    properties:
+      name:
+        type: string
+      description:
+        type: string
+      type:
+        type: string
+        enum: ["master", "tserver", "gc", "tracer", "monitor"]
+      memory:
+        type: integer
+      cpus:
+        type: number
+      launcher:
+        type: string
+        description: |
+          Fully qualified class name of launcher class to launch with.
+      user:
+        type: string
+  Executor:
+    type: object
+    properties:
+      executorID:
+        type: string
+      frameworkID:
+        type: string
+      name:
+        type: string
+  Slave:
+    type: object
+    properties:
+      hostname:
+        type: string
+      ID:
+        type: string
+  Task:
+    type: object
+    properties:
+      executor:
+        $ref : '#/definitions/Executor'
+      slave:
+        $ref : '#/definitions/Slave'
+          
