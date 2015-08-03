@@ -1,7 +1,7 @@
 package aredee.mesos.frameworks.accumulo.scheduler.matcher;
 
-import aredee.mesos.frameworks.accumulo.configuration.AbstractClusterConfiguration;
-import aredee.mesos.frameworks.accumulo.configuration.ClusterConfiguration;
+import aredee.mesos.frameworks.accumulo.configuration.cluster.BaseClusterConfiguration;
+import aredee.mesos.frameworks.accumulo.configuration.cluster.ClusterConfiguration;
 import aredee.mesos.frameworks.accumulo.configuration.ServerType;
 import aredee.mesos.frameworks.accumulo.scheduler.server.AccumuloServer;
 import aredee.mesos.frameworks.accumulo.scheduler.server.ServerUtils;
@@ -23,11 +23,9 @@ public class MinCpuMinRamFIFOMatcherTest {
 
     private Matcher matcher = null;
 
-    private static class MatcherTestClusterConfiguration extends AbstractClusterConfiguration {
+    private static class MatcherTestClusterConfiguration extends BaseClusterConfiguration {
 
     }
-
-
 
     private static class TestParameter {
 
@@ -44,12 +42,12 @@ public class MinCpuMinRamFIFOMatcherTest {
         }
 
         public TestParameter addMaster(){
-            this.servers.add(ServerUtils.newMaster());
+            this.servers.add(ServerUtils.newServer(ServerType.MASTER));
             return this;
         }
 
         public TestParameter addTabletServer(){
-            this.servers.add(ServerUtils.newTabletServer());
+            this.servers.add(ServerUtils.newServer(ServerType.TABLET_SERVER));
             return this;
         }
 
@@ -65,16 +63,15 @@ public class MinCpuMinRamFIFOMatcherTest {
             return this;
         }
 
-
-
     }
 
     private static final TestParameter param0 =
             new TestParameter(new MatcherTestClusterConfiguration());
 
     static {
+
         param0.config.setMinTservers(3);
-        param0.config.setMinTserverCpus(2);
+        param0.config.setTserverCpus(2);
         param0.config.setMinTserverMem(1024);
         param0.config.setMinMasterCpus(2);
         param0.config.setMinMasterMem(1024);
@@ -89,7 +86,7 @@ public class MinCpuMinRamFIFOMatcherTest {
 
         // TODO create class to package config, servers, offers, matches
         matches0 = Arrays.asList(new Match[] {
-           new Match(Servers);
+           new Match(Servers)
         });
 
     }
