@@ -54,7 +54,7 @@ public class Cluster {
         this.initializer = initializer;
         this.state = initializer.getFrameworkState();
         this.config = initializer.getClusterConfiguration();
-        this.launcher = new AccumuloStartExecutorLauncher(initializer.getProcessConfiguration(), config);
+        this.launcher = new AccumuloStartExecutorLauncher(initializer);
         this.matcher = new MinCpuMinRamFIFOMatcher(config);
         
         clusterServers = config.getProcessorConfigurations();

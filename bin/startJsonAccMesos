@@ -1,0 +1,18 @@
+#!/bin/bash
+
+export ACCUMULO_HOME=/vagrant/accumulo-mesos-dist/target/tarball/accumulo-1.7.0
+export ACCUMULO_CLIENT_CONF_PATH=$ACCUMULO_HOME/conf/accumulo-site.xml
+export HADOOP_PREFIX=/usr/local/hadoop
+export HADOOP_CONF_DIR=$HADOOP_PREFIX/etc/hadoop
+#export ZOOKEEPER_HOME=/etc/zookeeper
+# Where is the zookeeper jar?
+export ZOOKEEPER_HOME=/usr/share/java
+
+
+#java -jar accumulo-mesos-dist/target/lib/accumulo-mesos-framework-0.1.0-SNAPSHOT-jar-with-dependencies.jar -j conf/TestCluster.json | tee mylog.txt
+#java -jar accumulo-mesos-dist/target/lib/accumulo-mesos-framework-0.1.0-SNAPSHOT-jar-with-dependencies.jar -j conf/TestCluster-2.json | tee mylog.txt
+
+DATE=`date "+%Y%m%d_%H%M%S"` ; java -jar /vagrant/accumulo-mesos-dist/target/tarball/accumulo-mesos-framework-0.1.0-SNAPSHOT-jar-with-dependencies.jar \
+    -j conf/TestCluster-2.json \
+    | tee mylog+$DATE.txt
+

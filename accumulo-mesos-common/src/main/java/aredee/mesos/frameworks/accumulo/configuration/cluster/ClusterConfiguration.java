@@ -36,6 +36,15 @@ public interface ClusterConfiguration {
     public String getAccumuloRootPassword();
     public void setAccumuloRootPassword(String password);
 
+    // This is where the accumulo-site.xml file is to be found, defaults to file:./conf/default-accumulo-site.xml
+    // as defined in Defaults.ACCUMULO_SITE_URI
+    //
+    public void setAccumuloSiteUri(String uri);
+    public String getAccumuloSiteUri();
+   
+    public void setAccumuloVersion(String version);
+    public String getAccumuloVersion();
+    
     public double getMaxExecutorMemory();
     public void setMaxExecutorMemory(double maxExecutorMemory);
 
