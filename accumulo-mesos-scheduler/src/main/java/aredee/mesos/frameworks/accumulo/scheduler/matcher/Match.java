@@ -30,18 +30,24 @@ public class Match {
         this.server = server;
         this.offer = offer;
     }
-
-    public boolean hasServer(){ return this.server == null; }
-    public boolean hasOffer(){ return this.offer == null; }
-
+    
+    public boolean hasServer(){ 
+        return this.server != null; 
+    }
+    public boolean hasOffer(){ 
+        return this.offer != null; 
+    }
     public void setOffer(Protos.Offer offer){
         this.offer = offer;
     }
     public void setServer(AccumuloServer server){
         this.server = server;
     }
-
-    public Protos.Offer getOffer(){ return this.offer; }
-    public AccumuloServer getServer(){ return this.server; }
+    public Protos.Offer getOffer(){ 
+        return this.offer; 
+    }
+    public AccumuloServer getServer(){ 
+        return this.server; 
+    }
 
 }

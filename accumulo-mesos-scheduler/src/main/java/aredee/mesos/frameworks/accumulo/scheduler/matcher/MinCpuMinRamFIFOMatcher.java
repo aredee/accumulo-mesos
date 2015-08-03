@@ -1,7 +1,10 @@
 package aredee.mesos.frameworks.accumulo.scheduler.matcher;
 
-import aredee.mesos.frameworks.accumulo.configuration.ClusterConfiguration;
+import aredee.mesos.frameworks.accumulo.configuration.cluster.ClusterConfiguration;
+import aredee.mesos.frameworks.accumulo.configuration.process.ProcessConfiguration;
+import aredee.mesos.frameworks.accumulo.configuration.ServerType;
 import aredee.mesos.frameworks.accumulo.scheduler.server.AccumuloServer;
+
 import org.apache.mesos.Protos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,27 +41,22 @@ public class MinCpuMinRamFIFOMatcher implements Matcher {
         LOGGER.info("Matching {} servers to {} offers", servers.size(), offers.size());
         List<Match> matches = new ArrayList<>(servers.size());
         List<Protos.Offer> takenOffers = new ArrayList<>(offers.size());
+        
         for( AccumuloServer server: servers){
             Match match = new Match(server);
             LOGGER.info("Checking offers for server: {}", server.getType().getName());
             for(Protos.Offer offer: offers){
                 if( offerMatchesServer(server, offer) && !takenOffers.contains(offer)) {
                     match.setOffer(offer);
-                    LOGGER.info("Found match: {}", match.getOffer().getId().getValue());
+                    updateServer(servers, server, offer);
                     takenOffers.add(offer);
+                    LOGGER.info("Found match! server {} offer {} ", 
+                            match.getServer().getType().getName(), match.getOffer().getId().getValue());
+                    matches.add(match);              
                     break;
                 }
             }
-
-            if( match.hasOffer() ) {
-                LOGGER.info("Match has Offer");
-                if( match.hasServer() ){
-                    LOGGER.info("Match has server");
-                }
-                LOGGER.info("Found match! server {} offer {} ", match.getServer().getType().getName(), match.getOffer().getId().getValue());
-                matches.add(match);
-            }
-
+            
             if( matches.size() == offers.size() ){
                 LOGGER.info("Exhausted all offers");
                 break;
@@ -67,7 +65,13 @@ public class MinCpuMinRamFIFOMatcher implements Matcher {
         return matches;
     }
 
-
+    private void updateServer(Set<AccumuloServer> servers, AccumuloServer server, Protos.Offer offer) {
+        servers.remove(server);
+        server.setSlaveId(offer.getSlaveId().getValue());
+        servers.add(server);     
+    }
+    
+    
     private boolean offerMatchesServer(AccumuloServer server, Protos.Offer offer){
         double offerCpus = -1;
         double offerMem = -1;
@@ -82,32 +86,17 @@ public class MinCpuMinRamFIFOMatcher implements Matcher {
                     break;
             }
         }
-        double serverCpus = Double.MAX_VALUE;
-        double serverMem = Double.MAX_VALUE;
-        switch ( server.getType() ) {
-            case MASTER:
-                serverCpus = this.config.getMinMasterCpus();
-                serverMem = this.config.getMinMasterMem();
-                break;
-            case MONITOR:
-                serverCpus = this.config.getMinMonitorCpus();
-                serverMem = this.config.getMinMonitorMem();
-                break;
-            case TABLET_SERVER:
-                serverCpus = this.config.getMinTserverCpus();
-                serverMem = this.config.getMinTserverMem();
-                break;
-            case GARBAGE_COLLECTOR:
-                serverCpus = this.config.getMinGCCpus();
-                serverMem = this.config.getMinGCMem();
-                break;
-            //TODO handle tracer
-            case UNKNOWN:
-            default:
-                // TODO log unknown here?
-                return false;
+      
+        Map<ServerType,ProcessConfiguration> servers = this.config.getProcessorConfigurations();
+        boolean offerMatches = false;
+        
+        if (servers.containsKey(server.getType())) {
+            double serverCpus = servers.get(server.getType()).getCpuOffer();
+            double serverMem = servers.get(server.getType()).getMinMemoryOffer();
+            offerMatches = cpusAndMemAreAdequate(offerCpus, offerMem, serverCpus, serverMem);
         }
-        return cpusAndMemAreAdequate(offerCpus, offerMem, serverCpus, serverMem);
+        
+        return offerMatches;
     }
 
     private boolean cpusAndMemAreAdequate(double offerCpu, double offerMem, double serverCpu, double serverMem){

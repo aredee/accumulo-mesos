@@ -4,6 +4,9 @@ import aredee.mesos.frameworks.accumulo.configuration.ServerType;
 
 public class Master extends BaseServer {
 
+    public Master() {
+        super(getUUIDTask(ServerType.MASTER));
+    }
     public Master(String taskId, String slaveId) {
         super(taskId, slaveId);
     }
@@ -14,4 +17,8 @@ public class Master extends BaseServer {
 
     @Override
     public ServerType getType(){ return ServerType.MASTER; }
+    
+    public static boolean isMaster(String id){
+        return id.startsWith(ServerType.MASTER.getName());
+    }
 }

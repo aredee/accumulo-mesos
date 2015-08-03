@@ -1,6 +1,6 @@
 package aredee.mesos.frameworks.accumulo.framework.guice;
 
-import aredee.mesos.frameworks.accumulo.configuration.ClusterConfiguration;
+import aredee.mesos.frameworks.accumulo.configuration.cluster.ClusterConfiguration;
 import com.google.inject.AbstractModule;
 
 public class ConfigurationModule extends AbstractModule {

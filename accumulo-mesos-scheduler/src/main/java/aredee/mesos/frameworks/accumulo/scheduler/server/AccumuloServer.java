@@ -11,5 +11,12 @@ public interface AccumuloServer {
     public void setSlaveId(String newId);
 
     public String getTaskId();
+    
+    public int getMaxMemorySize();
+    
+    public int getMinMemorySize();
 
+    public void setMaxMemorySize(int memory);
+    
+    public void setMinMemorySize(int memory);
 }
