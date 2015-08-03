@@ -23,27 +23,25 @@ public final class Defaults {
     public final static String ZK_SERVERS = "127.0.0.1:2181";
 
     // Memory settings are MB
-    public final static int MIN_MASTER_MEM = 4096;
-    public final static int MIN_TSERVER_MEM = 4096;
-    public final static int MIN_GC_MEM = 1024;
-    public final static int MIN_MONITOR_MEM = 500;
+    public final static int MIN_MASTER_MEM = 512;
+    public final static int MIN_TSERVER_MEM = 512;
+    public final static int MIN_GC_MEM = 128;
+    public final static int MIN_MONITOR_MEM = 128;
     
     public final static String DEFAULT_8G_MAX_MEMORY = "8192";
     public final static String DEFAULT_2G_MAX_MEMORY = "2048";
     public final static String DEFAULT_1G_MAX_MEMORY = "1024";
 
     // Minimum CPU settings
-    public final static int MIN_MASTER_CPUS = 4;
-    public final static int MIN_TSERVER_CPUS = 4;
-    public final static int MIN_GC_CPUS = 2;
+    public final static int MIN_MASTER_CPUS = 1;
+    public final static int MIN_TSERVER_CPUS = 1;
+    public final static int MIN_GC_CPUS = 1;
     public final static int MIN_MONITOR_CPUS = 1;
 
     // Minimum number of tservers to launch
-    public final static int MIN_TSERVERS = 10;
+    public final static int MIN_TSERVERS = 3;
 
     // Executor URI
-    public final static String EXECUTOR_JAR = Constants.EXECUTOR_JAR;
-
     public final static String ROOT_USER = "root";
     public final static String ROOT_PASSWORD = "secret";
 
