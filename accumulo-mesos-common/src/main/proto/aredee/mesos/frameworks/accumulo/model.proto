@@ -56,18 +56,19 @@ message ClusterConfiguration {
   optional string accumuloInstanceName = 1;
   optional string accumuloRootUser = 2;
   optional string accumuloRootPassword = 3;
+  optional string accumuloVersion = 4;
 
-  optional uint32 minMasterMemory = 4 [default = 2048];
-  optional uint32 minTserverMemory = 5 [default = 2048];
-  optional uint32 minGCMemory = 6 [default = 512];
-  optional uint32 minMonitorMemory = 7 [default = 128];
-  optional uint32 minMasterCpus = 8 [default = 2];
-  optional uint32 minTserverCpus = 9 [default = 2];
-  optional uint32 minGCCpus = 10 [default = 1];
-  optional uint32 minMonitorCpus = 11 [default = 1];
-  optional uint32 minTservers = 12 [default = 3];
+  optional uint32 minMasterMemory = 5 [default = 2048];
+  optional uint32 minTserverMemory = 6 [default = 2048];
+  optional uint32 minGCMemory = 7 [default = 512];
+  optional uint32 minMonitorMemory = 8 [default = 128];
+  optional uint32 minMasterCpus = 9 [default = 2];
+  optional uint32 minTserverCpus = 10 [default = 2];
+  optional uint32 minGCCpus = 11 [default = 1];
+  optional uint32 minMonitorCpus = 12 [default = 1];
+  optional uint32 minTservers = 13 [default = 3];
 
-  optional bool launchTracer = 13 [default = false];
+  optional bool launchTracer = 14 [default = false];
 
 }
 
@@ -78,6 +79,8 @@ message ServerProcessConfiguration {
 
   optional string accumuloDir = 4;
   optional string hadoopConfDir = 5;
+  optional string accumuloSiteXml = 6;
+  optional string accumuloVersion = 7;
 
 }
 // cluster state?
