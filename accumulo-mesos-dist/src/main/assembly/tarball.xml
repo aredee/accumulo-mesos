@@ -21,6 +21,23 @@
             <outputDirectory>.</outputDirectory>
         </fileSet>
         <fileSet>
+            <directory>../bin/</directory>
+            <includes>
+		<include>findHome.sh</include>
+		<include>startJsonAccumulo</include>
+		<include>startCmdAccumulo</include>
+            </includes>
+            <outputDirectory>bin/</outputDirectory>
+        </fileSet>
+        <fileSet>
+            <directory>../conf/</directory>
+            <includes>
+		<include>default-accumulo-site.xml</include>
+		<include>DefaultCluster.json</include>
+            </includes>
+            <outputDirectory>conf/</outputDirectory>
+        </fileSet>
+        <fileSet>
             <directory>.</directory>
             <includes>
                 <include>THIRD-PARTY.txt</include>
