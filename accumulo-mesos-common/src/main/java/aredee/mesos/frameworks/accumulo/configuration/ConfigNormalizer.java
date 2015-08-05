@@ -55,6 +55,8 @@ public class ConfigNormalizer {
     public static String determineValue(String name, String defaultValue) {
         String value = System.getenv(name);
         
+        LOGGER.debug("Environment name: " + name + " value: " + value );
+        
         if (StringUtils.isEmpty(value)) {
             value = System.getProperty(name);
         }
@@ -109,11 +111,7 @@ public class ConfigNormalizer {
         String mesosDir = determineValue("MESOS_DIRECTORY", null);
         LOGGER.info("Mesos directory? " + mesosDir);
         
-        // If MESOS_DIRECTORY is set then this is not necessary.
-        String installDir = new File("./").getAbsolutePath();
-        LOGGER.info("Executor Home? " + installDir);
-       
-        setAccumuloDir(mesosDir, installDir, accumuloVersion);
+        setAccumuloDir(mesosDir, accumuloVersion);
         
         String accumuloHome = serviceConfiguration.getAccumuloDir().getAbsolutePath();
         LOGGER.info("Accumulo Home? " + accumuloHome);
@@ -124,7 +122,9 @@ public class ConfigNormalizer {
         serviceConfiguration.setAccumuloClientConfFile(new File(
                 determineValue(Environment.ACCUMULO_CLIENT_CONF_PATH, accumuloHome+"/conf/accumuilo-site.xml")));
       
-        serviceConfiguration.setExecutorDir(new File (installDir));
+        // On the supervisor side this will be empty.
+        if (!StringUtils.isEmpty(mesosDir))
+            serviceConfiguration.setExecutorDir(new File (mesosDir));
        
         serviceConfiguration.setHadoopHomeDir(new File(determineValue(Environment.HADOOP_PREFIX, null)));
         serviceConfiguration.setHadoopConfDir(new File(determineValue(Environment.HADOOP_CONF_DIR, null)));
@@ -142,7 +142,7 @@ public class ConfigNormalizer {
     }
 
     // mesosDir and installDir should be one and the same...test test test
-    private void setAccumuloDir(String mesosDir, String installDir, String accumuloVersion) {
+    private void setAccumuloDir(String mesosDir, String accumuloVersion) {
         
         // Properties and Environment variables take precedence. This should not be set
         // for the executor....
@@ -151,17 +151,13 @@ public class ConfigNormalizer {
         LOGGER.info("setAccumuloDir: ACCUMULO_HOME? " + home);
         
         if (StringUtils.isEmpty(home)) {
-            if (!StringUtils.isEmpty(mesosDir)) {
-                home = createAccumuloPath(mesosDir, accumuloVersion);  
-             } else {
-                 home = createAccumuloPath(installDir, accumuloVersion);  
-             }
+            home = createAccumuloPath(mesosDir, accumuloVersion); 
         }  
         serviceConfiguration.setAccumuloDir(new File(home));
     }
     
     private String createAccumuloPath(String dir, String accumuloVersion) {
-        return dir + File.pathSeparator + Constants.ACCUMULO_DISTRO + File.pathSeparator + "accumulo-" + accumuloVersion;
+        return dir + File.separator + Constants.ACCUMULO_DISTRO + File.separator + "accumulo-" + accumuloVersion;
     }
     private void setLibPaths() {
         
