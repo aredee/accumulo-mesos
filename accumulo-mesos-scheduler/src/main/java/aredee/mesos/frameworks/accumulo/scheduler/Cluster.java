@@ -34,7 +34,6 @@ public class Cluster {
 
     private String frameworkId;
     private State state;
-    private AccumuloInitializer initializer;
     
     private Master master = null;
     private GarbageCollector gc = null;
@@ -51,7 +50,6 @@ public class Cluster {
 
     @SuppressWarnings("unchecked")
     public Cluster(AccumuloInitializer initializer){
-        this.initializer = initializer;
         this.state = initializer.getFrameworkState();
         this.config = initializer.getClusterConfiguration();
         this.launcher = new AccumuloStartExecutorLauncher(initializer);
@@ -82,13 +80,12 @@ public class Cluster {
     @SuppressWarnings("unchecked")
     public void handleOffers(SchedulerDriver driver, List<Protos.Offer> offers){
 
-        LOGGER.info("Mesos Accumulo Cluster handling offers: for servers " + serversToLaunch);
+        LOGGER.debug("Mesos Accumulo Cluster handling offers: for servers {}", serversToLaunch);
 
         List<Match> matchedServers = matcher.matchOffers(serversToLaunch, offers);
-        LOGGER.info("Found {} matches for servers from {} offers", matchedServers.size(), offers.size());
+        LOGGER.debug("Found {} matches for servers from {} offers", matchedServers.size(), offers.size());
 
          List<AccumuloServer> launchedServers = new ArrayList<>();
-         LOGGER.info("serversToLaunch before launching? " + serversToLaunch);
 
         // Launch all the matched servers.
         for (Match match: matchedServers){
@@ -103,7 +100,6 @@ public class Cluster {
             launchedServers.add(match.getServer());
             serversToLaunch.remove(match.getServer());
         }
-        LOGGER.info("serversToLaunch after launching? " + serversToLaunch);
 
         declineUnmatchedOffers(driver, offers, matchedServers);
         // TODO call restore here?
