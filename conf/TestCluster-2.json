@@ -7,7 +7,7 @@
   "zkServers": "10.141.141.20:2181",
   "minTservers": 1,
   "instanceName": "default-instance",
-  "tarBallUri": "/vagrant/accumulo-mesos-dist/target/accumulo-mesos-dist-0.1.0-SNAPSHOT.tar.gz",
+  "tarballUri": "/vagrant/accumulo-mesos-dist/target/accumulo-mesos-dist-0.1.0-SNAPSHOT.tar.gz",
   "accumuloRootPassword": "password",
   "maxExecutorMemory": 512.0,
   "minExecutorMemory": 128.0,
@@ -17,6 +17,12 @@
       "maxMemory": "1024",
       "cpus": "0.5",
       "type": "tserver"
+    },
+   "MONITOR": {
+      "minMemory": "128",
+      "maxMemory": "500",
+      "cpus": "0.2",
+      "type": "monitor"
     },
     "MASTER": {
       "minMemory": "128",

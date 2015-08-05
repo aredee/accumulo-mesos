@@ -7,28 +7,27 @@
   "zkServers": "127.0.0.1:2181",
   "minTservers": 10,
   "instanceName": "default-instance",
-  "accumuloTarBallUri": "file:///usr/local/accumulo/AccumuloDist-1.7.0.tgz",
-  "executorJarUri": "file:///usr/local/accumulo/accumulo-mesos-executor-0.1.0-SNAPSHOT.jar",
+  "tarballUri": "/vagrant/accumulo-mesos-dist/target/accumulo-mesos-dist-0.1.0-SNAPSHOT.tar.gz",
   "accumuloRootPassword": "password",
   "maxExecutorMemory": 512.0,
   "minExecutorMemory": 128.0,
   "servers": {
     "TRACER": {
-      "minMemory": "500",
+      "minMemory": "128",
       "maxMemory": "1024",
-      "cpus": "1",
+      "cpus": "0.5",
       "type": "tracer"
     },
     "TABLET_SERVER": {
       "minMemory": "4096",
       "maxMemory": "8192",
-      "cpus": "4",
+      "cpus": "1",
       "type": "tserver"
     },
     "MASTER": {
       "minMemory": "4096",
       "maxMemory": "8192",
-      "cpus": "4",
+      "cpus": "1",
       "type": "master"
     },
     "MONITOR": {
@@ -40,7 +39,7 @@
     "GARBAGE_COLLECTOR": {
       "minMemory": "1024",
       "maxMemory": "2048",
-      "cpus": "2",
+      "cpus": "1",
       "type": "gc"
     }
   }
