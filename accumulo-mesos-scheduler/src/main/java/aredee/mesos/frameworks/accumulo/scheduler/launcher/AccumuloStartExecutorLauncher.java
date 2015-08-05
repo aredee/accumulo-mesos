@@ -59,9 +59,8 @@ public class AccumuloStartExecutorLauncher implements Launcher {
         String args[] = new String[1];
         args[0] = server.getType().getName();
 
-        LOGGER.info("Cluster Config? " + config);
-        LOGGER.info("Cluster Config? " + config.getTarballUri());
-    
+        LOGGER.debug("Cluster Config? " + config);
+     
         List<Protos.CommandInfo.URI> uris = new ArrayList<>();
         Protos.CommandInfo.URI tarballUri = Protos.CommandInfo.URI.newBuilder()
                 .setValue(this.config.getTarballUri())
@@ -93,7 +92,7 @@ public class AccumuloStartExecutorLauncher implements Launcher {
                         .setValue(serviceConfig.getHadoopHomeDir().getAbsolutePath()))
                 .addVariables(Protos.Environment.Variable.newBuilder()
                         .setName(Environment.HADOOP_CONF_DIR)
-                        .setValue(serviceConfig.getAccumuloConfDir().getAbsolutePath()))
+                        .setValue(serviceConfig.getHadoopConfDir().getAbsolutePath()))
                  .addVariables(Protos.Environment.Variable.newBuilder()
                         .setName(Environment.ZOOKEEPER_HOME)
                         .setValue(serviceConfig.getZooKeeperDir().getAbsolutePath()))
