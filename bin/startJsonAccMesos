@@ -8,11 +8,13 @@ export HADOOP_CONF_DIR=$HADOOP_PREFIX/etc/hadoop
 # Where is the zookeeper jar?
 export ZOOKEEPER_HOME=/usr/share/java
 
+rm -f $ACCUMULO_HOME/logs/*
+DATE=`date "+%Y%m%d_%H%M%S"`
+LOG="mylog_"$DATE.txt
+rm -f $LOG
 
-#java -jar accumulo-mesos-dist/target/lib/accumulo-mesos-framework-0.1.0-SNAPSHOT-jar-with-dependencies.jar -j conf/TestCluster.json | tee mylog.txt
-#java -jar accumulo-mesos-dist/target/lib/accumulo-mesos-framework-0.1.0-SNAPSHOT-jar-with-dependencies.jar -j conf/TestCluster-2.json | tee mylog.txt
 
-DATE=`date "+%Y%m%d_%H%M%S"` ; java -jar /vagrant/accumulo-mesos-dist/target/tarball/accumulo-mesos-framework-0.1.0-SNAPSHOT-jar-with-dependencies.jar \
+java -jar /vagrant/accumulo-mesos-dist/target/tarball/accumulo-mesos-framework-0.1.0-SNAPSHOT-jar-with-dependencies.jar \
     -j conf/TestCluster-2.json \
-    | tee mylog+$DATE.txt
+    | tee $LOG
 
