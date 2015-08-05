@@ -75,6 +75,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # Forward YARN/Hadoop ports
   config.vm.network "forwarded_port", guest: 50070, host: 50070
   config.vm.network "forwarded_port", guest: 50075, host: 50075
+  config.vm.network "forwarded_port", guest: 50095, host: 50095
   config.vm.network "forwarded_port", guest: 8088, host: 8088
   config.vm.network "forwarded_port", guest: 8042, host: 8042
   config.vm.network "forwarded_port", guest: 19888, host: 19888
@@ -85,7 +86,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   # Configure VM resources
   config.vm.provider :virtualbox do |vb|
-    vb.customize ["modifyvm", :id, "--memory", "4096"]
-    vb.customize ["modifyvm", :id, "--cpus", "2"]
+    vb.customize ["modifyvm", :id, "--memory", "8192"]
+    vb.customize ["modifyvm", :id, "--cpus", "4"]
   end
 end
