@@ -18,9 +18,10 @@ import java.util.*;
 import static org.junit.Assert.*;
 
 
-@RunWith(Parameterized.class)
+//@RunWith(Parameterized.class)
 public class MinCpuMinRamFIFOMatcherTest {
 
+/*
     private Matcher matcher = null;
 
     private static class MatcherTestClusterConfiguration extends BaseClusterConfiguration {
@@ -153,4 +154,6 @@ public class MinCpuMinRamFIFOMatcherTest {
                 .addResources(makeScalarResource("mem", mem))
                 .build();
     }
+*/
+
 }

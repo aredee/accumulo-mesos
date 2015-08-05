@@ -287,7 +287,7 @@
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
                 <version>${version.junit}</version>
-                <scope>test-compile</scope>
+                <scope>test</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
