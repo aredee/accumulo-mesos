@@ -5,6 +5,7 @@ import aredee.mesos.frameworks.accumulo.scheduler.launcher.Launcher;
 import aredee.mesos.frameworks.accumulo.scheduler.matcher.Match;
 import aredee.mesos.frameworks.accumulo.scheduler.matcher.Matcher;
 import aredee.mesos.frameworks.accumulo.scheduler.matcher.MinCpuMinRamFIFOMatcher;
+import aredee.mesos.frameworks.accumulo.scheduler.matcher.OperationalCheck;
 import aredee.mesos.frameworks.accumulo.scheduler.server.AccumuloServer;
 import aredee.mesos.frameworks.accumulo.scheduler.server.GarbageCollector;
 import aredee.mesos.frameworks.accumulo.scheduler.server.Master;
@@ -40,7 +41,9 @@ public class Cluster {
     private Monitor monitor = null;
     private Tracer tracer = null;
     private Set<AccumuloServer> tservers = new HashSet<AccumuloServer>();
-
+    
+    private Map<String, Map<ServerType,AccumuloServer>> launchedServers = new HashMap<String, Map<ServerType,AccumuloServer>>();
+    
     private Set<Protos.TaskStatus> runningServers = new HashSet<Protos.TaskStatus>();
     private Set<AccumuloServer> serversToLaunch = new HashSet<AccumuloServer>();
     private Map<ServerType, ProcessConfiguration> clusterServers;
@@ -81,42 +84,38 @@ public class Cluster {
     public void handleOffers(SchedulerDriver driver, List<Protos.Offer> offers){
 
         LOGGER.debug("Mesos Accumulo Cluster handling offers: for servers {}", serversToLaunch);
-
-        List<Match> matchedServers = matcher.matchOffers(serversToLaunch, offers);
+        
+        OperationalCheck opCheck =  new OperationalCheck() {
+            public boolean accept(AccumuloServer server, String slaveId) {
+                boolean accepted = !isServerLaunched(slaveId, server);
+                // This is a bit pre-mature but if not done here the offers just keep 
+                // getting accepted.
+                if (accepted) {
+                    addLaunchedServer(slaveId,server);
+                }
+                return accepted;
+            }
+        };
+        
+        List<Match> matchedServers = matcher.matchOffers(serversToLaunch, offers, opCheck);
+        
         LOGGER.debug("Found {} matches for servers from {} offers", matchedServers.size(), offers.size());
-
-         List<AccumuloServer> launchedServers = new ArrayList<>();
 
         // Launch all the matched servers.
         for (Match match: matchedServers){
              
             LOGGER.info("Launching Server: {} on {}", match.getServer().getType().getName(), 
-                    match.getOffer().getSlaveId() );
+                    match.getOffer().getSlaveId().getValue() );
             
             Protos.TaskInfo taskInfo = launcher.launch(driver, match);
             
-            LOGGER.info("Created Task {} on {}", taskInfo.getTaskId(), taskInfo.getSlaveId());
+            LOGGER.info("Created Task {} on {}", taskInfo.getTaskId(), taskInfo.getSlaveId().getValue());
             
-            launchedServers.add(match.getServer());
             serversToLaunch.remove(match.getServer());
         }
 
         declineUnmatchedOffers(driver, offers, matchedServers);
         // TODO call restore here?
-    }
-
-    // Remove used offers from the available offers and decline the rest.
-    private void declineUnmatchedOffers(SchedulerDriver driver, List<Protos.Offer> offers, List<Match> matches){
-        List<Protos.Offer> usedOffers = new ArrayList<>(matches.size());
-        for(Match match: matches){
-            if(match.hasOffer()){
-                usedOffers.add(match.getOffer());
-            }
-        }
-        offers.removeAll(usedOffers);
-        for( Protos.Offer offer: offers){
-            driver.declineOffer(offer.getId());
-        }
     }
 
 
@@ -127,11 +126,14 @@ public class Cluster {
         // TODO handle return of reconcileTasks
         Protos.Status reconcileStatus = driver.reconcileTasks(runningServers);
         clearServers();
-
+        
+        String slaveId;
+        String taskId;
+        
         // process the existing tasks
         for (Protos.TaskStatus status : runningServers ){
-            String slaveId = status.getSlaveId().getValue();
-            String taskId = status.getTaskId().getValue();
+            slaveId = status.getSlaveId().getValue();
+            taskId = status.getTaskId().getValue();
 
             if( Master.isMaster(taskId)){
                 master = (Master)ServerUtils.newServer(clusterServers.get(ServerType.MASTER), taskId, slaveId);
@@ -158,6 +160,8 @@ public class Cluster {
 
         String slaveId = status.getSlaveId().getValue();
         String taskId = status.getTaskId().getValue();
+        AccumuloServer serverToLaunch = null;
+        
         LOGGER.info("Task Status Update: Status: {} Slave: {} Task: {}", status.getState(), slaveId, taskId);
 
         switch (status.getState()){
@@ -169,20 +173,25 @@ public class Cluster {
             case TASK_KILLED:
             case TASK_LOST:
                 runningServers.remove(status);
+                
                 // re-queue tasks when servers are lost.
                 if( Master.isMaster(taskId)){
                     // Don't save the slave id, it maybe re-assigned to a new slave 
-                    serversToLaunch.add(ServerUtils.newServer(clusterServers.get(ServerType.MASTER), taskId, null));
+                    serverToLaunch = ServerUtils.newServer(clusterServers.get(ServerType.MASTER), taskId, null);
                     clearMaster();
                 } else if (TabletServer.isTabletServer(taskId)) {
                     tservers.remove(new TabletServer(taskId, slaveId));
-                    serversToLaunch.add(ServerUtils.newServer(clusterServers.get(ServerType.TABLET_SERVER), taskId, null));
+                    serverToLaunch = ServerUtils.newServer(clusterServers.get(ServerType.TABLET_SERVER), taskId, null);
                 } else if (Monitor.isMonitor(taskId)) {
-                    serversToLaunch.add(ServerUtils.newServer(clusterServers.get(ServerType.MONITOR), taskId, null));
+                    serverToLaunch = ServerUtils.newServer(clusterServers.get(ServerType.MONITOR), taskId, null);
                     clearMonitor();
                 } else if (GarbageCollector.isGarbageCollector(taskId)) {
-                    serversToLaunch.add(ServerUtils.newServer(clusterServers.get(ServerType.GARBAGE_COLLECTOR), taskId, null));
+                    serverToLaunch = ServerUtils.newServer(clusterServers.get(ServerType.GARBAGE_COLLECTOR), taskId, null);
                     clearGC();
+                }
+                if (serverToLaunch != null) {
+                    removeLaunchedServer(slaveId, serverToLaunch.getType());
+                    serversToLaunch.add(serverToLaunch);
                 }
                 break;
             case TASK_STARTING:
@@ -206,7 +215,52 @@ public class Cluster {
     public int numTserversRunning(){
         return tservers.size();
     }
+    
+    // Remove used offers from the available offers and decline the rest.
+    private void declineUnmatchedOffers(SchedulerDriver driver, List<Protos.Offer> offers, List<Match> matches){
+        List<Protos.Offer> usedOffers = new ArrayList<>(matches.size());
+        for(Match match: matches){
+            if(match.hasOffer()){
+                usedOffers.add(match.getOffer());
+            }
+        }
+        offers.removeAll(usedOffers);
+        for( Protos.Offer offer: offers){
+            driver.declineOffer(offer.getId());
+        }
+    }
 
+    private void addLaunchedServer(String slaveId, AccumuloServer server) {
+        synchronized(launchedServers) {
+            Map<ServerType,AccumuloServer> servers = launchedServers.get(slaveId);
+            if (servers == null) {
+                servers = new HashMap<ServerType,AccumuloServer>();
+                launchedServers.put(slaveId, servers);              
+            }
+            servers.put(server.getType(),server);
+        }
+    }
+    
+    private boolean isServerLaunched(String slaveId, AccumuloServer server) {
+        boolean launched = false;
+        synchronized(launchedServers) {
+            Map<ServerType,AccumuloServer> servers = launchedServers.get(slaveId);
+            if (servers != null) {
+               launched = servers.containsKey(server.getType());
+            }
+        }
+        return launched;
+    }
+    
+    private void removeLaunchedServer(String slaveId, ServerType type) {
+        synchronized(launchedServers) {
+            Map<ServerType,AccumuloServer> servers = launchedServers.get(slaveId);
+            if (servers != null) {
+                servers.remove(type);
+            }
+        }
+    }
+    
     private void clearServers(){
         clearMaster();
         clearMonitor();

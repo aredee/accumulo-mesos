@@ -14,6 +14,9 @@ public interface Matcher {
     /**
         Returns a list of matched servers and offers. If offers were not found for all servers,
         a Match object will be present with no
+        @param servers than require launched
+        @param offers to match servers against
+        @param opCheck is operational considerations that may exist, optional
      */
-    public List<Match> matchOffers(Set<AccumuloServer> servers, List<Protos.Offer> offers);
+    public List<Match> matchOffers(Set<AccumuloServer> servers, List<Protos.Offer> offers, OperationalCheck opCheck);
 }

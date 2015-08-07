@@ -1,8 +1,10 @@
 package aredee.mesos.frameworks.accumulo.scheduler.launcher;
 
 import aredee.mesos.frameworks.accumulo.configuration.Constants;
+import aredee.mesos.frameworks.accumulo.configuration.ServerType;
 import aredee.mesos.frameworks.accumulo.configuration.cluster.ClusterConfiguration;
 import aredee.mesos.frameworks.accumulo.configuration.Environment;
+import aredee.mesos.frameworks.accumulo.configuration.process.ProcessConfiguration;
 import aredee.mesos.frameworks.accumulo.configuration.process.ServerProcessConfiguration;
 import aredee.mesos.frameworks.accumulo.initialize.AccumuloInitializer;
 import aredee.mesos.frameworks.accumulo.scheduler.matcher.Match;
@@ -22,6 +24,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Launches an Executor process that starts Accumulo Servers using the accumulo-start jar.
@@ -52,6 +55,7 @@ public class AccumuloStartExecutorLauncher implements Launcher {
      * @param driver Mesos interface to use to launch a server
      * @param match AccumuloServer and Offer to launch
      */
+    @SuppressWarnings("unchecked")
     public Protos.TaskInfo launch(SchedulerDriver driver, Match match){
         AccumuloServer server = match.getServer();
         Protos.Offer offer = match.getOffer();
@@ -60,7 +64,8 @@ public class AccumuloStartExecutorLauncher implements Launcher {
         args[0] = server.getType().getName();
 
         LOGGER.debug("Cluster Config? " + config);
-     
+        
+      
         List<Protos.CommandInfo.URI> uris = new ArrayList<>();
         Protos.CommandInfo.URI tarballUri = Protos.CommandInfo.URI.newBuilder()
                 .setValue(this.config.getTarballUri())
@@ -135,7 +140,10 @@ public class AccumuloStartExecutorLauncher implements Launcher {
                               .setRole("*"))
                 .setName(executorId)
                 .build();
-
+        
+        Map<ServerType, ProcessConfiguration>pmap = config.getProcessorConfigurations();
+        ProcessConfiguration processor = pmap.get(server.getType());
+  
         Protos.TaskInfo taskInfo = Protos.TaskInfo.newBuilder()
                 .setName(server.getType().getName())
                 .setTaskId(Protos.TaskID.newBuilder().setValue(server.getTaskId()))
@@ -144,12 +152,12 @@ public class AccumuloStartExecutorLauncher implements Launcher {
                          .addResources(Resource.newBuilder()
                               .setName("cpus")
                               .setType(Type.SCALAR)
-                              .setScalar(Scalar.newBuilder().setValue(0.2))
+                              .setScalar(Scalar.newBuilder().setValue(processor.getCpuOffer()))
                               .setRole("*"))
                           .addResources(Resource.newBuilder()
                               .setName("mem")
                               .setType(Type.SCALAR)
-                              .setScalar(executorMem)
+                              .setScalar(Scalar.newBuilder().setValue(processor.getMaxMemoryOffer()))
                               .setRole("*"))                
                               .setExecutor(executorInfo)               
                 .build();
