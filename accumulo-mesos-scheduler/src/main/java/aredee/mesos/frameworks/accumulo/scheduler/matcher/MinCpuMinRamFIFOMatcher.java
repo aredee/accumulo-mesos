@@ -34,78 +34,71 @@ public class MinCpuMinRamFIFOMatcher implements Matcher {
      * @param offers
      */
     @Override
-    public List<Match> matchOffers(Set<AccumuloServer> servers, List<Protos.Offer> offers) {
-
-        // TODO refactor using for loops with counters to make clearer
-
-        LOGGER.info("Matching {} servers to {} offers", servers.size(), offers.size());
-        List<Match> matches = new ArrayList<>(servers.size());
-        List<Protos.Offer> takenOffers = new ArrayList<>(offers.size());
+    public List<Match> matchOffers(Set<AccumuloServer> servers, List<Protos.Offer> offers, OperationalCheck optCheck) {
         
-        for( AccumuloServer server: servers){
-            Match match = new Match(server);
-            LOGGER.info("Checking offers for server: {}", server.getType().getName());
+        LOGGER.info("Matching {} servers to {} offers", servers.size(), offers.size());
+        List<Match> matches = new ArrayList<>(servers.size());      
+        
+        int offersAccepted=0;
+        Iterator<AccumuloServer> itr = servers.iterator();
+        while (itr.hasNext() && (offersAccepted < offers.size())) {
+            AccumuloServer server = itr.next();
             for(Protos.Offer offer: offers){
-                if( offerMatchesServer(server, offer) && !takenOffers.contains(offer)) {
-                    match.setOffer(offer);
-                    updateServer(servers, server, offer);
-                    takenOffers.add(offer);
-                    LOGGER.info("Found match! server {} offer {} ", 
-                            match.getServer().getType().getName(), match.getOffer().getId().getValue());
-                    matches.add(match);              
-                    break;
+                Match match = new Match(server);
+                if( offerMatchesServer(server, offer))
+                {
+                    boolean optCheckStatus = true;
+                    if (optCheck != null) {
+                        optCheckStatus = optCheck.accept(server, offer.getSlaveId().getValue());
+                    }
+                    if (optCheckStatus) {
+                        match.setOffer(offer);
+                        matches.add(match);
+                        
+                        // Need to remove the server before setting the slavedId because it 
+                        // causes the hash to change 
+                        servers.remove(server);
+                        server.setSlaveId(offer.getSlaveId().getValue());
+                        servers.add(server);
+                        
+                         LOGGER.info("Found match! server {} offer {} ", 
+                                match.getServer().getType().getName(), match.getOffer().getId().getValue());
+                         
+                        offersAccepted++;
+                        break;
+                    }                   
                 }
             }
-            
-            if( matches.size() == offers.size() ){
-                LOGGER.info("Exhausted all offers");
-                break;
-            }
         }
+  
         return matches;
     }
-
-    private void updateServer(Set<AccumuloServer> servers, AccumuloServer server, Protos.Offer offer) {
-        servers.remove(server);
-        server.setSlaveId(offer.getSlaveId().getValue());
-        servers.add(server);     
-    }
-    
-    
+   
+    @SuppressWarnings("unchecked")
     private boolean offerMatchesServer(AccumuloServer server, Protos.Offer offer){
         double offerCpus = -1;
         double offerMem = -1;
-        for( Protos.Resource resource : offer.getResourcesList()){
-            resource.getName();
-            switch ( resource.getName() ) {
-                case "cpus":
-                    offerCpus = resource.hasScalar() ? resource.getScalar().getValue() : 0.0;
-                    break;
-                case "mem":
-                    offerMem = resource.hasScalar() ? resource.getScalar().getValue() : 0.0;
-                    break;
-            }
-        }
-      
-        Map<ServerType,ProcessConfiguration> servers = this.config.getProcessorConfigurations();
         boolean offerMatches = false;
         
-        if (servers.containsKey(server.getType())) {
-            double serverCpus = servers.get(server.getType()).getCpuOffer();
-            double serverMem = servers.get(server.getType()).getMinMemoryOffer();
-            offerMatches = cpusAndMemAreAdequate(offerCpus, offerMem, serverCpus, serverMem);
-        }
+        Map<ServerType,ProcessConfiguration> servers = this.config.getProcessorConfigurations();
         
+        if (servers.containsKey(server.getType())) {
+            for( Protos.Resource resource : offer.getResourcesList()){
+                if (resource.getName().equalsIgnoreCase("cpus")) {
+                    offerCpus = resource.hasScalar() ? resource.getScalar().getValue() : 0.0;        
+                } else if (resource.getName().equalsIgnoreCase("mem")) {
+                    offerMem = resource.hasScalar() ? resource.getScalar().getValue() : 0.0;         
+                }
+            }
+            double serverCpus = servers.get(server.getType()).getCpuOffer();
+            double serverMem = servers.get(server.getType()).getMaxMemoryOffer();
+            offerMatches = cpusAndMemAreAdequate(offerCpus, offerMem, serverCpus, serverMem);   
+        }
         return offerMatches;
     }
 
     private boolean cpusAndMemAreAdequate(double offerCpu, double offerMem, double serverCpu, double serverMem){
-        boolean cpuOk = false;
-        boolean memOk = false;
-        if( offerCpu >= serverCpu ){ cpuOk = true; }
-        if( offerMem >= offerMem ){ memOk = true; }
-
-        return (cpuOk && memOk);
+        return ( offerCpu >= serverCpu ) && ( offerMem >= offerMem );
     }
 
 }
