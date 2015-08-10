@@ -32,6 +32,7 @@ public class MinCpuMinRamFIFOMatcher implements Matcher {
      *
      * @param servers
      * @param offers
+     * @param optCheck operational considerations, optional, applied after offer determination.
      */
     @Override
     public List<Match> matchOffers(Set<AccumuloServer> servers, List<Protos.Offer> offers, OperationalCheck optCheck) {
@@ -39,21 +40,26 @@ public class MinCpuMinRamFIFOMatcher implements Matcher {
         LOGGER.info("Matching {} servers to {} offers", servers.size(), offers.size());
         List<Match> matches = new ArrayList<>(servers.size());      
         
-        int offersAccepted=0;
-        Iterator<AccumuloServer> itr = servers.iterator();
-        while (itr.hasNext() && (offersAccepted < offers.size())) {
+         Set<AccumuloServer> localservers = new HashSet<AccumuloServer>(servers);
+        Iterator<AccumuloServer> itr = localservers.iterator();
+        List<Protos.Offer> takenOffers = new ArrayList<>(offers.size());
+        
+        while (itr.hasNext() && (takenOffers.size() < offers.size())) {
             AccumuloServer server = itr.next();
             for(Protos.Offer offer: offers){
                 Match match = new Match(server);
-                if( offerMatchesServer(server, offer))
+                if( offerMatchesServer(server, offer) && !takenOffers.contains(offer))
                 {
                     boolean optCheckStatus = true;
+                    
+                    // If operational considerations check here.
                     if (optCheck != null) {
                         optCheckStatus = optCheck.accept(server, offer.getSlaveId().getValue());
                     }
                     if (optCheckStatus) {
                         match.setOffer(offer);
                         matches.add(match);
+                        takenOffers.add(offer);
                         
                         // Need to remove the server before setting the slavedId because it 
                         // causes the hash to change 
@@ -64,8 +70,7 @@ public class MinCpuMinRamFIFOMatcher implements Matcher {
                          LOGGER.info("Found match! server {} offer {} ", 
                                 match.getServer().getType().getName(), match.getOffer().getId().getValue());
                          
-                        offersAccepted++;
-                        break;
+                         break;
                     }                   
                 }
             }
@@ -97,8 +102,9 @@ public class MinCpuMinRamFIFOMatcher implements Matcher {
         return offerMatches;
     }
 
-    private boolean cpusAndMemAreAdequate(double offerCpu, double offerMem, double serverCpu, double serverMem){
-        return ( offerCpu >= serverCpu ) && ( offerMem >= offerMem );
+    private boolean cpusAndMemAreAdequate(double offerCpu, double offerMem, double serverCpu, double serverMem) {
+        LOGGER.info("offerCpu "+offerCpu+" offerMem "+offerMem+" serverCpu " + serverCpu+" serverMem " + serverMem);
+        return ( offerCpu >= serverCpu ) && ( offerMem >= serverMem );
     }
 
 }
