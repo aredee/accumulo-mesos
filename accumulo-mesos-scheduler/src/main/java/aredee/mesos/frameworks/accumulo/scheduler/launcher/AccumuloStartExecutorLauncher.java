@@ -1,6 +1,7 @@
 package aredee.mesos.frameworks.accumulo.scheduler.launcher;
 
 import aredee.mesos.frameworks.accumulo.configuration.Constants;
+import aredee.mesos.frameworks.accumulo.configuration.Defaults;
 import aredee.mesos.frameworks.accumulo.configuration.ServerType;
 import aredee.mesos.frameworks.accumulo.configuration.cluster.ClusterConfiguration;
 import aredee.mesos.frameworks.accumulo.configuration.Environment;
@@ -131,7 +132,7 @@ public class AccumuloStartExecutorLauncher implements Launcher {
                          .addResources(Resource.newBuilder()
                               .setName("cpus")
                               .setType(Type.SCALAR)
-                              .setScalar(Scalar.newBuilder().setValue(0.2))
+                              .setScalar(Scalar.newBuilder().setValue(Defaults.EXECUTOR_CPUS))
                               .setRole("*"))
                           .addResources(Resource.newBuilder()
                               .setName("mem")
