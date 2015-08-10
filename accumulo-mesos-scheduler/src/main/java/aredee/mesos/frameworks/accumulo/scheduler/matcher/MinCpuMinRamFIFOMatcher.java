@@ -2,6 +2,7 @@ package aredee.mesos.frameworks.accumulo.scheduler.matcher;
 
 import aredee.mesos.frameworks.accumulo.configuration.cluster.ClusterConfiguration;
 import aredee.mesos.frameworks.accumulo.configuration.process.ProcessConfiguration;
+import aredee.mesos.frameworks.accumulo.configuration.Defaults;
 import aredee.mesos.frameworks.accumulo.configuration.ServerType;
 import aredee.mesos.frameworks.accumulo.scheduler.server.AccumuloServer;
 
@@ -85,7 +86,7 @@ public class MinCpuMinRamFIFOMatcher implements Matcher {
         double offerMem = -1;
         boolean offerMatches = false;
         
-        Map<ServerType,ProcessConfiguration> servers = this.config.getProcessorConfigurations();
+        Map<ServerType,ProcessConfiguration> servers = config.getProcessorConfigurations();
         
         if (servers.containsKey(server.getType())) {
             for( Protos.Resource resource : offer.getResourcesList()){
@@ -95,8 +96,9 @@ public class MinCpuMinRamFIFOMatcher implements Matcher {
                     offerMem = resource.hasScalar() ? resource.getScalar().getValue() : 0.0;         
                 }
             }
-            double serverCpus = servers.get(server.getType()).getCpuOffer();
-            double serverMem = servers.get(server.getType()).getMaxMemoryOffer();
+            // Have to take into account the executor resources because MESOS will.
+            double serverCpus = servers.get(server.getType()).getCpuOffer() + Defaults.EXECUTOR_CPUS;
+            double serverMem = servers.get(server.getType()).getMaxMemoryOffer() + config.getMaxExecutorMemory();
             offerMatches = cpusAndMemAreAdequate(offerCpus, offerMem, serverCpus, serverMem);   
         }
         return offerMatches;
