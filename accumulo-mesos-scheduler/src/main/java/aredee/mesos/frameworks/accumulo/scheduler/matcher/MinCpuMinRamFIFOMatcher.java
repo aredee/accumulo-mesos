@@ -105,7 +105,6 @@ public class MinCpuMinRamFIFOMatcher implements Matcher {
     }
 
     private boolean cpusAndMemAreAdequate(double offerCpu, double offerMem, double serverCpu, double serverMem) {
-        LOGGER.info("offerCpu "+offerCpu+" offerMem "+offerMem+" serverCpu " + serverCpu+" serverMem " + serverMem);
         return ( offerCpu >= serverCpu ) && ( offerMem >= serverMem );
     }
 
