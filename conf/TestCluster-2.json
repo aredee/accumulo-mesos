@@ -1,13 +1,14 @@
 {
   "accumuloVersion": "1.7.0",
-  "bindAddress": "10.141.141.20",
+  "bindAddress": "192.168.50.101",
   "httpPort": 18120,
-  "mesosMaster": "10.141.141.20:5050",
+  "mesosMaster": "192.168.50.101:5050",
   "frameworkName": "testAccumulo-1",
-  "zkServers": "10.141.141.20:2181",
-  "minTservers": 1,
+  "zkServers": "192.168.50.101:2181",
+  "minTservers": 2,
   "instanceName": "default-instance",
   "tarballUri": "/vagrant/accumulo-mesos-dist/target/accumulo-mesos-dist-0.1.0-SNAPSHOT.tar.gz",
+  "accumuloSiteUri" : "file:./conf/test-1-accumulo-site.xml",
   "accumuloRootPassword": "password",
   "maxExecutorMemory": 512.0,
   "minExecutorMemory": 128.0,
@@ -26,7 +27,7 @@
     },
     "MASTER": {
       "minMemory": "128",
-      "maxMemory": "1024",
+      "maxMemory": "500",
       "cpus": "0.5",
       "type": "master"
     }

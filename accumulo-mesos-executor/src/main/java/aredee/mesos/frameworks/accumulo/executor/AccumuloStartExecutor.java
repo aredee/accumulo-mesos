@@ -7,23 +7,17 @@ import aredee.mesos.frameworks.accumulo.configuration.ServerType;
 import aredee.mesos.frameworks.accumulo.initialize.AccumuloInitializer;
 import aredee.mesos.frameworks.accumulo.process.AccumuloProcessFactory;
 
-
-
-
-//import org.apache.accumulo.tserver.TabletServer;
-//import org.apache.accumulo.master.Master;
-//import org.apache.accumulo.gc.SimpleGarbageCollector;
-//import org.apache.accumulo.monitor.Monitor;
-//import org.apache.accumulo.tracer.TraceServer;
 import org.apache.mesos.Executor;
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos;
+import org.apache.mesos.Protos.TaskID;
+import org.apache.mesos.Protos.TaskState;
+import org.apache.mesos.Protos.TaskStatus;
 import org.apache.mesos.SchedulerDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -107,7 +101,6 @@ public class AccumuloStartExecutor implements Executor {
     public void launchTask(ExecutorDriver executorDriver, Protos.TaskInfo taskInfo) {
         
         LOGGER.info("Launch TaskInfo " + taskInfo);
-      
         LOGGER.info("Launch Task Requested: " + taskInfo.getCommand());
 
         this.taskInfo = taskInfo;
@@ -128,11 +121,16 @@ public class AccumuloStartExecutor implements Executor {
             // accumulo-site.xml is sent in from scheduler
             AccumuloInitializer.writeAccumuloSiteFile(process.getAccumuloDir().getAbsolutePath(),
                     new AccumuloSiteXml(new ByteArrayInputStream(siteXml.getBytes())));
+            
             AccumuloProcessFactory factory = new AccumuloProcessFactory(process);          
+            
             this.serverProcess = factory.exec(discoverServerClass(process), jvmArgs, args);
+            
+            sendTaskStatus(executorDriver, taskInfo.getTaskId(), TaskState.TASK_RUNNING);
+            
         } catch (Exception e) {
             LOGGER.error("Unable to launch server process!", e);
-            System.exit(-1);
+            sendFailMessageAndExit(executorDriver,Protos.TaskStatus.Reason.REASON_COMMAND_EXECUTOR_FAILED,e.getMessage());
         }
 
     }
@@ -153,6 +151,7 @@ public class AccumuloStartExecutor implements Executor {
     public void killTask(ExecutorDriver executorDriver, Protos.TaskID taskID) {
         LOGGER.info("Killing Task: " + taskID.getValue());
         destroyServer();
+        sendTaskStatus(executorDriver, taskID, TaskState.TASK_KILLED);
     }
    
     /**
@@ -275,5 +274,14 @@ public class AccumuloStartExecutor implements Executor {
             throw new RuntimeException("Failed to parse server configuration: " + e.getMessage());
         }   
         return config;
+    }
+    
+    private void sendTaskStatus(ExecutorDriver driver, TaskID taskId, TaskState state) {
+     	
+        TaskStatus status = TaskStatus.newBuilder()
+                .setTaskId(taskId)
+                .setState(state)
+                .build();
+        driver.sendStatusUpdate(status);   	
     }
 }
