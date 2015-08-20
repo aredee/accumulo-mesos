@@ -18,6 +18,14 @@ import org.slf4j.LoggerFactory;
  * is used in the scheduler (ClusterConfiguration) and Executor (ServerProcessConfiguration)
  * and provide a flexible mechanism for defining the various environment variables so even
  * unit tests can be utilized easily.
+ * 
+ * Environment variables that are required to be set:
+ * Environment.ACCUMULO_CLIENT_CONF_PATH
+ * Environment.ZOOKEEPER_HOME
+ * Environment.HADOOP_PREFIX
+ * Environment.HADOOP_CONF_DIR
+ * Environment.ACCUMULO_HOME or MESOS_DIRECTORY
+ * 
  */
 public class ConfigNormalizer {
 
@@ -70,9 +78,10 @@ public class ConfigNormalizer {
     private void toServiceConfiguration(ClusterConfiguration config) {
         serviceConfiguration = new ServerProcessConfiguration();
         
-        // Memory for the initialization process.
-        serviceConfiguration.setMaxMemory("1024m");
-        serviceConfiguration.setMinMemory("512m");
+        // Memory for the accumulo initialization process.
+        serviceConfiguration.setMaxMemory("1024");
+        serviceConfiguration.setMinMemory("512");
+ 
         setCommonEnvironment(config.getAccumuloVersion());      
     }
     
@@ -89,12 +98,11 @@ public class ConfigNormalizer {
             if( server == null ) {
                 throw new RuntimeException("Failed to find server info from scheduler");
             }
-            // Memory for the accumulo service, Really should not hard code this to Megs unless clearly
-            // stated in configuration documentation...but for now this is the easiest way to get it up and running.
-            //
-            serviceConfiguration.setMaxMemory("" + server.getMaxMemory() + "m");
-            serviceConfiguration.setMinMemory("" + server.getMinMemory() + "m");
+  
+            serviceConfiguration.setMaxMemory("" + server.getMaxMemory());
+            serviceConfiguration.setMinMemory("" + server.getMinMemory());
             serviceConfiguration.setType(server.getServerType());
+            
             if (server.hasAccumuloSiteXml()) {
                 siteXml = server.getAccumuloSiteXml();
             }
@@ -108,17 +116,21 @@ public class ConfigNormalizer {
     
     private void setCommonEnvironment(String accumuloVersion) {
         
+        File file = null;
+ 
         String mesosDir = determineValue("MESOS_DIRECTORY", null);
-        LOGGER.info("Mesos directory? " + mesosDir);
-        
+        LOGGER.info("Mesos directory? " + mesosDir + " and version " + accumuloVersion);
+                
         setAccumuloDir(mesosDir, accumuloVersion);
         
         String accumuloHome = serviceConfiguration.getAccumuloDir().getAbsolutePath();
         LOGGER.info("Accumulo Home? " + accumuloHome);
        
         serviceConfiguration.setAccumuloLibDir(new File(accumuloHome + "/lib"));
+        serviceConfiguration.setAccumuloLibExtDir(new File(accumuloHome + "/lib/ext"));
         serviceConfiguration.setAccumuloLogDir(new File(accumuloHome + "/logs"));   
-        serviceConfiguration.setAccumuloConfDir(new File(accumuloHome + "/conf/"));
+        serviceConfiguration.setAccumuloConfDir(new File(accumuloHome + "/conf"));
+     
         serviceConfiguration.setAccumuloClientConfFile(new File(
                 determineValue(Environment.ACCUMULO_CLIENT_CONF_PATH, accumuloHome+"/conf/accumuilo-site.xml")));
       
@@ -126,8 +138,13 @@ public class ConfigNormalizer {
         if (!StringUtils.isEmpty(mesosDir))
             serviceConfiguration.setExecutorDir(new File (mesosDir));
        
-        serviceConfiguration.setHadoopHomeDir(new File(determineValue(Environment.HADOOP_PREFIX, null)));
-        serviceConfiguration.setHadoopConfDir(new File(determineValue(Environment.HADOOP_CONF_DIR, null)));
+        file = createFile(determineValue(Environment.HADOOP_PREFIX, null), Environment.HADOOP_PREFIX);
+ 
+        serviceConfiguration.setHadoopHomeDir(file);
+        
+        file = createFile(determineValue(Environment.HADOOP_CONF_DIR, null), Environment.HADOOP_CONF_DIR);
+     
+        serviceConfiguration.setHadoopConfDir(file);
 
         // This is optional, is not recommend to be set in the newest versions of accumulo since
         // it defaults to hdfs.
@@ -135,10 +152,13 @@ public class ConfigNormalizer {
         if (!StringUtils.isEmpty(walog)) {
             serviceConfiguration.setWalogDir(new File(walog));        
         }
-        serviceConfiguration.setZooKeeperDir(new File(determineValue(Environment.ZOOKEEPER_HOME, null)));
+        file = createFile(determineValue(Environment.ZOOKEEPER_HOME, null), Environment.ZOOKEEPER_HOME);
+ 
+        serviceConfiguration.setZooKeeperDir(file);
         
         setLibPaths();
-        setSystemProperties();        
+        setSystemProperties();
+  
     }
 
     // mesosDir and installDir should be one and the same...test test test
@@ -152,8 +172,9 @@ public class ConfigNormalizer {
         
         if (StringUtils.isEmpty(home)) {
             home = createAccumuloPath(mesosDir, accumuloVersion); 
-        }  
-        serviceConfiguration.setAccumuloDir(new File(home));
+        }
+       
+        serviceConfiguration.setAccumuloDir(createFile(home, Environment.ACCUMULO_HOME));
     }
     
     private String createAccumuloPath(String dir, String accumuloVersion) {
@@ -177,5 +198,15 @@ public class ConfigNormalizer {
             newMap.put(prop.toString(), value.toString());
         }
         serviceConfiguration.setSystemProperties(newMap);
+    }
+    
+    private File createFile(String location, String var) {
+        checkVar(location, var);
+        return new File(location);
+    }
+    private void checkVar(String value, String var) {
+        if (StringUtils.isEmpty(value)) {
+            throw new RuntimeException(var + " is not set");
+        }
     }
 }

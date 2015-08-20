@@ -29,6 +29,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 import org.apache.commons.cli.CommandLine;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.mesos.MesosSchedulerDriver;
 import org.apache.mesos.Protos.FrameworkInfo;
 import org.apache.mesos.SchedulerDriver;
@@ -44,35 +45,50 @@ public final class Main {
     private WebServer webServer;
 
     public static void main(String[] args) {
-
-        // initialize the config object
-        CommandLine cmdLine = CommandLineClusterConfiguration.parseArgs(args);
-        CommandLineClusterConfiguration.checkHelpOrVersion(cmdLine);  // early exit
-
-        // create injector with command line
-        ClusterConfiguration clusterConfiguration;
-        if( cmdLine.hasOption('j') ){
-            // JSON file specified
-            clusterConfiguration = new JSONClusterConfiguration(cmdLine.getOptionValue('j'));
-        } else {
-            // parse all the command line options
-            clusterConfiguration = new CommandLineClusterConfiguration(cmdLine);
-        }
-
+        System.exit(Main.startCluster(initializeClusterConfig(args)));
+    }
+    
+    public static int startCluster(ClusterConfiguration clusterConfig) {
         int exitStatus = -1;
         try {
             LOGGER.info("Starting mesos-accumumlo framework version " + Constants.FRAMEWORK_VERSION);
             LOGGER.info("Java Classpath: " + System.getProperty("java.class.path"));
-            exitStatus = new Main().run(clusterConfiguration, cmdLine.getArgs());
+            
+            exitStatus = new Main().run(clusterConfig);
+            
         } catch (Exception e) {
             LOGGER.error("Unhandled exception encountered, exiting: ", e);
         }
 
         LOGGER.info("Exiting Accumulo Framework with status: " + exitStatus);
-        System.exit(exitStatus);
+        
+        return exitStatus;
     }
-
-    private int run(ClusterConfiguration config, String[] args) throws Exception{
+    
+    public static ClusterConfiguration initializeClusterConfig(String args[]) {
+        
+        // create injector with command line
+        ClusterConfiguration clusterConfiguration = null;
+        
+        try {
+            // initialize the config object
+            CommandLine cmdLine = CommandLineClusterConfiguration.parseArgs(args);
+         
+            if( cmdLine.hasOption('j') ){
+                // JSON file specified
+                clusterConfiguration = new JSONClusterConfiguration(cmdLine.getOptionValue('j'));
+            } else {
+                // parse all the command line options
+                clusterConfiguration = new CommandLineClusterConfiguration(cmdLine);
+            }
+        } catch(RuntimeException re) {
+            System.exit(0);
+        }
+   
+        return clusterConfiguration;
+    }
+    
+    private int run(ClusterConfiguration config) throws Exception{
 
         Injector injector = Guice.createInjector(
                 Stage.PRODUCTION,

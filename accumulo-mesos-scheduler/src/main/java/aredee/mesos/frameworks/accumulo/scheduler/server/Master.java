@@ -18,6 +18,11 @@ public class Master extends BaseServer {
     @Override
     public ServerType getType(){ return ServerType.MASTER; }
     
+    @Override
+    public boolean isServer(String taskId) {
+        return isMaster(taskId);
+    }
+   
     public static boolean isMaster(String id){
         return id.startsWith(ServerType.MASTER.getName());
     }

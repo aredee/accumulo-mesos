@@ -23,10 +23,10 @@ public class BaseProcessConfiguration implements ProcessConfiguration {
      * @param type server type, matches ServerType
      */
     public BaseProcessConfiguration(String minMemory, String maxMemory, String cpus, String type) {
-        this.minMemory = minMemory;
-        this.maxMemory = maxMemory;
-        this.cpus = cpus;
-        this.type = type;
+        setMinMemory(minMemory);
+        setMaxMemory(maxMemory);
+        setCpus(cpus);
+        setType(type);
     }
     
     public BaseProcessConfiguration(ProcessConfiguration process) {
@@ -73,8 +73,9 @@ public class BaseProcessConfiguration implements ProcessConfiguration {
    }
     
     @Override
-    public void setMinMemory(String size) {
-        minMemory = size;
+    public void setMinMemory(String mem) {
+        checkMemory(mem);
+        minMemory = mem;
     }
 
     @Override
@@ -83,8 +84,9 @@ public class BaseProcessConfiguration implements ProcessConfiguration {
     }
     
     @Override
-    public void setMaxMemory(String size) {
-        maxMemory = size;
+    public void setMaxMemory(String mem) {
+        checkMemory(mem);
+        maxMemory = mem;
     }
 
     @Override   
@@ -126,6 +128,12 @@ public class BaseProcessConfiguration implements ProcessConfiguration {
     
     public String toString() {
         return new Gson().toJson(this);
+    }
+    
+    private void checkMemory(String mem) {
+        if (!StringUtils.containsOnly(mem,"0123456789.")) {
+            throw new RuntimeException("Memory is only digit or float, not " + mem);
+        }       
     }
 
 }

@@ -19,7 +19,7 @@ public class TestProcessConfiguration {
 
     // TODO get test working
 
-    //@Test
+    @Test
     public void testSettersGetters() {
         
         testSettersGetters(getTestConfig(MAX, MIN), MAX, MIN);
@@ -29,8 +29,8 @@ public class TestProcessConfiguration {
 
     // TODO get test working
 
-    //@SuppressWarnings("unused")
-    //@Test
+    @SuppressWarnings("unused")
+    @Test
     public void testPerf() {
         
         ProcessConfiguration config = getTestConfig(MAXO, MINO);

@@ -15,7 +15,12 @@ public class Monitor extends BaseServer {
     }
     @Override
     public ServerType getType(){ return ServerType.MONITOR; }
-
+    
+    @Override
+    public boolean isServer(String taskId) {
+        return isMonitor(taskId);
+    }
+    
     public static boolean isMonitor(String id){
         return id.startsWith(ServerType.MONITOR.getName());
     }  
