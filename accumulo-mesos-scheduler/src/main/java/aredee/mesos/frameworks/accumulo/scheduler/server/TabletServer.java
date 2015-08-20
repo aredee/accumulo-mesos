@@ -18,6 +18,11 @@ public class TabletServer extends BaseServer {
     @Override
     public ServerType getType(){ return ServerType.TABLET_SERVER; }
     
+    @Override
+    public boolean isServer(String taskId) {
+        return isTabletServer(taskId);
+    }
+    
     public static boolean isTabletServer(String id){
         return id.startsWith(ServerType.TABLET_SERVER.getName());
     }

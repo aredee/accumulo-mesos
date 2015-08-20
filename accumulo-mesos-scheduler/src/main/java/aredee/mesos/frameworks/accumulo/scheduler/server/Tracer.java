@@ -18,8 +18,12 @@ public class Tracer extends BaseServer {
     @Override
     public ServerType getType(){ return ServerType.TRACER; }
 
-
-    public static boolean isTacer(String id){
+    @Override
+    public boolean isServer(String taskId) {
+        return isTracer(taskId);
+    }
+    
+    public static boolean isTracer(String id){
         return id.startsWith(ServerType.TRACER.getName());
     }
       

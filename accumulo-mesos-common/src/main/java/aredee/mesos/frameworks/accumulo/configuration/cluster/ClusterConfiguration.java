@@ -54,4 +54,6 @@ public interface ClusterConfiguration {
     public void setMinTservers(int servers);
     public int getMinTservers();
     
+    //public void printOptionsInUse();
+   
 }

@@ -18,6 +18,25 @@ public class ServerUtils {
     // Don't allow instantiation
     private ServerUtils(){}
 
+    public static ServerType getType(String taskId) {
+    ServerType type = ServerType.UNKNOWN;
+        
+        if (taskId != null) {
+            if(TabletServer.isTabletServer(taskId)) {
+                type = ServerType.TABLET_SERVER;
+            } else if (Master.isMaster(taskId)) {
+                type = ServerType.MASTER;       
+            } else if (Monitor.isMonitor(taskId)) {
+                type = ServerType.MONITOR;     
+            } else if (GarbageCollector.isGarbageCollector(taskId)) {
+                type = ServerType.GARBAGE_COLLECTOR;
+            } else if (Tracer.isTracer(taskId)) {
+                type = ServerType.TRACER;         
+            }
+        }
+        return type;       
+    }
+    
     public static void addServer(Set<AccumuloServer> launchable, ProcessConfiguration config ) {
         launchable.add(ServerUtils.newServer(config));
     }
@@ -28,18 +47,23 @@ public class ServerUtils {
         server.setMinMemorySize(config.getMinMemorySize());        
         return server;
     }
+    
     public static AccumuloServer newServer(ProcessConfiguration config, String taskId, String slaveId) {
         AccumuloServer server = ServerUtils.newServer(config.toServerType(),taskId, slaveId);
         server.setMaxMemorySize(config.getMaxMemorySize());
         server.setMinMemorySize(config.getMinMemorySize());        
         return server;
-    }   
+    }
+    
     public static AccumuloServer newServer(ServerType type) {
         return serverFactories.get(type).newServer();
     }
+    
     public static AccumuloServer newServer(ServerType type, String taskId, String slaveId) {
         return serverFactories.get(type).newServer(taskId,slaveId);
-    }  
+    }
+    
+    
     private static interface IServerFactory {
         public AccumuloServer newServer();
         public AccumuloServer newServer(String taskId,String slaveId);

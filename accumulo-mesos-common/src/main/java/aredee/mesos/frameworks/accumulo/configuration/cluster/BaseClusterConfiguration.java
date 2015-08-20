@@ -1,8 +1,12 @@
 package aredee.mesos.frameworks.accumulo.configuration.cluster;
 
-import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.gson.Gson;
 
 import aredee.mesos.frameworks.accumulo.configuration.process.BaseProcessConfiguration;
 import aredee.mesos.frameworks.accumulo.configuration.process.ProcessConfiguration;
@@ -14,9 +18,12 @@ import aredee.mesos.frameworks.accumulo.configuration.ServerType;
  */
 public class BaseClusterConfiguration extends JsonBaseClusterConfiguration implements ClusterConfiguration {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(BaseClusterConfiguration.class);
+
     public BaseClusterConfiguration() {
         super();    
     }
+    
     public BaseClusterConfiguration(JsonBaseClusterConfiguration json) {
         this.setAccumuloInstanceName(json.getAccumuloInstanceName());
         this.setAccumuloRootPassword(json.getAccumuloRootPassword());
@@ -61,5 +68,8 @@ public class BaseClusterConfiguration extends JsonBaseClusterConfiguration imple
         }
         return servers;
     }
- 
+    
+    public String toString() {
+         return new Gson().toJson(this);
+    }    
 }

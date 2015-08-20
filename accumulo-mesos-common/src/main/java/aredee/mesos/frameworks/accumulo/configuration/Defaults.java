@@ -52,5 +52,10 @@ public final class Defaults {
     // Default location of the accumulo-site.xml file
     public final static String ACCUMULO_SITE_URI = "file:./conf/default-accumulo-site.xml";
     
+    // Memory unit of measure
+    public final static String DEFAULT_MEM_UNIT = "m";
+    
+    public final static String DEFAULT_ACCUMULO_VERSION = rb.getString("accumulo.default.version");
+    public final static String DEFAULT_ACCUMULO_INSTANCE = rb.getString("accumulo.default.instance");
     
 }

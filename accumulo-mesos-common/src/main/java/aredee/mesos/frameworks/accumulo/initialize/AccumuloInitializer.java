@@ -5,21 +5,12 @@ import java.io.File;
 import java.util.LinkedList;
 import java.util.concurrent.TimeUnit;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-
 import org.apache.accumulo.server.init.Initialize;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.mesos.state.ZooKeeperState;
 import org.apache.mesos.state.State;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 
 import aredee.mesos.frameworks.accumulo.Protos;
 import aredee.mesos.frameworks.accumulo.configuration.cluster.ClusterConfiguration;

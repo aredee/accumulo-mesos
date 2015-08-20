@@ -143,7 +143,7 @@ public class Cluster {
                 gc = (GarbageCollector)ServerUtils.newServer(clusterServers.get(ServerType.GARBAGE_COLLECTOR), taskId, slaveId);
             } else if(Monitor.isMonitor(taskId)){
                 monitor = (Monitor)ServerUtils.newServer(clusterServers.get(ServerType.MONITOR), taskId, slaveId);
-            } else if (Tracer.isTacer(taskId)) {
+            } else if (Tracer.isTracer(taskId)) {
                 tracer = (Tracer)ServerUtils.newServer(clusterServers.get(ServerType.TRACER), taskId, slaveId);
             }
         }

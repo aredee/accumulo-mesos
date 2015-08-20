@@ -16,6 +16,11 @@ public class GarbageCollector extends BaseServer {
     @Override
     public ServerType getType(){ return ServerType.GARBAGE_COLLECTOR; }
     
+    @Override
+    public boolean isServer(String taskId) {
+        return isGarbageCollector(taskId);
+    }
+    
     public static boolean isGarbageCollector(String id){
         return id.startsWith(ServerType.GARBAGE_COLLECTOR.getName());
     }

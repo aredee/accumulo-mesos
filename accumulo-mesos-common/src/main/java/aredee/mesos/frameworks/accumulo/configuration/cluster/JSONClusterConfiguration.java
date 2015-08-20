@@ -6,6 +6,7 @@ import aredee.mesos.frameworks.accumulo.configuration.ServerType;
 import com.google.gson.Gson;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,13 +32,15 @@ public class JSONClusterConfiguration implements ClusterConfiguration {
             JsonBaseClusterConfiguration json = new Gson().fromJson(jsonReader, JsonBaseClusterConfiguration.class);
             jsonAdaptor = new BaseClusterConfiguration(json);
             
-            // TODO verify JSON contains everything needed to get the job done
-        } catch(Exception e) {
+         } catch(Exception e) {
             LOGGER.error("Failed to find input json configuration: " + fileLocation, e);
             throw new RuntimeException("Failed to find or parse input json config", e);
         } finally {
             IOUtils.closeQuietly(jsonReader);
         }
+        
+        ClusterUtils.verifyCluster(jsonAdaptor);
+      
     }
 
     @Override
@@ -167,10 +170,17 @@ public class JSONClusterConfiguration implements ClusterConfiguration {
     public String getAccumuloSiteUri() {
         return jsonAdaptor.getAccumuloSiteUri();
     }
+    
     public void setAccumuloVersion(String version) {
         jsonAdaptor.setAccumuloVersion(version);
     }
+    
     public String getAccumuloVersion() {
         return jsonAdaptor.getAccumuloVersion();
     }
+    
+    public String toString() {
+        return jsonAdaptor.toString();
+    }
+  
 }

@@ -1,5 +1,6 @@
 package aredee.mesos.frameworks.accumulo.process;
 
+import aredee.mesos.frameworks.accumulo.configuration.Defaults;
 import aredee.mesos.frameworks.accumulo.configuration.Environment;
 import aredee.mesos.frameworks.accumulo.configuration.process.ServerProcessConfiguration;
 
@@ -45,8 +46,8 @@ public class AccumuloProcessFactory {
     public Process exec(Class<?> clazz, List<String> jvmArgs, String... args) throws IOException {
 
         ArrayList<String> jvmArgs2 = new ArrayList<>(2 + (jvmArgs == null ? 0 : jvmArgs.size()));
-        jvmArgs2.add("-Xmx" + config.getMaxMemory());
-        jvmArgs2.add("-Xms" + config.getMinMemory());
+        jvmArgs2.add("-Xmx" + config.getMaxMemory() + Defaults.DEFAULT_MEM_UNIT);
+        jvmArgs2.add("-Xms" + config.getMinMemory() + Defaults.DEFAULT_MEM_UNIT);
         if (jvmArgs != null)
             jvmArgs2.addAll(jvmArgs);
         
@@ -70,7 +71,6 @@ public class AccumuloProcessFactory {
         argList.addAll(Arrays.asList(javaBin, "-Dproc=" + clazz.getSimpleName()));
         argList.addAll(extraJvmOpts);
         
-        String prop;
         for (Map.Entry<String, String> sysProp : config.getSystemProperties().entrySet()) {
             
             String svar;

@@ -3,10 +3,14 @@ package aredee.mesos.frameworks.accumulo.configuration.cluster;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import aredee.mesos.frameworks.accumulo.configuration.Defaults;
 import aredee.mesos.frameworks.accumulo.configuration.process.BaseProcessConfiguration;
 import aredee.mesos.frameworks.accumulo.configuration.ServerType;
-import com.google.gson.GsonBuilder;
+
+import com.google.gson.Gson;
 
 /**
  * 
@@ -14,18 +18,17 @@ import com.google.gson.GsonBuilder;
  *
  */
 public class JsonBaseClusterConfiguration {
+    private static final Logger LOGGER = LoggerFactory.getLogger(JsonBaseClusterConfiguration.class);
 
     String bindAddress = Defaults.BIND_ADDRESS;
     int httpPort = Defaults.HTTP_PORT;
     String mesosMaster = Defaults.MESOS_MASTER;
     String frameworkName = Defaults.FRAMEWORK_NAME;
     String zkServers = Defaults.ZK_SERVERS;
-    
     int minTservers = Defaults.MIN_TSERVERS;
 
-    String instanceName = "default-instance";
+    // Where the executor tarball is located. Must be passed in, no default.
     String tarballUri;
-    String accumuloRootPassword = Defaults.ROOT_PASSWORD;
 
     double maxExecutorMemory = Defaults.MAX_EXECUTOR_MEM;
     double minExecutorMemory = Defaults.MIN_EXECUTOR_MEM;
@@ -33,8 +36,10 @@ public class JsonBaseClusterConfiguration {
     Map<ServerType, BaseProcessConfiguration> servers;
     
     String accumuloSiteUri = Defaults.ACCUMULO_SITE_URI;
-    String accumuloVersion;
-    
+    String accumuloVersion = Defaults.DEFAULT_ACCUMULO_VERSION;
+    String instanceName = Defaults.DEFAULT_ACCUMULO_INSTANCE;
+    String accumuloRootPassword = Defaults.ROOT_PASSWORD;
+   
     public JsonBaseClusterConfiguration() {
         setDefaultServers();    
     }
@@ -152,9 +157,9 @@ public class JsonBaseClusterConfiguration {
     }
     
     public String toString() {
-        return new GsonBuilder().setPrettyPrinting().create().toJson(this);
+        return new Gson().toJson(this);
     }
-    
+   
     protected void setDefaultServers() {
         servers = new HashMap<ServerType, BaseProcessConfiguration>(5);
         servers.put(ServerType.MASTER, getDefaultMasterServer());
@@ -198,8 +203,4 @@ public class JsonBaseClusterConfiguration {
                          ""+Defaults.MIN_GC_CPUS, 
                          ServerType.GARBAGE_COLLECTOR.getName());
     }
-
-
-    
-    
 }
