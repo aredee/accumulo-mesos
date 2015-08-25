@@ -1,7 +1,7 @@
 package aredee.mesos.frameworks.accumulo.executor;
 
 import aredee.mesos.frameworks.accumulo.configuration.ConfigNormalizer;
-import aredee.mesos.frameworks.accumulo.configuration.file.AccumuloSiteXml;
+import aredee.mesos.frameworks.accumulo.initialize.AccumuloSiteXml;
 import aredee.mesos.frameworks.accumulo.configuration.process.ServerProcessConfiguration;
 import aredee.mesos.frameworks.accumulo.configuration.ServerType;
 import aredee.mesos.frameworks.accumulo.initialize.AccumuloInitializer;

@@ -6,33 +6,11 @@ import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathFactory;
-
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.ConfigurationFactory;
-import org.apache.commons.configuration.XMLConfiguration;
+import aredee.mesos.frameworks.accumulo.initialize.AccumuloSiteXml;
 //import org.apache.commons.configuration.XMLConfiguration;
-import org.junit.Test;
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
 
 import com.google.common.base.Optional;
-import com.google.gson.Gson;
 
 public class TestSiteXml {
 

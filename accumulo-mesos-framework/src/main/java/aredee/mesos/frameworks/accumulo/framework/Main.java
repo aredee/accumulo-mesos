@@ -106,7 +106,7 @@ public final class Main {
 
                 // Initializes accumulo or gets the instance from the state store if one exists.
                 //
-                AccumuloInitializer accumuloInitializer = new AccumuloInitializer(config);
+                AccumuloInitializer accumuloInitializer = new AccumuloInitializer(config.getCluster());
 
             }
 
