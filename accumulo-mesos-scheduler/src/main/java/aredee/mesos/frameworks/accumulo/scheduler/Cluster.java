@@ -1,46 +1,37 @@
 package aredee.mesos.frameworks.accumulo.scheduler;
 
-import aredee.mesos.frameworks.accumulo.scheduler.launcher.AccumuloStartExecutorLauncher;
+import aredee.mesos.frameworks.accumulo.configuration.ServerType;
+import aredee.mesos.frameworks.accumulo.configuration.process.ProcessConfiguration;
+import aredee.mesos.frameworks.accumulo.model.Framework;
 import aredee.mesos.frameworks.accumulo.scheduler.launcher.Launcher;
 import aredee.mesos.frameworks.accumulo.scheduler.matcher.Match;
 import aredee.mesos.frameworks.accumulo.scheduler.matcher.Matcher;
-import aredee.mesos.frameworks.accumulo.scheduler.matcher.MinCpuMinRamFIFOMatcher;
 import aredee.mesos.frameworks.accumulo.scheduler.matcher.OperationalCheck;
-import aredee.mesos.frameworks.accumulo.scheduler.server.AccumuloServer;
-import aredee.mesos.frameworks.accumulo.scheduler.server.GarbageCollector;
-import aredee.mesos.frameworks.accumulo.scheduler.server.Master;
-import aredee.mesos.frameworks.accumulo.scheduler.server.Monitor;
-import aredee.mesos.frameworks.accumulo.scheduler.server.ServerUtils;
-import aredee.mesos.frameworks.accumulo.scheduler.server.TabletServer;
-import aredee.mesos.frameworks.accumulo.scheduler.server.Tracer;
-
+import aredee.mesos.frameworks.accumulo.scheduler.server.*;
+import com.google.common.collect.Sets;
 import org.apache.mesos.Protos;
 import org.apache.mesos.SchedulerDriver;
 import org.apache.mesos.state.State;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import aredee.mesos.frameworks.accumulo.configuration.cluster.ClusterConfiguration;
-import aredee.mesos.frameworks.accumulo.configuration.process.ProcessConfiguration;
-import aredee.mesos.frameworks.accumulo.configuration.ServerType;
-import aredee.mesos.frameworks.accumulo.initialize.AccumuloInitializer;
-
 import java.util.*;
-import java.util.Map.Entry;
 
-public class Cluster {
+public enum Cluster {
+    INSTANCE;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(Cluster.class);
 
-    private final ClusterConfiguration config;
+    private Framework config;
+    private State state;
 
     private String frameworkId;
-    private State state;
-    
+
     private Master master = null;
     private GarbageCollector gc = null;
     private Monitor monitor = null;
     private Tracer tracer = null;
-    private Set<AccumuloServer> tservers = new HashSet<AccumuloServer>();
+    private Set<AccumuloServer> tservers = Sets.newConcurrentHashSet(); //new HashSet<AccumuloServer>();
     
     private Map<String, Map<ServerType,AccumuloServer>> launchedServers = new HashMap<String, Map<ServerType,AccumuloServer>>();
     
@@ -51,8 +42,17 @@ public class Cluster {
     private Matcher matcher;
     private Launcher launcher;
 
+
+    public void initialize(Framework config, State state){
+        this.config = config;
+        this.state = state;
+    }
+
+
+/*
     @SuppressWarnings("unchecked")
     public Cluster(AccumuloInitializer initializer){
+
         this.state = initializer.getFrameworkState();
         this.config = initializer.getClusterConfiguration();
         this.launcher = new AccumuloStartExecutorLauncher(initializer);
@@ -73,7 +73,7 @@ public class Cluster {
             }
         }
      }
-
+*/
     public void setFrameworkId(String fid){
         this.frameworkId = fid;
         config.getFrameworkName();

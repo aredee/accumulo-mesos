@@ -14,28 +14,32 @@
  */
 package aredee.mesos.frameworks.accumulo.framework;
 
-import aredee.mesos.frameworks.accumulo.configuration.cluster.ClusterConfiguration;
-import aredee.mesos.frameworks.accumulo.configuration.cluster.CommandLineClusterConfiguration;
+import aredee.mesos.frameworks.accumulo.configuration.CommandLineHandler;
 import aredee.mesos.frameworks.accumulo.configuration.Constants;
+import aredee.mesos.frameworks.accumulo.configuration.Defaults;
 import aredee.mesos.frameworks.accumulo.configuration.Environment;
-import aredee.mesos.frameworks.accumulo.configuration.cluster.JSONClusterConfiguration;
 import aredee.mesos.frameworks.accumulo.framework.api.WebServer;
 import aredee.mesos.frameworks.accumulo.framework.guice.ApiServletModule;
 import aredee.mesos.frameworks.accumulo.framework.guice.ConfigurationModule;
 import aredee.mesos.frameworks.accumulo.initialize.AccumuloInitializer;
+import aredee.mesos.frameworks.accumulo.model.Framework;
 import aredee.mesos.frameworks.accumulo.scheduler.Cluster;
 import aredee.mesos.frameworks.accumulo.scheduler.Scheduler;
+import aredee.mesos.frameworks.accumulo.state.FrameworkStateHelper;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
-import org.apache.commons.cli.CommandLine;
 import org.apache.mesos.MesosSchedulerDriver;
 import org.apache.mesos.Protos.FrameworkInfo;
 import org.apache.mesos.SchedulerDriver;
+import org.apache.mesos.state.State;
+import org.apache.mesos.state.ZooKeeperState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 public final class Main {
 
@@ -43,27 +47,24 @@ public final class Main {
 
     private WebServer webServer;
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
 
-        // initialize the config object
-        CommandLine cmdLine = CommandLineClusterConfiguration.parseArgs(args);
-        CommandLineClusterConfiguration.checkHelpOrVersion(cmdLine);  // early exit
-
-        // create injector with command line
-        ClusterConfiguration clusterConfiguration;
-        if( cmdLine.hasOption('j') ){
-            // JSON file specified
-            clusterConfiguration = new JSONClusterConfiguration(cmdLine.getOptionValue('j'));
-        } else {
-            // parse all the command line options
-            clusterConfiguration = new CommandLineClusterConfiguration(cmdLine);
+        if( !environmentVariablesAreSet() ){
+            System.exit(-1);
         }
+
+        CommandLineHandler cmdHandler = new CommandLineHandler(args);
+        if( cmdHandler.checkHelpOrVersion() ){
+            System.exit(0);  // checkHelpOrVersion prints appropriate info to System.out
+        }
+
+        Framework frameworkConfig = cmdHandler.getFrameworkDefinition();
 
         int exitStatus = -1;
         try {
             LOGGER.info("Starting mesos-accumumlo framework version " + Constants.FRAMEWORK_VERSION);
             LOGGER.info("Java Classpath: " + System.getProperty("java.class.path"));
-            exitStatus = new Main().run(clusterConfiguration, cmdLine.getArgs());
+            exitStatus = new Main().run(frameworkConfig);
         } catch (Exception e) {
             LOGGER.error("Unhandled exception encountered, exiting: ", e);
         }
@@ -72,7 +73,77 @@ public final class Main {
         System.exit(exitStatus);
     }
 
-    private int run(ClusterConfiguration config, String[] args) throws Exception{
+    private int run(Framework config) throws Exception{
+
+        // before injector is created, Framework config must be validated/completely populated.
+
+        // check zk for existing accumulo-mesos framework id/name pairs.
+        State mesosState = new ZooKeeperState(config.getZkServers(),
+                Defaults.ZOOKEEPER_TIMEOUT,
+                Defaults.ZK_TIMEOUT_UNIT,
+                Defaults.ZK_STATE_ZNODE );
+
+        FrameworkStateHelper stateHelper = new FrameworkStateHelper(mesosState);
+
+        // Check if any accumulo-mesos frameworks have run here.
+        if( !stateHelper.hasRegisteredFrameworks() ){
+            // make sure Accumulo exists in config
+            if( !config.hasCluster() ){
+                throw new IllegalStateException("No Accumulo Cluster definition exists");
+            }
+            // otherwise, things should be good to go.
+        }
+
+        // if config has a name, but no ID, it may either not exist yet or may be trying to restart with name.
+        if( config.hasName() && !config.hasId() ){
+            // lookup id for name in state store
+            Map<String,String> nameMap = stateHelper.getFrameworkNameMap();
+            String id = nameMap.get(config.getName());
+            if( id != null ) {
+                config.setId(id);
+            } else if( config.hasCluster() ) {
+                // no id but accumulo config? initialize Accumulo with new random id
+
+                // Initializes accumulo or gets the instance from the state store if one exists.
+                //
+                AccumuloInitializer accumuloInitializer = new AccumuloInitializer(config);
+
+            }
+
+        } else if( config.hasId() && !config.hasName() ){
+            // lookup name from ZK using id.
+            Map<String, String> idMap = stateHelper.getFrameworkIdMap();
+            String name = idMap.get( config.getId() );
+            if( name != null){
+                config.setName(name);
+            } else {
+                throw new IllegalStateException("Found saved Framework Id without name");
+            }
+            // populate cluster information from state store
+            if( !config.hasCluster() ){
+                // TODO what if no saved config here? need test cases.
+                try {
+                    Framework savedConfig = stateHelper.getFrameworkConfig(config.getId());
+                    config.setCluster(savedConfig.getCluster());
+                } catch (Exception e){
+                    throw new IllegalStateException("Could not find Cluster definition for framework: " + config.getId());
+                }
+            }
+        }
+
+        // Sanity check before firing up processes.
+        assert( config.getId() != null );
+        assert( config.getName() != null );
+        assert( !config.getName().isEmpty() );
+        assert( !config.getName().isEmpty() );
+        assert( config.hasCluster() );
+        assert( config.getCluster().getId() != null);
+        assert( !config.getCluster().getId().isEmpty());
+
+        // Initialize the Cluster singleton. Do this before creating the webservice in case the
+        // webservice touches it.
+        Cluster cluster = Cluster.INSTANCE;
+        cluster.initialize(config, mesosState);
 
         Injector injector = Guice.createInjector(
                 Stage.PRODUCTION,
@@ -80,26 +151,14 @@ public final class Main {
                 new ApiServletModule()
         );
 
-        checkEnvironmentOrDie();
         startWebserverOrDie(injector);
         
-        // Initializes accumulo or gets the instance from the state store if one exists.
-        //
-        AccumuloInitializer accumuloInitializer = new AccumuloInitializer(config);
-   
-        // TODO reconcile registered frameworks with framework name saved here.
-        //     If name exists, grab the ID and pass that
-        //     into the the framework info when creating the scheduler driver.
-        //     make this work with framework id and/or framework name.
-
         // Start the schedulerDriver
         LOGGER.info("Initializing mesos-accumulo Scheduler");
   
-        Cluster cluster = new Cluster(accumuloInitializer);
-
         FrameworkInfo frameworkInfo = FrameworkInfo.newBuilder()
-                .setId(createMesosFrameworkID(accumuloInitializer.getFrameworkId())) // empty string creates new random name
-                .setName(accumuloInitializer.getFrameworkName())
+                .setId(createMesosFrameworkID(config.getId())) // empty string creates new random name
+                .setName(config.getName())
                 .setCheckpoint(true)
                 .setHostname("") // let mesos set to current hostname
                 .setUser("")  // empty string is current user of mesos process
@@ -161,7 +220,7 @@ public final class Main {
     }
 
 
-    private void checkEnvironmentOrDie(){
+    private static boolean environmentVariablesAreSet(){
         // Check that environment Variables are defined
         List<String> missingEnv = Environment.getMissingVariables();
         if( !missingEnv.isEmpty() ){
@@ -171,7 +230,8 @@ public final class Main {
                 System.err.println(env);
             }
             System.err.println("Define environment and restart");
-            throw new RuntimeException("Invalid Environment");
+            return false;
         }
+        return true;
     }
 }

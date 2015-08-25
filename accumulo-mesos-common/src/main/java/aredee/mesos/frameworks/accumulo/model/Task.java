@@ -4,12 +4,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 
 public class Task  {
-  
+
   private Executor executor = null;
   private Slave slave = null;
-  private String ID = null;
+  private String id = null;
 
-  
+
   /**
    **/
   @JsonProperty("executor")
@@ -20,7 +20,7 @@ public class Task  {
     this.executor = executor;
   }
 
-  
+
   /**
    **/
   @JsonProperty("slave")
@@ -31,27 +31,27 @@ public class Task  {
     this.slave = slave;
   }
 
-  
+
   /**
    **/
-  @JsonProperty("ID")
-  public String getID() {
-    return ID;
+  @JsonProperty("id")
+  public String getId() {
+    return id;
   }
-  public void setID(String ID) {
-    this.ID = ID;
+  public void setId(String id) {
+    this.id = id;
   }
 
-  
+
 
   @Override
   public String toString()  {
     StringBuilder sb = new StringBuilder();
     sb.append("class Task {\n");
-    
+
     sb.append("  executor: ").append(executor).append("\n");
     sb.append("  slave: ").append(slave).append("\n");
-    sb.append("  ID: ").append(ID).append("\n");
+    sb.append("  id: ").append(id).append("\n");
     sb.append("}\n");
     return sb.toString();
   }

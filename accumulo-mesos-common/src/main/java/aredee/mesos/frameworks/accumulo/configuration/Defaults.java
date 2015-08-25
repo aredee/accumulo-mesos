@@ -2,6 +2,7 @@ package aredee.mesos.frameworks.accumulo.configuration;
 
 
 import java.util.ResourceBundle;
+import java.util.concurrent.TimeUnit;
 
 public final class Defaults {
 
@@ -21,6 +22,10 @@ public final class Defaults {
 
     // Zookeeper server
     public final static String ZK_SERVERS = "127.0.0.1:2181";
+    // Zookeeper connection timeout
+    public final static long ZOOKEEPER_TIMEOUT = 60l;
+    public final static TimeUnit ZK_TIMEOUT_UNIT = TimeUnit.SECONDS;
+    public final static String ZK_STATE_ZNODE = "accumulo-mesos";
 
     // Memory settings are MB
     public final static int MIN_MASTER_MEM = 512;
@@ -52,5 +57,5 @@ public final class Defaults {
     // Default location of the accumulo-site.xml file
     public final static String ACCUMULO_SITE_URI = "file:./conf/default-accumulo-site.xml";
     
-    
+
 }

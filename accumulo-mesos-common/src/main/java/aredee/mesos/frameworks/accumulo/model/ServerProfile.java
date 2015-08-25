@@ -5,21 +5,24 @@ import java.math.BigDecimal;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 
+
 public class ServerProfile  {
-  
+
   private String name = null;
   private String description = null;
+  private String id = null;
   public enum TypeEnum {
-     master,  tserver,  gc,  tracer,  monitor, 
+    master,  tserver,  gc,  tracer,  monitor,
   };
   private TypeEnum type = null;
-  private Integer memory = null;
+  private Integer memory = 128;
   private BigDecimal cpus = null;
   private String launcher = null;
   private String user = null;
 
-  
+
   /**
+   * A short name for this profile\n
    **/
   @JsonProperty("name")
   public String getName() {
@@ -29,8 +32,9 @@ public class ServerProfile  {
     this.name = name;
   }
 
-  
+
   /**
+   * Description of this profile\n
    **/
   @JsonProperty("description")
   public String getDescription() {
@@ -40,8 +44,21 @@ public class ServerProfile  {
     this.description = description;
   }
 
-  
+
   /**
+   * Unique ID for this server profile\n
+   **/
+  @JsonProperty("id")
+  public String getId() {
+    return id;
+  }
+  public void setId(String id) {
+    this.id = id;
+  }
+
+
+  /**
+   * Accumulo server type\n
    **/
   @JsonProperty("type")
   public TypeEnum getType() {
@@ -51,8 +68,9 @@ public class ServerProfile  {
     this.type = type;
   }
 
-  
+
   /**
+   * Memory to allocate to this server in MB\n
    **/
   @JsonProperty("memory")
   public Integer getMemory() {
@@ -62,8 +80,9 @@ public class ServerProfile  {
     this.memory = memory;
   }
 
-  
+
   /**
+   * Number of cpus to allocate to this server\n
    **/
   @JsonProperty("cpus")
   public BigDecimal getCpus() {
@@ -73,7 +92,7 @@ public class ServerProfile  {
     this.cpus = cpus;
   }
 
-  
+
   /**
    * Fully qualified class name of launcher class to launch with.\n
    **/
@@ -85,8 +104,9 @@ public class ServerProfile  {
     this.launcher = launcher;
   }
 
-  
+
   /**
+   * System user name to run server processes as.\n
    **/
   @JsonProperty("user")
   public String getUser() {
@@ -96,15 +116,16 @@ public class ServerProfile  {
     this.user = user;
   }
 
-  
+
 
   @Override
   public String toString()  {
     StringBuilder sb = new StringBuilder();
     sb.append("class ServerProfile {\n");
-    
+
     sb.append("  name: ").append(name).append("\n");
     sb.append("  description: ").append(description).append("\n");
+    sb.append("  id: ").append(id).append("\n");
     sb.append("  type: ").append(type).append("\n");
     sb.append("  memory: ").append(memory).append("\n");
     sb.append("  cpus: ").append(cpus).append("\n");

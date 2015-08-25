@@ -1,0 +1,396 @@
+swagger: '2.0'
+     
+info:   
+  version: "0.1.0-SNAPSHOT"
+  title: accumulo-mesos API
+  description: API that the accumulo-mesos framework will serve
+      
+schemes: [http] # https eventually...
+        
+consumes: [application/json]
+produces: [application/json, text/html]
+
+basePath: /api
+  
+################
+#
+# API
+#
+################     
+paths:
+  /:
+    get:
+      description: |
+        Returns Swagger UI for this API
+      responses:
+        200:
+          description: Success
+  /config:    
+    get: 
+      description: |
+        Returns current Framework configuration
+      responses:
+        200:
+          description: Successful response
+          schema:
+            title: Framework Configuration
+            type: object
+            $ref: '#/definitions/Framework'
+  /status:
+    get:
+      description: |
+        Returns Framework Status
+      responses:
+        200:
+          description: Successful response
+          schema:
+            title: Framework Status
+            type: object
+            properties:
+              framework: 
+                type: object
+                $ref: '#/definitions/Framework'
+              tasks:
+                type: array
+                items:
+                  type: object
+                  $ref: '#/definitions/Task'
+  /cluster/start:
+    post:
+      description: |
+        Start configured Accumulo cluster
+      responses:
+        202:
+          description: Start accepted
+        409:
+          description: Cluster already running
+          schema:
+            type: object
+            $ref: '#/definitions/Error'
+  /cluster/stop:
+    post:
+      description: |
+        Stop running Accumulo cluster using Accumulo
+      responses:
+        202:
+          description: Stop accepted
+        409:
+          description: Cluster not running
+          schema:
+            type: object
+            $ref: '#/definitions/Error'
+  /cluster/kill:
+    post:
+      description: |
+        Kill all running processes using Mesos
+      responses:
+        202:
+          description: Kill accepted
+        409:
+          description: Cluster not running
+          schema:
+            type: object
+            $ref: '#/definitions/Error'
+  /cluster/master/restart:
+    post:
+      description: |
+        Restarts Accumulo master server
+      responses:
+        202:
+          description: Restart accepted
+        409:
+          description: Master not running
+          schema:
+            type: object
+            $ref: '#/definitions/Error'
+  /cluster/master/reprovision:
+    post:
+      description: |
+        Restarts Accumulo master server using a new Mesos Resource
+      responses:
+        202:
+          description: Reprovision accepted
+        409:
+          description: Master not running
+          schema:
+            type: object
+            $ref: '#/definitions/Error'          
+  /cluster/monitor:
+    get:
+      description: |
+        Get location(s) of Accumulo Monitor server
+      responses:
+        200:
+          description: Monitor found
+          schema:
+            type: object
+            $ref: '#/definitions/Monitor'
+  /cluster/tserver/restart:
+    post:
+      description: |
+        Restart an Accumulo tserver
+      parameters:
+      - name: id
+        in: query
+        description: ID of the tserver
+        required: true
+        type: string
+      responses:
+        202:
+          description: Reprovision accepted
+        404:
+          description: tserver does not exist
+          schema:
+            type: object
+            $ref: '#/definitions/Error'
+        409:
+          description: tserver exists but is not running
+          schema:
+            type: object
+            $ref: '#/definitions/Error'
+  /cluster/tserver/restart:
+    post:
+      description: |
+        Restarts an Accumulo Tserver
+      parameters:
+      - name: id
+        in: query
+        description: ID of the tserver
+        required: true
+        type: string
+      responses:
+        202:
+          description: Reprovision accepted
+        404:
+          description: tserver does not exist
+          schema:
+            type: object
+            $ref: '#/definitions/Error'
+        409:
+          description: tserver exists but is not running
+          schema:
+            type: object
+            $ref: '#/definitions/Error'
+  /cluster/tserver/reprovision:
+    post:
+      description: |
+        Reprovisions an Accumulo Tserver using a new Mesos Resource
+      parameters:
+      - name: id
+        in: query
+        description: ID of the tserver
+        required: true
+        type: string
+      responses:
+        202:
+          description: Reprovision accepted
+        404:
+          description: tserver does not exist
+          schema:
+            type: object
+            $ref: '#/definitions/Error'
+        409:
+          description: tserver exists but is not running
+          schema:
+            type: object
+            $ref: '#/definitions/Error'
+  /cluster/tserver/rollingrestart:
+    post:
+      description: |
+        Perform a rolling restart of all cluster servers.
+      parameters:
+      - name: master
+        in: query
+        description: Include master server in restart
+        required: false
+        type: boolean
+        default: false
+      - name: group
+        in: query
+        description: Number of servers to restart at once.
+        required: false
+        type: integer
+        default: 1
+      - name: reprovision
+        in: query
+        description: Reprovision servers on new Mesos Resources
+        required: false
+        type: boolean
+        default: false
+      responses:
+        202:
+          description: Rolling restart accepted
+      
+################
+#
+# Data Objects
+#
+################
+definitions:
+  Framework:
+    type: object
+    properties:
+      bindAddress:
+        type: string
+        default: "0.0.0.0"
+        description: |
+          IP address to bind framework webserver to.
+      httpPort:
+        type: integer
+        default: 18120
+        description: |
+          Port to bind framework webserver to.
+      mesosMaster:
+        type: string
+        default: "10.0.2.15:5050"
+        description: |
+          IP and port of Mesos Master node to register with.
+      name:
+        type: string
+        default: "Accumulo Framework"
+        description: |
+          Descriptive name for this framework.
+      id:
+        type: string
+        description: |
+          Unique ID that references this framework
+      tarballUri:
+        type: string
+        description: |
+          URI of tarball containing framework distribution
+      zkServers:
+        type: string
+        default: "127.0.0.1:2181"
+        description: |
+          List of Zookeeper servers to store Framework state on. Does not have
+          to be the same ZK servers used for the Accumulo cluster 
+      cluster:
+        type: object
+        $ref: '#/definitions/Accumulo'
+  Accumulo:
+    type: object
+    properties:
+      id:
+        type: string
+      instance:
+        type: string
+      rootUser:
+        type: string
+        default: "root"
+      rootPassword:
+        type: string
+        default: "secret"
+      initLocation:
+        type: string
+        description: |
+          URI of the rfiles for this instance
+      zkServers:
+        type: string
+        default: "127.0.0.1:2181"
+      executorMemory:
+        type: integer
+        default: 128
+        description: |
+          Maximum memory in MB to launch executors with. This does not include
+          the memory for the server processes.
+      tarballUri:
+        type: string
+        description: |
+          URI for Accumulo distribution code.
+      servers:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/Server'
+  Server:
+    type: object
+    properties:
+      count:
+        type: integer
+        default: 1
+        description: |
+          Number of instances of this profile to launch
+      profile:
+        $ref: '#/definitions/ServerProfile'
+  ServerProfile:
+    type: object
+    properties:
+      name:
+        type: string
+        description: |
+          A short name for this profile
+      description:
+        type: string
+        description: |
+          Description of this profile
+      id:
+        type: string
+        description: |
+          Unique ID for this server profile
+      type:
+        type: string
+        enum: ["master", "tserver", "gc", "tracer", "monitor"]
+        description: |
+          Accumulo server type
+      memory:
+        type: integer
+        default: 128
+        description: |
+          Memory to allocate to this server in MB
+      cpus:
+        type: number
+        default: 0.5
+        description: |
+          Number of cpus to allocate to this server
+      launcher:
+        type: string
+        description: |
+          Fully qualified class name of launcher class to launch with.
+      user:
+        type: string
+        default: "accumulo"
+        description: |
+          System user name to run server processes as.
+  Executor:
+    type: object
+    properties:
+      executorId:
+        type: string
+      frameworkId:
+        type: string
+      name:
+        type: string
+  Slave:
+    type: object
+    properties:
+      hostname:
+        type: string
+      id:
+        type: string
+  Task:
+    type: object
+    properties:
+      executor:
+        $ref : '#/definitions/Executor'
+      slave:
+        $ref : '#/definitions/Slave'
+      id:
+        type: string
+  Monitor:
+    description: |
+      IP addresses of running Accumulo Monitor processes
+    type: array
+    items:
+      type: string
+  Error:
+    description: |
+      Error message
+    type: object
+    properties:
+      code:
+        type: integer
+        description: Numeric error code
+      message:
+        type: string
+        description: Description of error
+

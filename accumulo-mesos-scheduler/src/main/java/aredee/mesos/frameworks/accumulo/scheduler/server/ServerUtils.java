@@ -40,9 +40,9 @@ public class ServerUtils {
     public static AccumuloServer newServer(ServerType type, String taskId, String slaveId) {
         return serverFactories.get(type).newServer(taskId,slaveId);
     }  
-    private static interface IServerFactory {
-        public AccumuloServer newServer();
-        public AccumuloServer newServer(String taskId,String slaveId);
+    private interface IServerFactory {
+        AccumuloServer newServer();
+        AccumuloServer newServer(String taskId,String slaveId);
     }
     
     static {

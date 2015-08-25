@@ -27,7 +27,6 @@ import com.jcabi.xml.XMLDocument;
 
 public class AccumuloSiteXml {
 
- 
     public static final String PASSWORD_PROP = "instance.secret";
     public static final String ZOOKEEPER_PROP = "instance.zookeeper.host";
     
