@@ -120,7 +120,7 @@ public class ConfigNormalizer {
         serviceConfiguration.setAccumuloLogDir(new File(accumuloHome + "/logs"));   
         serviceConfiguration.setAccumuloConfDir(new File(accumuloHome + "/conf/"));
         serviceConfiguration.setAccumuloClientConfFile(new File(
-                determineValue(Environment.ACCUMULO_CLIENT_CONF_PATH, accumuloHome+"/conf/accumuilo-site.xml")));
+                determineValue(Environment.ACCUMULO_CLIENT_CONF_PATH, accumuloHome+"/conf/accumulo-site.xml")));
       
         // On the supervisor side this will be empty.
         if (!StringUtils.isEmpty(mesosDir))

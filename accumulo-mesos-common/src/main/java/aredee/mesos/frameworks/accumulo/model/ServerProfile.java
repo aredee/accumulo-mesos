@@ -19,7 +19,7 @@ public class ServerProfile  {
   private BigDecimal cpus = null;
   private String launcher = null;
   private String user = null;
-
+  private String siteXml = null;
 
   /**
    * A short name for this profile\n
@@ -70,7 +70,7 @@ public class ServerProfile  {
 
 
   /**
-   * Memory to allocate to this server in MB\n
+   * Memory to allocate to this server in MB. -Xmx yyyyM\n
    **/
   @JsonProperty("memory")
   public Integer getMemory() {
@@ -116,7 +116,9 @@ public class ServerProfile  {
     this.user = user;
   }
 
-
+  @JsonProperty("siteXml")
+  public String getSiteXml() { return siteXml; }
+  public void setSiteXml(String siteXml) { this.siteXml = siteXml; }
 
   @Override
   public String toString()  {
@@ -131,6 +133,7 @@ public class ServerProfile  {
     sb.append("  cpus: ").append(cpus).append("\n");
     sb.append("  launcher: ").append(launcher).append("\n");
     sb.append("  user: ").append(user).append("\n");
+    sb.append("  siteXml: ").append(siteXml).append("\n");
     sb.append("}\n");
     return sb.toString();
   }

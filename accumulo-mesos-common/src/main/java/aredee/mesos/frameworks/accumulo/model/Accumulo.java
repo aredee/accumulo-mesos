@@ -18,7 +18,6 @@ public class Accumulo  {
     private Integer executorMemory = 128;
     private String tarballUri = null;
     private List<Server> servers = new ArrayList<Server>();
-    private String siteXml = null;
 
     /**
      **/
@@ -121,10 +120,6 @@ public class Accumulo  {
       this.servers = servers;
     }
 
-    @JsonProperty("siteXml")
-    public String getSiteXml() { return siteXml; }
-    public void setSiteXml(String siteXml) { this.siteXml = siteXml; }
-
     @Override
     public String toString()  {
       StringBuilder sb = new StringBuilder();
@@ -139,7 +134,6 @@ public class Accumulo  {
       sb.append("  executorMemory: ").append(executorMemory).append("\n");
       sb.append("  tarballUri: ").append(tarballUri).append("\n");
       sb.append("  servers: ").append(servers).append("\n");
-      sb.append("  siteXml: ").append(siteXml).append("\n");
       sb.append("}\n");
       return sb.toString();
     }

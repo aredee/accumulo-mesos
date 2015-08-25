@@ -41,7 +41,7 @@ public class AccumuloSiteXml {
         this.config = config;
 
         setPropertyValue(PASSWORD_PROP, config.getRootPassword());
-        setPropertyValue(ZOOKEEPER_PROP, config.getZkServers() );
+        setPropertyValue(ZOOKEEPER_PROP, config.getZkServers());
 
     }
 
@@ -53,11 +53,12 @@ public class AccumuloSiteXml {
     public AccumuloSiteXml() throws Exception {
         this(Defaults.ACCUMULO_SITE_URI);
     }
-    
+
+
     public AccumuloSiteXml(String siteUri) throws Exception {
         initialize(new URI(siteUri).toURL().openStream());
     }
-    
+
     public AccumuloSiteXml(InputStream xmlSiteInput) throws Exception {
         initialize(xmlSiteInput);
     }
@@ -114,10 +115,17 @@ public class AccumuloSiteXml {
      * @param value of property
      * @throws Exception
      */
-    private void setPropertyValue(String propertyName, String value) throws Exception {
-        Node node = getPropertyValueNode(propertyName);
-        if (node != null){
-            node.setTextContent(value);
+    // TODO why not catch exception and then call addProperty here?
+    private void setPropertyValue(String propertyName, String value) {
+
+        try {
+            Node node = null;
+            node = getPropertyValueNode(propertyName);
+            if (node != null){
+                node.setTextContent(value);
+            }
+        } catch (XPathExpressionException e) {
+            addProperty(propertyName, value);
         }
     }
 

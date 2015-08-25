@@ -49,7 +49,7 @@ public class TestSiteXml {
             value = xmlSite.getPropertyValue("xyz.volumes");  
             assertTrue(!value.isPresent());
             
-            xmlSite.addProperty("BLAH", "BLAHBLAH");
+            xmlSite.setPropertyValue("BLAH", "BLAHBLAH");
             
             System.out.println(xmlSite.toXml());          
             

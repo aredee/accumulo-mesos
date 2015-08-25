@@ -1,10 +1,10 @@
 package aredee.mesos.frameworks.accumulo.process;
 
 import aredee.mesos.frameworks.accumulo.configuration.Environment;
-import aredee.mesos.frameworks.accumulo.configuration.process.ServerProcessConfiguration;
 
 import com.google.common.base.Joiner;
 
+import com.google.common.collect.Maps;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.impl.VFSClassLoader;
@@ -33,20 +33,25 @@ import java.util.TimerTask;
 public class AccumuloProcessFactory {
     private static final Logger LOGGER = LoggerFactory.getLogger(AccumuloProcessFactory.class);
 
-    private final ServerProcessConfiguration config;
     private List<LogWriter> logWriters = new ArrayList<>(5);
     private List<Process> cleanup = new ArrayList<>();
+    private Map<String, String> processEnv = Maps.newHashMap();
+    private final String memory;
 
- 
-    public AccumuloProcessFactory(ServerProcessConfiguration config){
-        this.config = config;
+    public AccumuloProcessFactory(String memory){
+        if( memory.endsWith("M")){
+            this.memory = memory;
+        } else {
+            this.memory = memory + "M";
+        }
+
+        initializeEnvironment();
     }
 
     public Process exec(Class<?> clazz, List<String> jvmArgs, String... args) throws IOException {
 
         ArrayList<String> jvmArgs2 = new ArrayList<>(2 + (jvmArgs == null ? 0 : jvmArgs.size()));
-        jvmArgs2.add("-Xmx" + config.getMaxMemory());
-        jvmArgs2.add("-Xms" + config.getMinMemory());
+        jvmArgs2.add("-Xmx" + this.memory);
         if (jvmArgs != null)
             jvmArgs2.addAll(jvmArgs);
         
@@ -56,29 +61,56 @@ public class AccumuloProcessFactory {
         return proc;
     }
 
+    private void initializeEnvironment(){
+        String accumuloHome = System.getenv(Environment.ACCUMULO_HOME);
+        processEnv.put(Environment.ACCUMULO_HOME, System.getenv(Environment.ACCUMULO_HOME));
+        processEnv.put(Environment.ACCUMULO_LOG_DIR, accumuloHome+File.separator+"logs");
+        processEnv.put(Environment.ACCUMULO_CLIENT_CONF_PATH, System.getenv(Environment.ACCUMULO_CLIENT_CONF_PATH));
+        processEnv.put(Environment.ACCUMULO_CONF_DIR, accumuloHome+"/conf/");
+
+        String nativePaths = System.getenv(Environment.NATIVE_LIB_PATHS);
+        String ldLibraryPath = "";
+        if(!StringUtils.isEmpty(nativePaths)) {
+            // change comma for a :
+            ldLibraryPath = Joiner.on(File.pathSeparator).join(Arrays.asList(nativePaths.split(",")));
+        }
+        processEnv.put(Environment.LD_LIBRARY_PATH, ldLibraryPath);
+        processEnv.put(Environment.DYLD_LIBRARY_PATH, ldLibraryPath);
+
+        // if we're running under accumulo.start, we forward these env vars
+        String hadoopPrefix = System.getenv(Environment.HADOOP_PREFIX);
+        processEnv.put(Environment.HADOOP_PREFIX, hadoopPrefix);
+        processEnv.put(Environment.ZOOKEEPER_HOME, System.getenv(Environment.ZOOKEEPER_HOME));
+
+        // hadoop-2.2 puts error messages in the logs if this is not set
+        processEnv.put(Environment.HADOOP_HOME, hadoopPrefix);
+        processEnv.put(Environment.HADOOP_CONF_DIR, hadoopPrefix);
+    }
+
     private Process _exec(Class<?> clazz, List<String> extraJvmOpts, String... args) throws IOException {
         String javaHome = System.getProperty("java.home");
         String javaBin = javaHome + File.separator + "bin" + File.separator + "java";
         
         LOGGER.info("_exec: Java Bin? " + javaBin);
-        LOGGER.info("Config? " + config +"\n\n");
-       
+
         String classpath = getClasspath();
         String className = clazz.getName();
 
         ArrayList<String> argList = new ArrayList<>();
-        argList.addAll(Arrays.asList(javaBin, "-Dproc=" + clazz.getSimpleName()));
+        argList.addAll(Arrays.asList(javaBin, "-Dproc=" + clazz.getSimpleName(),"-cp",classpath));
         argList.addAll(extraJvmOpts);
         
         String prop;
-        for (Map.Entry<String, String> sysProp : config.getSystemProperties().entrySet()) {
+        //for (Map.Entry<String, String> sysProp : profile.getSystemProperties().entrySet()) {
+        // TODO follow the system properties... this might be accumulo properties list.
+        for (Map.Entry<Object, Object> sysProp : System.getProperties().entrySet()) {
             
             String svar;
-            if (sysProp.getKey().equals("java.class.path")){
-                svar = String.format("-D%s=%s", sysProp.getKey(), classpath+":"+sysProp.getValue());
-            } else {
+//            if (sysProp.getKey().equals("java.class.path")){
+//                svar = String.format("-D%s=%s", sysProp.getKey(), classpath+":"+sysProp.getValue());
+//            } else {
                 svar = String.format("-D%s=%s", sysProp.getKey(), sysProp.getValue());
-            }
+//            }
             argList.add(svar);
         }
         // @formatter:off
@@ -98,42 +130,24 @@ public class AccumuloProcessFactory {
         LOGGER.info("Launching with args? " + argList);
         
         ProcessBuilder builder = new ProcessBuilder(argList);
+
+        // copy environment into builder environment
         Map<String, String> environment = builder.environment();
-        environment.put(Environment.ACCUMULO_HOME, config.getAccumuloDir().getAbsolutePath());
-        environment.put(Environment.ACCUMULO_LOG_DIR, config.getAccumuloLogDir().getAbsolutePath());
-        
-        LOGGER.info("CLIENT CONF PATH ? " + config.getAccumuloClientConfFile());
-        
-        environment.put(Environment.ACCUMULO_CLIENT_CONF_PATH, config.getAccumuloClientConfFile().getAbsolutePath());
-
-        String ldLibraryPath = Joiner.on(File.pathSeparator).join(config.getNativeLibPaths());
-        environment.put(Environment.LD_LIBRARY_PATH, ldLibraryPath);
-        environment.put(Environment.DYLD_LIBRARY_PATH, ldLibraryPath);
-
-        // if we're running under accumulo.start, we forward these env vars
-        addEnvironmentVar(Environment.HADOOP_PREFIX, config.getHadoopHomeDir().getAbsolutePath(), environment);
-        addEnvironmentVar(Environment.ZOOKEEPER_HOME, config.getZooKeeperDir().getAbsolutePath(), environment);
-             
-        environment.put(Environment.ACCUMULO_CONF_DIR, config.getAccumuloConfDir().getAbsolutePath());
-        
-        // hadoop-2.2 puts error messages in the logs if this is not set
-        environment.put(Environment.HADOOP_HOME, config.getHadoopHomeDir().getAbsolutePath());
-        environment.put(Environment.HADOOP_CONF_DIR, config.getHadoopConfDir().getAbsolutePath());
+        for( String key : processEnv.keySet()){
+            environment.put(key, processEnv.get(key));
+        }
 
         Process process = builder.start();
-        addLogWriter(process.getErrorStream(), clazz.getSimpleName(), process.hashCode(), ".err");
-        addLogWriter(process.getInputStream(), clazz.getSimpleName(), process.hashCode(), ".out");
+        addLogWriter(processEnv.get(Environment.ACCUMULO_LOG_DIR),
+                process.getErrorStream(), clazz.getSimpleName(), process.hashCode(), ".err");
+        addLogWriter(processEnv.get(Environment.ACCUMULO_LOG_DIR),
+                process.getInputStream(), clazz.getSimpleName(), process.hashCode(), ".out");
 
         return process;
     }
 
-    private void addEnvironmentVar(String name, String value, Map<String, String> environment) {
-        if(!StringUtils.isEmpty(value)) {
-            environment.put(name, value);
-        }
-    }
-    private void addLogWriter(InputStream stream, String className, int hash, String ext) throws IOException {
-        File f = new File(config.getAccumuloLogDir(), className + "_" + hash + ext);
+    private void addLogWriter(String accumuloLogDir, InputStream stream, String className, int hash, String ext) throws IOException {
+        File f = new File(accumuloLogDir, className + "_" + hash + ext);
         logWriters.add(new LogWriter(stream,f));       
     }
     
@@ -152,12 +166,13 @@ public class AccumuloProcessFactory {
             Collections.reverse(classloaders);
 
             StringBuilder classpathBuilder = new StringBuilder();
-            classpathBuilder.append(config.getAccumuloConfDir().getAbsolutePath());
+            classpathBuilder.append(getProcessEnvPath(Environment.ACCUMULO_CONF_DIR));
 
-            if (config.getHadoopConfDir() != null)
-                classpathBuilder.append(File.pathSeparator).append(config.getHadoopConfDir().getAbsolutePath());
+            if (processEnv.get(Environment.HADOOP_CONF_DIR) != null) {
+                classpathBuilder.append(File.pathSeparator).append(getProcessEnvPath(Environment.HADOOP_CONF_DIR));
+            }
 
-            if (config.getClasspathItems() == null) {
+            //if (config.getClasspathItems() == null) {  // JLK - classpathItems is not needed here.
 
                 // assume 0 is the system classloader and skip it
                 for (int i = 1; i < classloaders.size(); i++) {
@@ -179,11 +194,13 @@ public class AccumuloProcessFactory {
                         throw new IllegalArgumentException("Unknown classloader type : " + classLoader.getClass().getName());
                     }
                 }
+            /*
             } else {
                 for (Object s : config.getClasspathItems())
                     classpathBuilder.append(File.pathSeparator).append(s.toString());
             }
-            
+            */
+
             LOGGER.info("Creating classpath: " + classpathBuilder.toString());
 
             return classpathBuilder.toString();
@@ -191,6 +208,12 @@ public class AccumuloProcessFactory {
         } catch (URISyntaxException e) {
             throw new IOException(e);
         }
+    }
+
+    private String getProcessEnvPath(final String envVar){
+        return new File(
+                processEnv.get(envVar)
+        ).getAbsolutePath();
     }
 
     private void append(StringBuilder classpathBuilder, URL url) throws URISyntaxException {
