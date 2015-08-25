@@ -1,6 +1,6 @@
-package aredee.mesos.frameworks.accumulo.configuration.cluster;
+package aredee.mesos.frameworks.accumulo.configuration;
 
-import aredee.mesos.frameworks.accumulo.configuration.Constants;
+import aredee.mesos.frameworks.accumulo.model.Framework;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.HelpFormatter;
@@ -10,8 +10,8 @@ import org.apache.commons.cli.Parser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CommandLineClusterConfiguration extends BaseClusterConfiguration {
-    private static final Logger LOGGER = LoggerFactory.getLogger(CommandLineClusterConfiguration.class);
+public class CommandLineHandler  {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CommandLineHandler.class);
 
     // TODO maybe this should be more like how mesos slaves define their resources and attributes.
     private static final Options options;
@@ -22,17 +22,18 @@ public class CommandLineClusterConfiguration extends BaseClusterConfiguration {
         options.addOption("P", "port", true, "Port number to serve HTTP interface");
         options.addOption("b", "bind-address", true, "IP address of interface to bind HTTP interface to");
         options.addOption("m", "master", true, "Location of mesos master to connect to");
-        options.addOption("f", "framework-name", true, "Name of this mesos framework");
+        options.addOption("n", "name", true, "Name of this mesos framework");
         options.addOption("z", "zookeepers", true, "List of Zookeeper servers");
         options.addOption("t", "tarball", true, "URI of framework tarball");
-        options.addOption("j", "json", true, "JSON file containing configuration");
+
+        options.addOption("f", "framework", true, "JSON file of entire framework configuration");
+        options.addOption("c", "cluster", true, "JSON file containing cluster configuration");
     }
 
     private static final Parser parser = new GnuParser();
 
-    public CommandLineClusterConfiguration(CommandLine cmdLine){
+    public CommandLineHandler(CommandLine cmdLine){
 
-        super();
 
         // Populate configuration
         if( cmdLine.hasOption('P') ){
@@ -62,6 +63,18 @@ public class CommandLineClusterConfiguration extends BaseClusterConfiguration {
         if (cmdLine.hasOption('t')){
             this.setTarballUri( cmdLine.getOptionValue('t'));
         }
+    }
+
+    public Framework getFrameworkDefinition(){
+        // TODO ppopulate config from command line
+
+
+
+
+
+
+        Framework config = new Framework();
+        return config;
     }
 
     public static CommandLine parseArgs(String args[]) {
