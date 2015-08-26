@@ -7,7 +7,6 @@ import java.net.URI;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.collections.CollectionUtils;
 import org.junit.Test;
-import com.google.gson.Gson;
 
 import aredee.mesos.frameworks.accumulo.configuration.cluster.ClusterConfiguration;
 import aredee.mesos.frameworks.accumulo.configuration.cluster.CommandLineClusterConfiguration;

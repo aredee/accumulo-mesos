@@ -121,6 +121,8 @@ public class AccumuloProcessFactory {
         environment.put(Environment.HADOOP_CONF_DIR, config.getHadoopConfDir().getAbsolutePath());
 
         Process process = builder.start();
+        
+        LOGGER.info("class ??? " + clazz + " process ? " + process);
         addLogWriter(process.getErrorStream(), clazz.getSimpleName(), process.hashCode(), ".err");
         addLogWriter(process.getInputStream(), clazz.getSimpleName(), process.hashCode(), ".out");
 
@@ -224,6 +226,7 @@ public class AccumuloProcessFactory {
         public LogWriter(InputStream stream, File logFile) throws IOException {
             setDaemon(true);
             this.in = new BufferedReader(new InputStreamReader(stream));
+            logFile.getParentFile().mkdirs();
             this.out = new BufferedWriter(new FileWriter(logFile));
 
            new Timer().schedule(new TimerTask() {public void run() {

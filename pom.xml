@@ -74,6 +74,8 @@
         <version.snake>1.15</version.snake>
         <version.gson>2.3.1</version.gson>
         <version.commons-lang3>3.4</version.commons-lang3>
+        <version.jcabi>0.16.2</version.jcabi>
+        <version.jmockit>1.18</version.jmockit>
         <accumulo.bin.md5>898ec8e2c9d048be554a32a344dd6170</accumulo.bin.md5>
     </properties>
 
@@ -261,11 +263,13 @@
                 <artifactId>${slf4j.binding}</artifactId>
                 <version>${version.slf4j}</version>
             </dependency>
- 	    <dependency>
-   	        <groupId>com.jcabi</groupId>
+            
+            <!-- Manipulate siteXml file -->
+ 	        <dependency>
+   	            <groupId>com.jcabi</groupId>
                  <artifactId>jcabi-xml</artifactId>
-                 <version>0.16.2</version>
- 	    </dependency>
+                 <version>${version.jcabi}</version>
+ 	        </dependency>
 
             <!-- Test Libraries -->
             <dependency>
@@ -273,6 +277,12 @@
                 <artifactId>junit</artifactId>
                 <version>${version.junit}</version>
                 <scope>test</scope>
+            </dependency>
+	        <dependency>
+		        <groupId>org.jmockit</groupId>
+		        <artifactId>jmockit</artifactId>
+		        <version>${version.jmockit}</version>
+	     	    <scope>test</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -319,7 +329,6 @@
                     <artifactId>maven-jar-plugin</artifactId>
                     <version>2.6</version>
                 </plugin>
-
             </plugins>
         </pluginManagement>
 
@@ -358,10 +367,18 @@
                         </manifest>
                         <manifestEntries>
                             <Class-Path>conf/</Class-Path>
-                            <Class-Path>/vagrant/accumulo-install/conf/</Class-Path>
                         </manifestEntries>
                     </archive>
                 </configuration>
+               
+                  <executions>
+                    <execution>
+                        <goals>
+                            <goal>test-jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                    
             </plugin>
 
             <plugin>
@@ -375,6 +392,7 @@
                         <version>2.18.1</version>
                     </dependency>
                 </dependencies>
+  
             </plugin>
             <plugin>
                 <artifactId>maven-dependency-plugin</artifactId>
@@ -414,6 +432,48 @@
                     </execution>
                 </executions>
             </plugin>
+	    <plugin>
+		  <groupId>org.jacoco</groupId>
+		  <artifactId>jacoco-maven-plugin</artifactId>
+		  <version>0.7.5.201505241946</version>
+		  <configuration>
+		     	<excludes>
+			 	<exclude>**/Protos*.class</exclude>         <!-- Exclude generated protobuf classes -->
+		      	</excludes>
+		  </configuration>
+		  <executions>
+			<execution>
+			    <id>pre-unit-test</id>
+			    <goals>
+				<goal>prepare-agent</goal>
+			    </goals>
+			    <configuration>
+				<!-- Sets the path to the file which contains the execution data. -->
+				<destFile>${project.build.directory}/coverage-reports/jacoco-ut.exec</destFile>
+			    </configuration>
+			</execution>
+			<!--
+			    Ensures that the code coverage report for unit tests is created after
+			    unit tests have been run.
+			-->
+			<execution>
+			    <id>post-unit-test</id>
+			    <phase>test</phase>
+			    <goals>
+				<goal>report</goal>
+			    </goals>
+			    <configuration>
+				<!-- Sets the path to the file which contains the execution data. -->
+				<dataFile>${project.build.directory}/coverage-reports/jacoco-ut.exec</dataFile>
+				<!-- Sets the output directory for the code coverage report. -->
+				<outputDirectory>${project.reporting.outputDirectory}/jacoco-ut</outputDirectory>
+			    </configuration>
+			</execution>
+
+ 
+		  </executions>
+	     </plugin>
+
         </plugins>
     </build>
 </project>
