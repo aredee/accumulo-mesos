@@ -60,20 +60,7 @@ public class ConfigNormalizer {
         return siteXml;
     }
    
-    public static String determineValue(String name, String defaultValue) {
-        String value = System.getenv(name);
-        
-        LOGGER.debug("Environment name: " + name + " value: " + value );
-        
-        if (StringUtils.isEmpty(value)) {
-            value = System.getProperty(name);
-        }
-        
-        if (StringUtils.isEmpty(value) && !StringUtils.isEmpty(defaultValue) )
-            value = defaultValue;
-        
-        return value;
-    }
+ 
     
     private void toServiceConfiguration(ClusterConfiguration config) {
         serviceConfiguration = new ServerProcessConfiguration();
@@ -105,6 +92,9 @@ public class ConfigNormalizer {
             
             if (server.hasAccumuloSiteXml()) {
                 siteXml = server.getAccumuloSiteXml();
+                LOGGER.info("toServiceConfiguration: siteXml? " + siteXml);
+            } else {
+                LOGGER.warn("Expected accumuloSite.xml but not found");
             }
            
             setCommonEnvironment(server.getAccumuloVersion());
@@ -118,7 +108,7 @@ public class ConfigNormalizer {
         
         File file = null;
  
-        String mesosDir = determineValue("MESOS_DIRECTORY", null);
+        String mesosDir = Environment.determineValue("MESOS_DIRECTORY", null);
         LOGGER.info("Mesos directory? " + mesosDir + " and version " + accumuloVersion);
                 
         setAccumuloDir(mesosDir, accumuloVersion);
@@ -132,27 +122,27 @@ public class ConfigNormalizer {
         serviceConfiguration.setAccumuloConfDir(new File(accumuloHome + "/conf"));
      
         serviceConfiguration.setAccumuloClientConfFile(new File(
-                determineValue(Environment.ACCUMULO_CLIENT_CONF_PATH, accumuloHome+"/conf/accumuilo-site.xml")));
+                Environment.determineValue(Environment.ACCUMULO_CLIENT_CONF_PATH, accumuloHome+"/conf/accumuilo-site.xml")));
       
         // On the supervisor side this will be empty.
         if (!StringUtils.isEmpty(mesosDir))
             serviceConfiguration.setExecutorDir(new File (mesosDir));
        
-        file = createFile(determineValue(Environment.HADOOP_PREFIX, null), Environment.HADOOP_PREFIX);
+        file = createFile(Environment.determineValue(Environment.HADOOP_PREFIX, null), Environment.HADOOP_PREFIX);
  
         serviceConfiguration.setHadoopHomeDir(file);
         
-        file = createFile(determineValue(Environment.HADOOP_CONF_DIR, null), Environment.HADOOP_CONF_DIR);
+        file = createFile(Environment.determineValue(Environment.HADOOP_CONF_DIR, null), Environment.HADOOP_CONF_DIR);
      
         serviceConfiguration.setHadoopConfDir(file);
 
         // This is optional, is not recommend to be set in the newest versions of accumulo since
         // it defaults to hdfs.
-        String walog = determineValue(Environment.ACCUMULO_WALOG, null);
+        String walog = Environment.determineValue(Environment.ACCUMULO_WALOG, null);
         if (!StringUtils.isEmpty(walog)) {
             serviceConfiguration.setWalogDir(new File(walog));        
         }
-        file = createFile(determineValue(Environment.ZOOKEEPER_HOME, null), Environment.ZOOKEEPER_HOME);
+        file = createFile(Environment.determineValue(Environment.ZOOKEEPER_HOME, null), Environment.ZOOKEEPER_HOME);
  
         serviceConfiguration.setZooKeeperDir(file);
         
@@ -166,7 +156,7 @@ public class ConfigNormalizer {
         
         // Properties and Environment variables take precedence. This should not be set
         // for the executor....
-        String home = determineValue(Environment.ACCUMULO_HOME, null);
+        String home = Environment.determineValue(Environment.ACCUMULO_HOME, null);
         
         LOGGER.info("setAccumuloDir: ACCUMULO_HOME? " + home);
         
@@ -180,9 +170,10 @@ public class ConfigNormalizer {
     private String createAccumuloPath(String dir, String accumuloVersion) {
         return dir + File.separator + Constants.ACCUMULO_DISTRO + File.separator + "accumulo-" + accumuloVersion;
     }
+    
     private void setLibPaths() {
         
-        String paths = determineValue(Environment.NATIVE_LIB_PATHS, null);
+        String paths = Environment.determineValue(Environment.NATIVE_LIB_PATHS, null);
         
         if(!StringUtils.isEmpty(paths)) {
              serviceConfiguration.setNativeLibPaths(Arrays.asList(paths.split(",")));

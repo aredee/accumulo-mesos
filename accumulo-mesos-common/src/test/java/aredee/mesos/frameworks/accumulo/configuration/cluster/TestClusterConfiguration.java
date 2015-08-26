@@ -16,6 +16,7 @@ public class TestClusterConfiguration {
     
     public static final String BADCLUSTER_RES = "/TestBadCluster.json";
     public static final String GOODCLUSTER_RES = "/TestGoodCluster.json";
+    
     static final String TARBALL = "/usr/local/accumulo/accumulo-1.1.1.tar.gz";
     static final String ZOOKEEPERS = "10.0.2.15:2181,192,168.0.1:2181";
     static final String VERSION = "1.1.1";
@@ -95,7 +96,7 @@ public class TestClusterConfiguration {
        System.out.println("Running testBadClusterCmdLine unit test");
        try
         {
-            // This should fail because not tarball option
+            // This should fail because no tarball option
             String args[] = new String[] {"-b","http://localhost","-m", "10.0.2.15:5050", 
                     "-f", "Accumulo-1-Mesos","-z", "10.0.2.15:2181"};
             
@@ -114,28 +115,18 @@ public class TestClusterConfiguration {
 
 
     @SuppressWarnings("unused")
-    @Test
+    @Test(expected= RuntimeException.class)
     public void testBadClusterJson() {
         System.out.println("Running testBadClusterJson unit test");
      
-        try
-        {
-            // This should fail because no tarball option
-            String args[] = new String[] { "-j", getClusterFile(BADCLUSTER_RES) , "-t", "/xyz"};
-            
-            CommandLine cmdLine = CommandLineClusterConfiguration.parseArgs(args);
-            if( cmdLine.hasOption('j') ){
-                // JSON file specified
-                 ClusterConfiguration cluster = new JSONClusterConfiguration(cmdLine.getOptionValue('j'));
-            }          
-            fail("Expected a RuntimeException");
+        // This should fail because no tarball option
+        String args[] = new String[] { "-j", getClusterFile(BADCLUSTER_RES) , "-t", "/xyz"};
         
-        } catch(Exception e) {
-            assertTrue(true);
+        CommandLine cmdLine = CommandLineClusterConfiguration.parseArgs(args);
+        if( cmdLine.hasOption('j') ){
+            // JSON file specified
+             ClusterConfiguration cluster = new JSONClusterConfiguration(cmdLine.getOptionValue('j'));
         }
-        
-        System.out.println("Ending testBadClusterJson unit test");
-      
     }
     
     @Test
@@ -144,8 +135,7 @@ public class TestClusterConfiguration {
      
         try
         {
-            // This should fail because no port -P option
-            String args[] = new String[] { "-j=" + getClusterFile(GOODCLUSTER_RES)};
+            String args[] = new String[] { "-j", getClusterFile(GOODCLUSTER_RES)};
             
             CommandLine cmdLine = CommandLineClusterConfiguration.parseArgs(args);
             if( cmdLine.hasOption('j') ){
@@ -189,7 +179,7 @@ public class TestClusterConfiguration {
       
     }
     
-    public String getClusterFile(String resource) {
+    public static String getClusterFile(String resource) {
         String f = ClassLoader.class.getResource(resource).getFile();
         System.out.println("Cluster config file : " + f);
         return f;

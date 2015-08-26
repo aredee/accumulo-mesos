@@ -147,17 +147,17 @@ public class AccumuloInitializer {
          return siteXml;
      }
     
+     public static String siteUri() {
+         return  File.separator + "conf" + File.separator + "accumulo-site.xml";
+     }
+     
      public static void writeAccumuloSiteFile(String accumuloHomeDir, AccumuloSiteXml siteXml) {       
-         LOGGER.info("ACCUMULO HOME? " + accumuloHomeDir);
          try {
-  
-             File accumuloSiteFile = new File(accumuloHomeDir + File.separator +
-                     "conf" + File.separator + "accumulo-site.xml");
-  
-             siteXml.writeSiteFile(accumuloSiteFile);
-             
+             File siteFile = new File(accumuloHomeDir + siteUri());
+             siteFile.getParentFile().mkdirs();
+             siteXml.writeSiteFile(siteFile);    
          } catch (Exception e) {
-             logErrorAndDie("Error Creating accumulo-site.xml\n",e);
+             logErrorAndThrowRT("Error Creating accumulo-site.xml\n",e);
          } 
      }
    
@@ -204,7 +204,7 @@ public class AccumuloInitializer {
         config.setAccumuloInstanceName(accumuloInstanceName);
     }
     
-    private static void logErrorAndDie(String message, Exception e){
+    private static void logErrorAndThrowRT(String message, Exception e){
         LOGGER.error(message,e);
         throw new RuntimeException(e);
     }

@@ -15,6 +15,8 @@ import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
 import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -24,9 +26,13 @@ import aredee.mesos.frameworks.accumulo.configuration.Defaults;
 import com.google.common.base.Optional;
 import com.jcabi.xml.XMLDocument;
 
-
+/**
+ * Manage accumulo site xml file
+ *
+ */
 public class AccumuloSiteXml {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(AccumuloSiteXml.class);
  
     public static final String PASSWORD_PROP = "instance.secret";
     public static final String ZOOKEEPER_PROP = "instance.zookeeper.host";
@@ -43,6 +49,8 @@ public class AccumuloSiteXml {
     }
     
     public AccumuloSiteXml(String siteUri) throws Exception {
+        LOGGER.info("() siteUri? " + siteUri);
+        
         initialize(new URI(siteUri).toURL().openStream());
     }
     

@@ -54,8 +54,18 @@
             <groupId>aredee.mesos.frameworks.accumulo</groupId>
             <artifactId>accumulo-mesos-common</artifactId>
             <version>${project.parent.version}</version>
-                <scope>compile</scope>
+            <scope>compile</scope>
         </dependency>
+        
+        <!-- Unit tests depend on common test classes  -->
+        <dependency>
+            <groupId>aredee.mesos.frameworks.accumulo</groupId>
+            <artifactId>accumulo-mesos-common</artifactId>
+            <type>test-jar</type>
+            <version>${project.parent.version}</version>
+            <scope>test</scope>
+        </dependency>
+       
         <dependency>
             <groupId>org.apache.mesos</groupId>
             <artifactId>mesos</artifactId>
@@ -106,12 +116,19 @@
             <artifactId>junit</artifactId>
             <scope>test</scope>
         </dependency>
-      	    <dependency>
+      	<dependency>
           	<artifactId>snakeyaml</artifactId>
           	<groupId>org.yaml</groupId>
-                <scope>compile</scope>
-            </dependency>
+            <scope>compile</scope>
+       	</dependency>
+ 
+        <dependency>
+		    <groupId>org.jmockit</groupId>
+		    <artifactId>jmockit</artifactId>
+            <scope>test</scope>
+        </dependency>
 
+ 
     </dependencies>
 
     <build>

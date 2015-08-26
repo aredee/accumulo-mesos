@@ -53,7 +53,8 @@ public class AccumuloStartExecutor implements Executor {
      * @see org.apache.mesos.MesosSchedulerDriver
      */
     @Override
-    public void registered(ExecutorDriver executorDriver, Protos.ExecutorInfo executorInfo, Protos.FrameworkInfo frameworkInfo, Protos.SlaveInfo slaveInfo) {
+    public void registered(ExecutorDriver executorDriver, Protos.ExecutorInfo executorInfo, 
+            Protos.FrameworkInfo frameworkInfo, Protos.SlaveInfo slaveInfo) {
         LOGGER.info("Executor Registered: " + executorInfo.getName());
         this.executorInfo = executorInfo;
         this.frameworkInfo = frameworkInfo;
@@ -118,6 +119,7 @@ public class AccumuloStartExecutor implements Executor {
         String[] args = new String[0];
    
         try {
+            
             // accumulo-site.xml is sent in from scheduler
             AccumuloInitializer.writeAccumuloSiteFile(process.getAccumuloDir().getAbsolutePath(),
                     new AccumuloSiteXml(new ByteArrayInputStream(siteXml.getBytes())));

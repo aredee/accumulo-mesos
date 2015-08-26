@@ -3,28 +3,15 @@ package aredee.mesos.frameworks.accumulo.executor;
 import static org.junit.Assert.fail;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.mesos.ExecutorDriver;
-import org.apache.mesos.Protos;
-import org.apache.mesos.Protos.ExecutorID;
-import org.apache.mesos.Protos.Resource;
+
 import org.apache.mesos.Protos.Status;
 import org.apache.mesos.Protos.TaskInfo;
 import org.apache.mesos.Protos.TaskStatus;
-import org.apache.mesos.Protos.Value;
-import org.apache.mesos.Protos.Value.Scalar;
-import org.junit.Test;
-
- 
-
-
-
-
 
 import aredee.mesos.frameworks.accumulo.configuration.Environment;
 import aredee.mesos.frameworks.accumulo.configuration.ServerType;

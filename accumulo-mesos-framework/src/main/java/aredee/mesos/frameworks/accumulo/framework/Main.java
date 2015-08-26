@@ -29,7 +29,6 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.mesos.MesosSchedulerDriver;
 import org.apache.mesos.Protos.FrameworkInfo;
 import org.apache.mesos.SchedulerDriver;
@@ -69,25 +68,21 @@ public final class Main {
         
         // create injector with command line
         ClusterConfiguration clusterConfiguration = null;
-        
-        try {
-            // initialize the config object
-            CommandLine cmdLine = CommandLineClusterConfiguration.parseArgs(args);
-         
-            if( cmdLine.hasOption('j') ){
-                // JSON file specified
-                clusterConfiguration = new JSONClusterConfiguration(cmdLine.getOptionValue('j'));
-            } else {
-                // parse all the command line options
-                clusterConfiguration = new CommandLineClusterConfiguration(cmdLine);
-            }
-        } catch(RuntimeException re) {
-            System.exit(0);
+       
+        // initialize the config object
+        CommandLine cmdLine = CommandLineClusterConfiguration.parseArgs(args);
+     
+        if( cmdLine.hasOption('j') ){
+            // JSON file specified
+            clusterConfiguration = new JSONClusterConfiguration(cmdLine.getOptionValue('j'));
+        } else {
+            // parse all the command line options
+            clusterConfiguration = new CommandLineClusterConfiguration(cmdLine);
         }
-   
+    
         return clusterConfiguration;
     }
-    
+   
     private int run(ClusterConfiguration config) throws Exception{
 
         Injector injector = Guice.createInjector(
