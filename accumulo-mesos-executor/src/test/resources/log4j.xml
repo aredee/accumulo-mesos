@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
+  <appender name="console" class="org.apache.log4j.ConsoleAppender"> 
+    <param name="Target" value="System.out"/> 
+    <layout class="org.apache.log4j.PatternLayout"> 
+      <param name="ConversionPattern" value="%-5p %c{1} - %m%n"/> 
+    </layout> 
+  </appender> 
+
+  <appender name="executor" class="org.apache.log4j.RollingFileAppender"> 
+    <param name="file" value="./logs/executor.log"/>
+    <param name="MaxFileSize" value="10MB"/>
+    <!-- Keep one backup file -->
+    <param name="MaxBackupIndex" value="2"/>
+    <layout class="org.apache.log4j.PatternLayout"> 
+      <param name="ConversionPattern" value="[%d{dd/MM/yy hh:mm:ss:sss z}] %p %t %c - %m%n"/> 
+    </layout> 
+  </appender> 
+
+<logger name="com.ebay" additivity="false">
+   <level value="debug" />
+   <appender-ref ref="executor" />
+</logger>
+
+  <root> 
+    <priority value ="debug" /> 
+    <appender-ref ref="executor" />
+  </root>
+  
+</log4j:configuration>

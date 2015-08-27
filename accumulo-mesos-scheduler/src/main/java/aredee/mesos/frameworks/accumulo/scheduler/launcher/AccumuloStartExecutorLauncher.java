@@ -56,7 +56,6 @@ public class AccumuloStartExecutorLauncher implements Launcher {
      * @param driver Mesos interface to use to launch a server
      * @param match AccumuloServer and Offer to launch
      */
-    @SuppressWarnings("unchecked")
     public Protos.TaskInfo launch(SchedulerDriver driver, Match match){
         AccumuloServer server = match.getServer();
         Protos.Offer offer = match.getOffer();

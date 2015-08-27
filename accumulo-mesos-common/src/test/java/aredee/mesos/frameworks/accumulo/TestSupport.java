@@ -20,6 +20,7 @@ import aredee.mesos.frameworks.accumulo.configuration.Defaults;
 import aredee.mesos.frameworks.accumulo.configuration.Environment;
 import aredee.mesos.frameworks.accumulo.configuration.ServerType;
 import aredee.mesos.frameworks.accumulo.configuration.cluster.ClusterConfiguration;
+import aredee.mesos.frameworks.accumulo.configuration.cluster.JSONClusterConfiguration;
 import aredee.mesos.frameworks.accumulo.configuration.process.ProcessConfiguration;
  
 public class TestSupport {
@@ -87,6 +88,13 @@ public class TestSupport {
         }
     }
     
+    public static void setExecutorEnviron() {
+        System.setProperty("HADOOP_PREFIX", TestSupport.HADOOP_PREFIX);
+        System.setProperty("HADOOP_CONF_DIR", TestSupport.HADOOP_PREFIX);
+        System.setProperty("MESOS_DIRECTORY",TestSupport.MESOS_DIRECTORY);
+        System.setProperty("ZOOKEEPER_HOME",TestSupport.ZOOKEEPER_HOME);       
+    }
+    
     public static void setSchedulerEnviron() {
     
         System.setProperty("ACCUMULO_HOME", ACCUMULO_HOME);
@@ -96,7 +104,11 @@ public class TestSupport {
         System.setProperty("ACCUMULO_CLIENT_CONF_PATH", ACCUMULO_CLIENT_CONF_PATH);
     }
     
-    
+    public static void setBadSchedulerEnviron() {
+        setSchedulerEnviron();
+        
+        System.clearProperty("HADOOP_PREFIX");
+    }
     public static TaskInfo createTaskInfo(ServerContext serverCtx, 
             ClusterConfiguration config, String siteXml, EnvironContext envCtx) {
         
@@ -216,6 +228,16 @@ public class TestSupport {
         tearDownConfDir();
         tearDownAccumuloHome();
         tearDownMesosDir();
+    }
+    
+    public static ClusterConfiguration getJsonClusterConfigWithTestSite(String resource) {
+        String loc = getResourceFileLocation(resource);
+        ClusterConfiguration cluster = new JSONClusterConfiguration(loc);
+        setTestSiteFileLocation(cluster);
+        return cluster;
+    }
+    public static void setTestSiteFileLocation(ClusterConfiguration config) {
+        config.setAccumuloSiteUri("file:"+TestSupport.TEST_CONF_DIR+TestSupport.TEST_SITE_RESOURCE);      
     }
        
 }

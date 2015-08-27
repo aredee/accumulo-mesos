@@ -27,6 +27,8 @@ import aredee.mesos.frameworks.accumulo.initialize.AccumuloInitializer;
 
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 public class Cluster {
     private static final Logger LOGGER = LoggerFactory.getLogger(Cluster.class);
@@ -35,14 +37,16 @@ public class Cluster {
 
     private String frameworkId;
     private State state;
+        
+    // Just in case there can be multiple GC/Tracer/Master/Monitor/ on multiple slaves.
+    // This is basically the same as launcheServers but indexed a different way
+    //
+    private ConcurrentMap<ServerType, Set<AccumuloServer>>serversAvailable = 
+            new ConcurrentHashMap<ServerType,Set<AccumuloServer>>();
     
-    private Master master = null;
-    private GarbageCollector gc = null;
-    private Monitor monitor = null;
-    private Tracer tracer = null;
-    private Set<AccumuloServer> tservers = new HashSet<AccumuloServer>();
-    
-    private Map<String, Map<ServerType,AccumuloServer>> launchedServers = new HashMap<String, Map<ServerType,AccumuloServer>>();
+    // currently sync'ed in methods but could be Concurrent
+    private Map<String, Map<ServerType,AccumuloServer>> launchedServers = 
+            new HashMap<String, Map<ServerType,AccumuloServer>>();
     
     private Set<Protos.TaskStatus> runningServers = new HashSet<Protos.TaskStatus>();
     private Set<AccumuloServer> serversToLaunch = new HashSet<AccumuloServer>();
@@ -51,7 +55,6 @@ public class Cluster {
     private Matcher matcher;
     private Launcher launcher;
 
-    @SuppressWarnings("unchecked")
     public Cluster(AccumuloInitializer initializer){
         this.state = initializer.getFrameworkState();
         this.config = initializer.getClusterConfiguration();
@@ -80,7 +83,6 @@ public class Cluster {
         //TODO persist configuration
     }
 
-    @SuppressWarnings("unchecked")
     public void handleOffers(SchedulerDriver driver, List<Protos.Offer> offers){
 
         LOGGER.debug("Mesos Accumulo Cluster handling offers: for servers {}", serversToLaunch);
@@ -125,7 +127,7 @@ public class Cluster {
         // will update the tasks list.
         // TODO handle return of reconcileTasks
         Protos.Status reconcileStatus = driver.reconcileTasks(runningServers);
-        clearServers();
+        clearAvailServers();
         
         String slaveId;
         String taskId;
@@ -134,17 +136,17 @@ public class Cluster {
         for (Protos.TaskStatus status : runningServers ){
             slaveId = status.getSlaveId().getValue();
             taskId = status.getTaskId().getValue();
-
-            if( Master.isMaster(taskId)){
-                master = (Master)ServerUtils.newServer(clusterServers.get(ServerType.MASTER), taskId, slaveId);
+             
+             if( Master.isMaster(taskId)){
+                addAvailServer(ServerUtils.newServer(clusterServers.get(ServerType.MASTER), taskId, slaveId));
             } else if( TabletServer.isTabletServer(taskId)) {
-                tservers.add((TabletServer)ServerUtils.newServer(clusterServers.get(ServerType.TABLET_SERVER), taskId, slaveId));
+                addAvailServer(ServerUtils.newServer(clusterServers.get(ServerType.TABLET_SERVER), taskId, slaveId));
             } else if( GarbageCollector.isGarbageCollector(taskId)) {
-                gc = (GarbageCollector)ServerUtils.newServer(clusterServers.get(ServerType.GARBAGE_COLLECTOR), taskId, slaveId);
+                addAvailServer(ServerUtils.newServer(clusterServers.get(ServerType.GARBAGE_COLLECTOR), taskId, slaveId));
             } else if(Monitor.isMonitor(taskId)){
-                monitor = (Monitor)ServerUtils.newServer(clusterServers.get(ServerType.MONITOR), taskId, slaveId);
+                addAvailServer(ServerUtils.newServer(clusterServers.get(ServerType.MONITOR), taskId, slaveId));
             } else if (Tracer.isTracer(taskId)) {
-                tracer = (Tracer)ServerUtils.newServer(clusterServers.get(ServerType.TRACER), taskId, slaveId);
+                addAvailServer(ServerUtils.newServer(clusterServers.get(ServerType.TRACER), taskId, slaveId));
             }
         }
 
@@ -167,6 +169,18 @@ public class Cluster {
         switch (status.getState()){
             case TASK_RUNNING:
                 runningServers.add(status);
+                
+                if( Master.isMaster(taskId)){
+                    addAvailServer(new Master(taskId,slaveId));
+                } else if (TabletServer.isTabletServer(taskId)) {
+                    addAvailServer(new TabletServer(taskId, slaveId));
+                } else if (Monitor.isMonitor(taskId)) {
+                    addAvailServer(new Monitor(taskId,slaveId));
+                } else if (GarbageCollector.isGarbageCollector(taskId)) {
+                    addAvailServer(new GarbageCollector(taskId,slaveId));
+                } else if (Tracer.isTracer(taskId)) {
+                    addAvailServer(new Tracer(taskId,slaveId));
+                }
                 break;
             case TASK_FINISHED:
             case TASK_FAILED:
@@ -178,16 +192,19 @@ public class Cluster {
                 if( Master.isMaster(taskId)){
                     // Don't save the slave id, it maybe re-assigned to a new slave 
                     serverToLaunch = ServerUtils.newServer(clusterServers.get(ServerType.MASTER), taskId, null);
-                    clearMaster();
+                    clearMaster(new Master(taskId,slaveId));
                 } else if (TabletServer.isTabletServer(taskId)) {
-                    tservers.remove(new TabletServer(taskId, slaveId));
+                    clearTservers(new TabletServer(taskId, slaveId));
                     serverToLaunch = ServerUtils.newServer(clusterServers.get(ServerType.TABLET_SERVER), taskId, null);
                 } else if (Monitor.isMonitor(taskId)) {
                     serverToLaunch = ServerUtils.newServer(clusterServers.get(ServerType.MONITOR), taskId, null);
-                    clearMonitor();
+                    clearMonitor(new Monitor(taskId,slaveId));
                 } else if (GarbageCollector.isGarbageCollector(taskId)) {
                     serverToLaunch = ServerUtils.newServer(clusterServers.get(ServerType.GARBAGE_COLLECTOR), taskId, null);
-                    clearGC();
+                    clearGC(new GarbageCollector(taskId,slaveId));
+                } else if (Tracer.isTracer(taskId)) {
+                    serverToLaunch = ServerUtils.newServer(clusterServers.get(ServerType.TRACER), taskId, null);
+                    clearTracer(new Tracer(taskId,slaveId));
                 }
                 if (serverToLaunch != null) {
                     removeLaunchedServer(slaveId, serverToLaunch.getType());
@@ -204,16 +221,21 @@ public class Cluster {
     }
 
     public boolean isMasterRunning(){
-        return master == null;
+        return serversAvailable.containsKey(ServerType.MASTER);
     }
     public boolean isGCRunning(){
-        return gc == null;
+        return serversAvailable.containsKey(ServerType.GARBAGE_COLLECTOR);
     }
     public boolean isMonitorRunning(){
-        return monitor == null;
+        return serversAvailable.containsKey(ServerType.MONITOR);
     }
+    public boolean isTracerRunning(){
+        return serversAvailable.containsKey(ServerType.TRACER);
+    }
+    
     public int numTserversRunning(){
-        return tservers.size();
+        Set<AccumuloServer> tservers = serversAvailable.get(ServerType.TABLET_SERVER);
+        return (tservers != null ? tservers.size() : 0);
     }
     
     // Remove used offers from the available offers and decline the rest.
@@ -261,16 +283,41 @@ public class Cluster {
         }
     }
     
-    private void clearServers(){
-        clearMaster();
-        clearMonitor();
-        clearGC();
-        clearTservers();
+    private void clearAvailServers(){
+        serversAvailable.clear();
     }
 
-    private void clearMaster(){ master = null; }
-    private void clearMonitor(){ monitor = null; }
-    private void clearGC(){ gc = null; }
-    private void clearTservers(){ tservers.clear(); }
-
+    private void clearMaster(Master server){ 
+        removeAvailServer(serversAvailable.get(ServerType.MASTER),server); 
+    }
+    private void clearMonitor(Monitor server){ 
+        removeAvailServer(serversAvailable.get(ServerType.MONITOR),server); 
+    }
+    private void clearGC(GarbageCollector server){ 
+        removeAvailServer(serversAvailable.get(ServerType.GARBAGE_COLLECTOR), server); 
+    }
+    private void clearTracer(Tracer server){ 
+        removeAvailServer(serversAvailable.get(ServerType.TRACER), server); 
+    }  
+    private void clearTservers(TabletServer server){ 
+        removeAvailServer(serversAvailable.get(ServerType.TABLET_SERVER), server); 
+    }
+    private void removeAvailServer(Set<AccumuloServer> servers, AccumuloServer server) {
+        if (servers != null) {
+            servers.remove(server);
+            if (servers.size() == 0) {
+                serversAvailable.remove(server.getType());
+            }
+        } else {
+            LOGGER.warn("Tried to remove a server that was not available...could be a problem? " + server);
+        }
+    }
+    private void addAvailServer(AccumuloServer server) {
+        Set<AccumuloServer> set;
+        if ((set = serversAvailable.get(server.getType() ) ) == null) {
+                set = new HashSet<AccumuloServer>(2);
+        }
+        set.add(server);
+        serversAvailable.put(server.getType(), set); 
+    }
 }

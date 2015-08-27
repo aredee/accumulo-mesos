@@ -132,7 +132,8 @@ public class AccumuloStartExecutor implements Executor {
             
         } catch (Exception e) {
             LOGGER.error("Unable to launch server process!", e);
-            sendFailMessageAndExit(executorDriver,Protos.TaskStatus.Reason.REASON_COMMAND_EXECUTOR_FAILED,e.getMessage());
+            sendFailMessageAndExit(executorDriver,
+                    Protos.TaskStatus.Reason.REASON_COMMAND_EXECUTOR_FAILED,e.getMessage());
         }
 
     }
