@@ -61,6 +61,8 @@ public class TestConfigNormalizer {
         } catch (Exception e) {
             e.printStackTrace();
             fail();
+        } finally {
+            unsetEnvironment();           
         }
     }
     
@@ -93,7 +95,10 @@ public class TestConfigNormalizer {
         } catch (Exception e) {
             e.printStackTrace();
             fail();
+        } finally {
+            unsetEnvironment();        
         }
+        
     }
     
     @SuppressWarnings("unused")
