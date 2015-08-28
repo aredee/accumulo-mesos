@@ -270,6 +270,12 @@
                  <artifactId>jcabi-xml</artifactId>
                  <version>${version.jcabi}</version>
  	        </dependency>
+                <dependency>
+                    <groupId>com.jcabi</groupId>
+                 <artifactId>jcabi-aspects</artifactId>
+                 <version>0.22</version>
+                </dependency>
+
 
             <!-- Test Libraries -->
             <dependency>

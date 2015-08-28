@@ -100,7 +100,7 @@ public class TestFrameworkMain {
     
     @AfterClass
     public static void tearDown() {
-       // TestSupport.tearDownTestDirs();
+        TestSupport.tearDownTestDirs();
     }
     
     /**
