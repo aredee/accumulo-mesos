@@ -91,6 +91,7 @@ public class TestFrameworkMain {
         try {
             TestSupport.setupConfDir();
         } catch(Exception e) {
+            e.printStackTrace();
             fail("Failed to copy site xml to " + TestSupport.TEST_CONF_DIR);
         }
         // JMockit will now replace any reference to MesosSchedulerDriver with this mock version.
@@ -99,7 +100,7 @@ public class TestFrameworkMain {
     
     @AfterClass
     public static void tearDown() {
-        TestSupport.tearDownTestDirs();
+       // TestSupport.tearDownTestDirs();
     }
     
     /**
