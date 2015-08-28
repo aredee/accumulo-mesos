@@ -157,7 +157,7 @@ public class ConfigNormalizer {
     }
     
     private String createAccumuloPath(String dir, String accumuloVersion) {
-        return dir + File.separator + Constants.ACCUMULO_DISTRO + File.separator + "accumulo-" + accumuloVersion;
+        return dir + File.separator + Constants.ACCUMULO_MESOS_DISTRO + File.separator + "accumulo-" + accumuloVersion;
     }
     private void setLibPaths() {
         

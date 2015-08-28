@@ -19,4 +19,5 @@ public interface AccumuloServer {
     public void setMaxMemorySize(int memory);
     
     public void setMinMemorySize(int memory);
+
 }

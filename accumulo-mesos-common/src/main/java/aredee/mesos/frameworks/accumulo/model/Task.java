@@ -2,57 +2,79 @@ package aredee.mesos.frameworks.accumulo.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.UUID;
+
 
 public class Task  {
 
-  private Executor executor = null;
-  private Slave slave = null;
-  private String id = null;
+    private String slaveId = null;
+    private String taskId = null;
+    private ServerProfile serverProfile = null;
+
+    /**
+    **/
+    @JsonProperty("slaveId")
+    public String getSlaveId() {
+        return slaveId;
+    }
+    public void setSlaveId(String slaveId) {
+        this.slaveId = slaveId;
+    }
+    public boolean hasSlaveId(){
+        if( slaveId == null ) return false;
+        if( slaveId.isEmpty()) return false;
+        return true;
+    }
+
+    /**
+    **/
+    @JsonProperty("taskId")
+    public String getTaskId() {
+    return taskId;
+    }
+    public void setTaskId(String id) {
+    this.taskId = id;
+    }
+    public boolean hasTaskId(){
+        if( taskId == null ) return false;
+        if( taskId.isEmpty()) return false;
+        return true;
+    }
 
 
-  /**
-   **/
-  @JsonProperty("executor")
-  public Executor getExecutor() {
-    return executor;
-  }
-  public void setExecutor(Executor executor) {
-    this.executor = executor;
-  }
+    /**
+     **/
+    @JsonProperty("serverProfile")
+    public ServerProfile getServerProfile() {
+        return serverProfile;
+    }
+    public void setServerProfile(ServerProfile profile) {
+        this.serverProfile = profile;
+    }
 
 
-  /**
-   **/
-  @JsonProperty("slave")
-  public Slave getSlave() {
-    return slave;
-  }
-  public void setSlave(Slave slave) {
-    this.slave = slave;
-  }
+    public ServerProfile.TypeEnum getType(){
+        return serverProfile.getType();
+    }
 
+    public String assignTaskId(){
+        assert( taskId != null);
+        assert( serverProfile != null);
 
-  /**
-   **/
-  @JsonProperty("id")
-  public String getId() {
-    return id;
-  }
-  public void setId(String id) {
-    this.id = id;
-  }
+        this.taskId = getType()+"::"+serverProfile.getId()+"::"+ UUID.randomUUID();
 
+        return taskId;
+    }
 
+    @Override
+    public String toString()  {
+        StringBuilder sb = new StringBuilder();
+        sb.append("class Task {\n");
 
-  @Override
-  public String toString()  {
-    StringBuilder sb = new StringBuilder();
-    sb.append("class Task {\n");
-
-    sb.append("  executor: ").append(executor).append("\n");
-    sb.append("  slave: ").append(slave).append("\n");
-    sb.append("  id: ").append(id).append("\n");
-    sb.append("}\n");
-    return sb.toString();
-  }
+        sb.append("  slaveId: ").append(slaveId).append("\n");
+        sb.append("  taskId: ").append(taskId).append("\n");
+        sb.append("  serverProfile: ").append(serverProfile).append("\n");
+        sb.append("}\n");
+        return sb.toString();
+    }
 }

@@ -13,11 +13,13 @@ public class Accumulo  {
     private String instance = null;
     private String rootUser = null;
     private String rootPassword = null;
-    private String initLocation = null;
+    //private String initLocation = null;
     private String zkServers = null;
     private Integer executorMemory = 128;
     private String tarballUri = null;
-    private List<Server> servers = new ArrayList<Server>();
+    private List<ServerGroup> serverGroups = new ArrayList<ServerGroup>();
+    private String hdfsUri = null;
+    private String siteXml = null;
 
     /**
      **/
@@ -66,13 +68,13 @@ public class Accumulo  {
     /**
      * URI of the rfiles for this instance\n
      **/
-    @JsonProperty("initLocation")
-    public String getInitLocation() {
-      return initLocation;
-    }
-    public void setInitLocation(String initLocation) {
-      this.initLocation = initLocation;
-    }
+    //@JsonProperty("initLocation")
+    //public String getInitLocation() {
+    //  return initLocation;
+    //}
+    //public void setInitLocation(String initLocation) {
+    //  this.initLocation = initLocation;
+    //}
 
 
     /**
@@ -109,16 +111,28 @@ public class Accumulo  {
       this.tarballUri = tarballUri;
     }
 
-
     /**
      **/
     @JsonProperty("servers")
-    public List<Server> getServers() {
-      return servers;
+    public List<ServerGroup> getServerGroups() {
+      return serverGroups;
     }
-    public void setServers(List<Server> servers) {
-      this.servers = servers;
+    public void setServerGroups(List<ServerGroup> serverGroups) {
+      this.serverGroups = serverGroups;
     }
+
+    /**
+     * HDFS URI where accumulo can be initialized (hdfs://localhost:9000/accumulo-mesos)
+     *
+     * @return
+     */
+    @JsonProperty("hdfsUri")
+    public String getHdfsUri(){return this.hdfsUri; }
+    public void setHdfsUri(String uri){ this.hdfsUri = uri; }
+
+    @JsonProperty("siteXml")
+    public String getSiteXml(){ return this.siteXml; }
+    public void setSiteXml(String siteXml){ this.siteXml = siteXml; }
 
     @Override
     public String toString()  {
@@ -129,11 +143,12 @@ public class Accumulo  {
       sb.append("  instance: ").append(instance).append("\n");
       sb.append("  rootUser: ").append(rootUser).append("\n");
       sb.append("  rootPassword: ").append(rootPassword).append("\n");
-      sb.append("  initLocation: ").append(initLocation).append("\n");
+      //sb.append("  initLocation: ").append(initLocation).append("\n");
       sb.append("  zkServers: ").append(zkServers).append("\n");
       sb.append("  executorMemory: ").append(executorMemory).append("\n");
       sb.append("  tarballUri: ").append(tarballUri).append("\n");
-      sb.append("  servers: ").append(servers).append("\n");
+      sb.append("  hdfsUri: ").append(hdfsUri).append("\n");
+      sb.append("  serverGroups: ").append(serverGroups).append("\n");
       sb.append("}\n");
       return sb.toString();
     }

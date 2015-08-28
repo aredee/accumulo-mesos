@@ -1,19 +1,29 @@
 package aredee.mesos.frameworks.accumulo.model;
 
-import java.math.BigDecimal;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.math.BigDecimal;
 
 
 public class ServerProfile  {
 
+    public enum TypeEnum {
+        master(org.apache.accumulo.master.Master.class),
+        tserver(org.apache.accumulo.tserver.TabletServer.class),
+        gc(org.apache.accumulo.gc.SimpleGarbageCollector.class),
+        tracer(org.apache.accumulo.tracer.TraceServer.class),
+        monitor(org.apache.accumulo.monitor.Monitor.class);
+
+        private Class<?> clazz;
+        TypeEnum(Class<?> clazz){
+            this.clazz = clazz;
+        }
+        public Class<?> getServerClass(){ return clazz;}
+    }
+
   private String name = null;
   private String description = null;
   private String id = null;
-  public enum TypeEnum {
-    master,  tserver,  gc,  tracer,  monitor,
-  };
   private TypeEnum type = null;
   private Integer memory = 128;
   private BigDecimal cpus = null;
@@ -116,9 +126,11 @@ public class ServerProfile  {
     this.user = user;
   }
 
+
   @JsonProperty("siteXml")
   public String getSiteXml() { return siteXml; }
   public void setSiteXml(String siteXml) { this.siteXml = siteXml; }
+
 
   @Override
   public String toString()  {

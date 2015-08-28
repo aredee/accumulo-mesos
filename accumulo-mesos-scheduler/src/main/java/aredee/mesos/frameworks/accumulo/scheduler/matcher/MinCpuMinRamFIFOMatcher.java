@@ -1,16 +1,15 @@
 package aredee.mesos.frameworks.accumulo.scheduler.matcher;
 
-import aredee.mesos.frameworks.accumulo.configuration.cluster.ClusterConfiguration;
-import aredee.mesos.frameworks.accumulo.configuration.process.ProcessConfiguration;
 import aredee.mesos.frameworks.accumulo.configuration.Defaults;
-import aredee.mesos.frameworks.accumulo.configuration.ServerType;
-import aredee.mesos.frameworks.accumulo.scheduler.server.AccumuloServer;
-
+import aredee.mesos.frameworks.accumulo.model.Accumulo;
+import aredee.mesos.frameworks.accumulo.model.ServerProfile;
+import aredee.mesos.frameworks.accumulo.model.Task;
+import com.google.common.collect.Lists;
 import org.apache.mesos.Protos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.List;
 
 /**
  * Matcher that finds an offer that meets minimum cpu and ram requirements for the server on a first come first
@@ -21,86 +20,69 @@ public class MinCpuMinRamFIFOMatcher implements Matcher {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MinCpuMinRamFIFOMatcher.class);
 
-    private ClusterConfiguration config;
+    private Accumulo config;
 
-    public MinCpuMinRamFIFOMatcher(ClusterConfiguration config){
+    public MinCpuMinRamFIFOMatcher(Accumulo config){
         this.config = config;
     }
 
     /**
      * Returns a list of matched servers and offers. If offers were not found for all servers,
-     * a Match object will be present with no
+     * a Match object will be present with no offer
      *
-     * @param servers
+     * @param tasks
      * @param offers
-     * @param optCheck operational considerations, optional, applied after offer determination.
+     *
      */
     @Override
-    public List<Match> matchOffers(Set<AccumuloServer> servers, List<Protos.Offer> offers, OperationalCheck optCheck) {
+    public List<Match> matchOffers(List<Task> tasks, List<Protos.Offer> offers) {
         
-        LOGGER.info("Matching {} servers to {} offers", servers.size(), offers.size());
-        List<Match> matches = new ArrayList<>(servers.size());      
+        LOGGER.info("Matching {} tasks to {} offers", tasks.size(), offers.size());
+
+        List<Match> matches = Lists.newArrayListWithCapacity(tasks.size());
         
-         Set<AccumuloServer> localservers = new HashSet<AccumuloServer>(servers);
-        Iterator<AccumuloServer> itr = localservers.iterator();
-        List<Protos.Offer> takenOffers = new ArrayList<>(offers.size());
-        
-        while (itr.hasNext() && (takenOffers.size() < offers.size())) {
-            AccumuloServer server = itr.next();
-            for(Protos.Offer offer: offers){
-                Match match = new Match(server);
-                if( offerMatchesServer(server, offer) && !takenOffers.contains(offer))
-                {
-                    boolean optCheckStatus = true;
-                    
-                    // If operational considerations check here.
-                    if (optCheck != null) {
-                        optCheckStatus = optCheck.accept(server, offer.getSlaveId().getValue());
-                    }
-                    if (optCheckStatus) {
-                        match.setOffer(offer);
-                        matches.add(match);
-                        takenOffers.add(offer);
-                        
-                        // Need to remove the server before setting the slavedId because it 
-                        // causes the hash to change 
-                        servers.remove(server);
-                        server.setSlaveId(offer.getSlaveId().getValue());
-                        servers.add(server);
-                        
-                         LOGGER.info("Found match! server {} offer {} ", 
-                                match.getServer().getType().getName(), match.getOffer().getId().getValue());
-                         
-                         break;
-                    }                   
+        int offerCount = 0;
+        for(int tt = 0; tt < tasks.size(); tt++){
+            Task task = tasks.get(tt);
+            boolean foundOffer = false;
+            for( int oo = offerCount; (oo < offers.size()) && (!foundOffer); oo++){
+                Protos.Offer offer = offers.get(offerCount);
+                if( offerMatchesTask(task, offer)){
+                    // create a match
+                    Match match = new Match(task, offer);
+                    matches.add(match);
+                    offerCount = oo;
+                    foundOffer = true;
+
+                    LOGGER.info("Found match! task {} offer {}", task.getType().name(), offer.getId().getValue());
                 }
             }
         }
-  
+
         return matches;
     }
    
-    @SuppressWarnings("unchecked")
-    private boolean offerMatchesServer(AccumuloServer server, Protos.Offer offer){
+    private boolean offerMatchesTask(Task task, Protos.Offer offer){
         double offerCpus = -1;
         double offerMem = -1;
-        boolean offerMatches = false;
-        
-        Map<ServerType,ProcessConfiguration> servers = config.getProcessorConfigurations();
-        
-        if (servers.containsKey(server.getType())) {
-            for( Protos.Resource resource : offer.getResourcesList()){
-                if (resource.getName().equalsIgnoreCase("cpus")) {
-                    offerCpus = resource.hasScalar() ? resource.getScalar().getValue() : 0.0;        
-                } else if (resource.getName().equalsIgnoreCase("mem")) {
-                    offerMem = resource.hasScalar() ? resource.getScalar().getValue() : 0.0;         
-                }
+
+        // Get offer resources
+        for( Protos.Resource resource : offer.getResourcesList()){
+            if (resource.getName().equalsIgnoreCase("cpus")) {
+                offerCpus = resource.hasScalar() ? resource.getScalar().getValue() : 0.0;
+            } else if (resource.getName().equalsIgnoreCase("mem")) {
+                offerMem = resource.hasScalar() ? resource.getScalar().getValue() : 0.0;
             }
-            // Have to take into account the executor resources because MESOS will.
-            double serverCpus = servers.get(server.getType()).getCpuOffer() + Defaults.EXECUTOR_CPUS;
-            double serverMem = servers.get(server.getType()).getMaxMemoryOffer() + config.getMaxExecutorMemory();
-            offerMatches = cpusAndMemAreAdequate(offerCpus, offerMem, serverCpus, serverMem);   
         }
+        // TODO Have to take into account the executor resources because MESOS will.
+
+        // Get profile resources
+        ServerProfile profile = task.getServerProfile();
+        double profileCpus = profile.getCpus().doubleValue() + Defaults.EXECUTOR_CPUS;
+        double profileMem = profile.getMemory().doubleValue() + config.getExecutorMemory();
+
+        boolean offerMatches = cpusAndMemAreAdequate(offerCpus, offerMem, profileCpus, profileMem);
+
         return offerMatches;
     }
 

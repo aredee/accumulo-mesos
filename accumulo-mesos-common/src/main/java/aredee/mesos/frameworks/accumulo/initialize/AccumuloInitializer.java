@@ -1,22 +1,29 @@
 package aredee.mesos.frameworks.accumulo.initialize;
 
-import java.io.File;
-import java.util.LinkedList;
-
+import aredee.mesos.frameworks.accumulo.configuration.Environment;
 import aredee.mesos.frameworks.accumulo.model.Accumulo;
+import aredee.mesos.frameworks.accumulo.process.AccumuloProcessFactory;
 import org.apache.accumulo.server.init.Initialize;
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import aredee.mesos.frameworks.accumulo.process.AccumuloProcessFactory;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
+import java.net.URI;
+import java.net.URL;
+import java.util.LinkedList;
 
 public class AccumuloInitializer {
     private static final Logger LOGGER = LoggerFactory.getLogger(AccumuloInitializer.class);
 
     private Accumulo config;
+    private String accumuloHome;
     
     public AccumuloInitializer(Accumulo config) throws Exception {
         this.config = config;
+        this.accumuloHome = Environment.get(Environment.ACCUMULO_HOME);
     }
     
     /**
@@ -31,26 +38,24 @@ public class AccumuloInitializer {
         
         // run accumulo init procedure
         LOGGER.info("Writing accumulo-site.xml");
-    
-        //processConfiguration = new ConfigNormalizer(config).getServiceConfiguration();
-        //String accumuloHome = processConfiguration.getAccumuloDir().getAbsolutePath();
-        
+
         AccumuloSiteXml siteXml = new AccumuloSiteXml(this.config);
+        siteXml.initializeFromScheduler(AccumuloSiteXml.getEmptySiteXml());
 
-        this.writeAccumuloSiteFile(accumuloHome, siteXml);
-
-        // TODO create instance name
-        String accumuloInstanceName = config.getInstance();
+        writeAccumuloSiteFile(accumuloHome, siteXml);
+        config.setSiteXml(siteXml.toString());
 
         LinkedList<String> initArgs  = new LinkedList<>();
         initArgs.add("--instance-name");
-        initArgs.add(accumuloInstanceName);
+        initArgs.add(config.getInstance());
         initArgs.add("--password");
         initArgs.add(config.getRootPassword());
+        initArgs.add("--user");
+        initArgs.add(config.getRootUser());
+
         // This clears the instance name out of zookeeper, this may need revisited, but was
         // needed during testing.
         initArgs.add("--clear-instance-name");
-
 
         AccumuloProcessFactory processFactory = new AccumuloProcessFactory("256");
        
@@ -59,7 +64,7 @@ public class AccumuloInitializer {
             initProcess = processFactory.exec(Initialize.class, null, initArgs.toArray(new String[initArgs.size()]));
             LOGGER.info("Initializing Accumulo");
             initProcess.waitFor();
-            LOGGER.info("New Accumulo instance initialized");
+            LOGGER.info("New Accumulo instance initialized: {}", config.getInstance() );
         } catch (Exception ioe) {
             LOGGER.error("IOException while trying to initialize Accumulo", ioe);
             System.exit(-1);
@@ -73,23 +78,28 @@ public class AccumuloInitializer {
     }
 */
 
-    private void writeAccumuloSiteFile(String accumuloHomeDir, AccumuloSiteXml siteXml) {
+    public static void writeAccumuloSiteFile(String accumuloHomeDir, AccumuloSiteXml siteXml) {
         LOGGER.info("ACCUMULO HOME? " + accumuloHomeDir);
         try {
   
             File accumuloSiteFile = new File(accumuloHomeDir + File.separator +
                     "conf" + File.separator + "accumulo-site.xml");
-  
-            siteXml.writeSiteFile(accumuloSiteFile);
-             
+
+            LOGGER.info("Writing accumulo-site.xml to {}", accumuloSiteFile.getAbsolutePath());
+
+            OutputStream siteFile = new FileOutputStream(accumuloSiteFile);
+            IOUtils.write(siteXml.toXml(), siteFile);
+            IOUtils.closeQuietly(siteFile);
+
         } catch (Exception e) {
             logErrorAndDie("Error Creating accumulo-site.xml\n",e);
         }
     }
 
     private static void logErrorAndDie(String message, Exception e){
-        LOGGER.error(message,e);
-        throw new RuntimeException(e);
+        LOGGER.error(message, e);
+        throw new RuntimeException(message, e);
     }
+
 
 }

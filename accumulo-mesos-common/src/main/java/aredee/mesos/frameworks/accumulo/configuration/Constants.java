@@ -14,5 +14,5 @@ public final class Constants {
             +"-jar-with-dependencies"
             +".jar";
 
-    public static final String ACCUMULO_DISTRO = "accumulo-mesos-dist-"+FRAMEWORK_VERSION;
+    public static final String ACCUMULO_MESOS_DISTRO = "accumulo-mesos-dist-"+FRAMEWORK_VERSION;
 }

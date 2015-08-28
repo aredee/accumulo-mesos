@@ -106,8 +106,10 @@ public final class Main {
 
                 // Initializes accumulo or gets the instance from the state store if one exists.
                 //
-                AccumuloInitializer accumuloInitializer = new AccumuloInitializer(config.getCluster());
+                AccumuloInitializer accumuloInitializer =
+                        new AccumuloInitializer(config.getCluster());
 
+                accumuloInitializer.initialize();
             }
 
         } else if( config.hasId() && !config.hasName() ){
@@ -222,7 +224,7 @@ public final class Main {
 
     private static boolean environmentVariablesAreSet(){
         // Check that environment Variables are defined
-        List<String> missingEnv = Environment.getMissingVariables();
+        List<String> missingEnv = Environment.getMissingVariables(Environment.REQUIRED_FRAMEWORK_VARS);
         if( !missingEnv.isEmpty() ){
             LOGGER.error("Missing environment variables {} ", missingEnv);
             System.err.println("Missing Environments Variables:");

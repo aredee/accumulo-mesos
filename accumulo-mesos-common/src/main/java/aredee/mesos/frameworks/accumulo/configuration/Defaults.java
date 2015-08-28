@@ -46,13 +46,13 @@ public final class Defaults {
     // Minimum number of tservers to launch
     public final static int MIN_TSERVERS = 3;
 
-    // Executor URI
     public final static String ROOT_USER = "root";
     public final static String ROOT_PASSWORD = "secret";
 
     public final static double MAX_EXECUTOR_MEM = 128;
     public final static double MIN_EXECUTOR_MEM = 16;
-    public final static double EXECUTOR_CPUS = 0.1;
+    // CPUS to be consumed by executor outside of server process
+    public final static double EXECUTOR_CPUS = 0.25;
     
     // Default location of the accumulo-site.xml file
     public final static String ACCUMULO_SITE_URI = "file:./conf/default-accumulo-site.xml";

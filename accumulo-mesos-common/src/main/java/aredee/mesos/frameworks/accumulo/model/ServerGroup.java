@@ -3,7 +3,7 @@ package aredee.mesos.frameworks.accumulo.model;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 
-public class Server  {
+public class ServerGroup {
 
     private Integer count = 1;
     private ServerProfile profile = null;

@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
+// TODO refactor this to not use clazz, just use the start jar and the name (e.g. init, master, tserver, etc)
 public class AccumuloProcessFactory {
     private static final Logger LOGGER = LoggerFactory.getLogger(AccumuloProcessFactory.class);
 
@@ -64,7 +65,7 @@ public class AccumuloProcessFactory {
     private void initializeEnvironment(){
         String accumuloHome = System.getenv(Environment.ACCUMULO_HOME);
         processEnv.put(Environment.ACCUMULO_HOME, System.getenv(Environment.ACCUMULO_HOME));
-        processEnv.put(Environment.ACCUMULO_LOG_DIR, accumuloHome+File.separator+"logs");
+        processEnv.put(Environment.ACCUMULO_LOG_DIR, accumuloHome + File.separator + "logs");
         processEnv.put(Environment.ACCUMULO_CLIENT_CONF_PATH, System.getenv(Environment.ACCUMULO_CLIENT_CONF_PATH));
         processEnv.put(Environment.ACCUMULO_CONF_DIR, accumuloHome+"/conf/");
 
@@ -97,7 +98,23 @@ public class AccumuloProcessFactory {
         String className = clazz.getName();
 
         ArrayList<String> argList = new ArrayList<>();
-        argList.addAll(Arrays.asList(javaBin, "-Dproc=" + clazz.getSimpleName(),"-cp",classpath));
+
+        //START_JAR="${ACCUMULO_HOME}/lib/accumulo-start.jar"
+        //JAVA="${JAVA_HOME}/bin/java"
+        //exec "$JAVA" "-Dapp=$1" \
+        //$ACCUMULO_OPTS \
+        //-classpath "${CLASSPATH}" \
+        //-XX:OnOutOfMemoryError="${ACCUMULO_KILL_CMD:-kill -9 %p}" \
+        //-XX:-OmitStackTraceInFastThrow \
+        //-Djavax.xml.parsers.DocumentBuilderFactory=com.sun.org.apache.xerces.internal.jaxp.DocumentBuilderFactoryImpl \
+        //-Dorg.apache.accumulo.core.home.dir="${ACCUMULO_HOME}" \
+        //-Dhadoop.home.dir="${HADOOP_PREFIX}" \
+        //-Dzookeeper.home.dir="${ZOOKEEPER_HOME}" \
+        //org.apache.accumulo.start.Main \
+        //"$@"
+
+        argList.addAll(Arrays.asList(javaBin, "-Dproc=" + clazz.getSimpleName(), "-cp",classpath));
+
         argList.addAll(extraJvmOpts);
         
         String prop;
@@ -114,7 +131,7 @@ public class AccumuloProcessFactory {
             argList.add(svar);
         }
         // @formatter:off
-       
+
         argList.addAll(Arrays.asList(
                 "-XX:+UseConcMarkSweepGC",
                 "-XX:CMSInitiatingOccupancyFraction=75",
@@ -123,6 +140,9 @@ public class AccumuloProcessFactory {
                 "-XX:+PerfDisableSharedMem",
                 "-XX:+AlwaysPreTouch",
                 org.apache.accumulo.start.Main.class.getName(), className));
+
+        // TODO remove above accumulo dependence just use jar name
+
         // @formatter:on
 
         argList.addAll(Arrays.asList(args));
@@ -133,9 +153,7 @@ public class AccumuloProcessFactory {
 
         // copy environment into builder environment
         Map<String, String> environment = builder.environment();
-        for( String key : processEnv.keySet()){
-            environment.put(key, processEnv.get(key));
-        }
+        environment.putAll(processEnv);
 
         Process process = builder.start();
         addLogWriter(processEnv.get(Environment.ACCUMULO_LOG_DIR),
@@ -172,7 +190,7 @@ public class AccumuloProcessFactory {
                 classpathBuilder.append(File.pathSeparator).append(getProcessEnvPath(Environment.HADOOP_CONF_DIR));
             }
 
-            //if (config.getClasspathItems() == null) {  // JLK - classpathItems is not needed here.
+            //if (config.getClasspathItems() == null) {  // JLK - classpathItems is not needed here. Only ever used in accumulo tests
 
                 // assume 0 is the system classloader and skip it
                 for (int i = 1; i < classloaders.size(); i++) {

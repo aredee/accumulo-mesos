@@ -1,12 +1,14 @@
 package aredee.mesos.frameworks.accumulo.executor;
 
 import aredee.mesos.frameworks.accumulo.configuration.ConfigNormalizer;
-import aredee.mesos.frameworks.accumulo.initialize.AccumuloSiteXml;
-import aredee.mesos.frameworks.accumulo.configuration.process.ServerProcessConfiguration;
+import aredee.mesos.frameworks.accumulo.configuration.Environment;
 import aredee.mesos.frameworks.accumulo.configuration.ServerType;
+import aredee.mesos.frameworks.accumulo.configuration.process.ServerProcessConfiguration;
 import aredee.mesos.frameworks.accumulo.initialize.AccumuloInitializer;
+import aredee.mesos.frameworks.accumulo.initialize.AccumuloSiteXml;
+import aredee.mesos.frameworks.accumulo.model.ServerProfile;
 import aredee.mesos.frameworks.accumulo.process.AccumuloProcessFactory;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.mesos.Executor;
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos;
@@ -17,7 +19,7 @@ import org.apache.mesos.SchedulerDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,15 +27,14 @@ import java.util.List;
 public class AccumuloStartExecutor implements Executor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AccumuloStartExecutor.class);
+    private static final ObjectMapper mapper = new ObjectMapper();
 
     private Process serverProcess = null;
     private Protos.ExecutorInfo executorInfo = null;
     private Protos.FrameworkInfo frameworkInfo = null;
     private Protos.SlaveInfo slaveInfo = null;
     private Protos.TaskInfo taskInfo = null;
-    private String siteXml;
-    
-   
+
     public AccumuloStartExecutor(){
     }
     
@@ -107,25 +108,34 @@ public class AccumuloStartExecutor implements Executor {
 
         // If there is another executor then exit?!
         checkForRunningExecutor();
-        
-        /**
-         * A by product of this is the siteXml will be set
-         */       
-        ServerProcessConfiguration process = createProcessorConfig(taskInfo);
-        
+
+        // get server profile
+        byte[] profileBytes = taskInfo.getData().toByteArray();
+        ServerProfile profile = null;
+        try {
+            profile = mapper.readValue(profileBytes, ServerProfile.class);
+        } catch (IOException e) {
+            LOGGER.error("Unable to deserialze ServerProfile");
+
+            // TODO what do?
+            e.printStackTrace();
+        }
+
         //TODO get jvmArgs and args from protobuf?
         List<String> jvmArgs = new ArrayList<>();
         String[] args = new String[0];
-   
+
         try {
             // accumulo-site.xml is sent in from scheduler
-            AccumuloInitializer.writeAccumuloSiteFile(process.getAccumuloDir().getAbsolutePath(),
-                    new AccumuloSiteXml(new ByteArrayInputStream(siteXml.getBytes())));
-            
-            AccumuloProcessFactory factory = new AccumuloProcessFactory(process);          
-            
-            this.serverProcess = factory.exec(discoverServerClass(process), jvmArgs, args);
-            
+            // reify the xml and add in the tserver memory settings before writing
+            AccumuloSiteXml siteXml = new AccumuloSiteXml();
+            siteXml.initializeFromExecutor(profile.getSiteXml());
+            siteXml.defineTserverMemory(getScalarResource(taskInfo, "mem"));
+            AccumuloInitializer.writeAccumuloSiteFile(System.getenv(Environment.ACCUMULO_HOME), siteXml);
+
+            AccumuloProcessFactory factory = new AccumuloProcessFactory(profile.getMemory().toString());
+            this.serverProcess = factory.exec(profile.getType().getServerClass(), jvmArgs, args);
+
             sendTaskStatus(executorDriver, taskInfo.getTaskId(), TaskState.TASK_RUNNING);
             
         } catch (Exception e) {
@@ -134,7 +144,17 @@ public class AccumuloStartExecutor implements Executor {
         }
 
     }
-    
+
+    private double getScalarResource(Protos.TaskInfo taskInfo, String name){
+        double ret  = -1.0;
+        for(Protos.Resource resource : taskInfo.getResourcesList()){
+            if( resource.getName().equals(name)){
+                ret = resource.getScalar().getValue();
+            }
+        }
+        return ret;
+    }
+
     /**
      * Invoked when a task running within this executor has been killed
      * (via {@link org.apache.mesos.SchedulerDriver#killTask}). Note that no
@@ -202,7 +222,6 @@ public class AccumuloStartExecutor implements Executor {
         }
     }
     
-    @SuppressWarnings("rawtypes")
     private Class discoverServerClass(ServerProcessConfiguration process) {
         Class clazz = null;
         Exception exc = null;
@@ -218,7 +237,7 @@ public class AccumuloStartExecutor implements Executor {
             exc = e;
         } finally {
             if (exc != null) {
-                LOGGER.error("Failed to discover executer server type, exiting",exc);
+                LOGGER.error("Failed to discover executor server type, exiting",exc);
                 System.exit(-2);
             }
         }
@@ -261,7 +280,7 @@ public class AccumuloStartExecutor implements Executor {
 
         System.exit(-1);
     }
-
+/*
     private ServerProcessConfiguration createProcessorConfig(Protos.TaskInfo taskInfo) {
          ServerProcessConfiguration config = null;
          try {
@@ -275,7 +294,8 @@ public class AccumuloStartExecutor implements Executor {
         }   
         return config;
     }
-    
+ */
+
     private void sendTaskStatus(ExecutorDriver driver, TaskID taskId, TaskState state) {
      	
         TaskStatus status = TaskStatus.newBuilder()
