@@ -62,7 +62,11 @@ public class Framework  {
     this.name = name;
   }
   public boolean hasName(){
-    return name == null;
+    boolean hasName = false;
+    if( name != null ){
+      hasName = !name.isEmpty();
+    }
+    return hasName;
   }
 
   /**
@@ -76,7 +80,11 @@ public class Framework  {
     this.id = id;
   }
   public boolean hasId(){
-    return id == null;
+    boolean hasId = false;
+    if( id != null ){
+      hasId = !id.isEmpty();
+    }
+    return hasId;
   }
 
   /**
@@ -90,7 +98,11 @@ public class Framework  {
     this.tarballUri = tarballUri;
   }
   public boolean hasTarballUri(){
-    return tarballUri == null;
+    boolean hasTar = false;
+    if( tarballUri != null ){
+      hasTar = !tarballUri.isEmpty();
+    }
+    return hasTar;
   }
 
   /**
@@ -116,7 +128,11 @@ public class Framework  {
     this.cluster = cluster;
   }
   public boolean hasCluster(){
-    return cluster == null;
+      boolean hasCluster = false;
+      if( cluster != null ){
+          hasCluster = true;
+      }
+      return hasCluster;
   }
 
 

@@ -9,7 +9,6 @@ import java.util.List;
 
 public class Accumulo  {
 
-    private String id = null;
     private String instance = null;
     private String rootUser = null;
     private String rootPassword = null;
@@ -20,17 +19,6 @@ public class Accumulo  {
     private List<ServerGroup> serverGroups = new ArrayList<ServerGroup>();
     private String hdfsUri = null;
     private String siteXml = null;
-
-    /**
-     **/
-    @JsonProperty("id")
-    public String getId() {
-      return id;
-    }
-    public void setId(String id) {
-      this.id = id;
-    }
-
 
     /**
      **/
@@ -133,13 +121,19 @@ public class Accumulo  {
     @JsonProperty("siteXml")
     public String getSiteXml(){ return this.siteXml; }
     public void setSiteXml(String siteXml){ this.siteXml = siteXml; }
+    public boolean hasSiteXml(){
+        boolean hasXml = false;
+        if( siteXml != null ){
+            hasXml = !siteXml.isEmpty();
+        }
+        return hasXml;
+    }
 
     @Override
     public String toString()  {
       StringBuilder sb = new StringBuilder();
       sb.append("class Accumulo {\n");
 
-      sb.append("  id: ").append(id).append("\n");
       sb.append("  instance: ").append(instance).append("\n");
       sb.append("  rootUser: ").append(rootUser).append("\n");
       sb.append("  rootPassword: ").append(rootPassword).append("\n");

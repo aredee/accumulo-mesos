@@ -12,7 +12,6 @@ public class ClusterApiServiceImpl extends ClusterApiService {
 
     @Override
     public Response clusterKillPost() throws NotFoundException {
-        cluster.isMonitorRunning();
         return null;
     }
 

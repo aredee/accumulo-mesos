@@ -82,7 +82,7 @@ public class ServerProfile  {
   /**
    * Memory to allocate to this server in MB. -Xmx yyyyM\n
    **/
-  @JsonProperty("memory")
+  @JsonProperty("mem")
   public Integer getMemory() {
     return memory;
   }
@@ -106,6 +106,7 @@ public class ServerProfile  {
   /**
    * Fully qualified class name of launcher class to launch with.\n
    **/
+  //TODO implement defining launcher as config
   @JsonProperty("launcher")
   public String getLauncher() {
     return launcher;

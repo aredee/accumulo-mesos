@@ -1,0 +1,9 @@
+{
+  "bindAddress": "1.1.1.1",
+  "httpPort": "1234",
+  "mesosMaster": "1.2.3.4:5150",
+  "name":"accumulo-mesos-test",
+  "id": "",
+  "tarballUri": "hdfs://localhost:9000/data/accumulo-mesos.tar.gz",
+  "zkServers": "server1:2181,server2:2181,server3:2181"
+}

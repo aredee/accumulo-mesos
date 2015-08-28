@@ -139,8 +139,6 @@ public final class Main {
         assert( !config.getName().isEmpty() );
         assert( !config.getName().isEmpty() );
         assert( config.hasCluster() );
-        assert( config.getCluster().getId() != null);
-        assert( !config.getCluster().getId().isEmpty());
 
         // Initialize the Cluster singleton. Do this before creating the webservice in case the
         // webservice touches it.
