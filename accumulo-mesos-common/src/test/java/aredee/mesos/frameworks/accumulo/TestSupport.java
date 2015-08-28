@@ -2,11 +2,13 @@ package aredee.mesos.frameworks.accumulo;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.ExecutorID;
 import org.apache.mesos.Protos.Resource;
@@ -202,13 +204,22 @@ public class TestSupport {
     public static String getResourceFileLocation(String resource) {
         return ClassLoader.class.getResource(resource).getFile();
     }
-    
+    public static InputStream getResourceStream(String resource) throws IOException {
+        return ClassLoader.class.getResource(resource).openStream();
+    }  
     public static void setupConfDir() throws IOException {
         if (!TEST_CONF_DIR.exists())
             TEST_CONF_DIR.mkdir();
         
-        File src = new File(getResourceFileLocation(TEST_SITE_RESOURCE));
-        FileUtils.copyFileToDirectory(src, TEST_CONF_DIR);
+        // If you are wondering why I'm using stream instead of file, when run as
+        // "mvn package" the resources are sometimes found in the jar files and it
+        // requires the stream to extract. Though I may have fixed this anomaly by
+        // duplicating all the test resources across all the projects.
+        InputStream input = getResourceStream(TEST_SITE_RESOURCE);
+        // Strip the leading "/"
+        String siteFile = TEST_SITE_RESOURCE.substring(1,TEST_SITE_RESOURCE.length());
+        FileUtils.copyInputStreamToFile(input, new File(TEST_CONF_DIR,siteFile));
+        IOUtils.closeQuietly(input);
     }
     
     public static void tearDownConfDir() {
