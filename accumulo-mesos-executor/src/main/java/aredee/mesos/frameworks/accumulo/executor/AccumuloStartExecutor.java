@@ -1,9 +1,7 @@
 package aredee.mesos.frameworks.accumulo.executor;
 
-import aredee.mesos.frameworks.accumulo.configuration.ConfigNormalizer;
 import aredee.mesos.frameworks.accumulo.configuration.Environment;
 import aredee.mesos.frameworks.accumulo.configuration.ServerType;
-import aredee.mesos.frameworks.accumulo.configuration.process.ServerProcessConfiguration;
 import aredee.mesos.frameworks.accumulo.initialize.AccumuloInitializer;
 import aredee.mesos.frameworks.accumulo.initialize.AccumuloSiteXml;
 import aredee.mesos.frameworks.accumulo.model.ServerProfile;
@@ -222,29 +220,6 @@ public class AccumuloStartExecutor implements Executor {
         }
     }
     
-    private Class discoverServerClass(ServerProcessConfiguration process) {
-        Class clazz = null;
-        Exception exc = null;
-        try {
-            ServerType serverType = ServerType.getTypeFromName(process.getType());
-            if (serverType.getServiceClass() == null)
-                throw new RuntimeException("Unknown service " + process.getType());
-            
-            clazz = serverType.getServiceClass();
-        } catch (RuntimeException e) {
-            exc = e;
-        } catch (Exception e) {
-            exc = e;
-        } finally {
-            if (exc != null) {
-                LOGGER.error("Failed to discover executor server type, exiting",exc);
-                System.exit(-2);
-            }
-        }
-        
-        return clazz;
-    }
-   
     private void checkForRunningExecutor() {
         if(this.serverProcess != null){
             if(this.serverProcess.isAlive()){

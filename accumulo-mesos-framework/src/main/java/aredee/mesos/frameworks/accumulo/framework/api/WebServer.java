@@ -1,7 +1,7 @@
 package aredee.mesos.frameworks.accumulo.framework.api;
 
-import aredee.mesos.frameworks.accumulo.configuration.cluster.ClusterConfiguration;
 
+import aredee.mesos.frameworks.accumulo.model.Framework;
 import com.google.inject.Inject;
 import com.google.inject.servlet.GuiceFilter;
 
@@ -13,11 +13,11 @@ import java.util.EnumSet;
 
 public class WebServer {
 
-    private final ClusterConfiguration config;
+    private final Framework config;
     private Server server;
 
     @Inject
-    public WebServer(ClusterConfiguration config) {
+    public WebServer(Framework config) {
         this.config = config;
     }
 

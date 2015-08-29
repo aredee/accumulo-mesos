@@ -1,6 +1,0 @@
-
-httpPort: 8088
-mesosMaster: 127.0.0.1:5050
-frameworkName: test-framework
-zkServers: localhost:2181
-

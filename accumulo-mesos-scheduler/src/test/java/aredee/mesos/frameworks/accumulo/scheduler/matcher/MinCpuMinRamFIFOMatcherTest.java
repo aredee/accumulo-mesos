@@ -1,22 +1,5 @@
 package aredee.mesos.frameworks.accumulo.scheduler.matcher;
 
-import aredee.mesos.frameworks.accumulo.configuration.cluster.BaseClusterConfiguration;
-import aredee.mesos.frameworks.accumulo.configuration.cluster.ClusterConfiguration;
-import aredee.mesos.frameworks.accumulo.configuration.ServerType;
-import aredee.mesos.frameworks.accumulo.scheduler.server.AccumuloServer;
-import aredee.mesos.frameworks.accumulo.scheduler.server.ServerUtils;
-import org.apache.mesos.Protos;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
-import org.junit.runners.Parameterized.Parameter;
-
-import java.util.*;
-
-import static org.junit.Assert.*;
-
 
 //@RunWith(Parameterized.class)
 public class MinCpuMinRamFIFOMatcherTest {

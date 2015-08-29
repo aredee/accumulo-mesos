@@ -1,6 +1,5 @@
 package aredee.mesos.frameworks.accumulo.framework.guice;
 
-import aredee.mesos.frameworks.accumulo.configuration.cluster.ClusterConfiguration;
 import aredee.mesos.frameworks.accumulo.model.Framework;
 import com.google.inject.AbstractModule;
 

@@ -2,8 +2,6 @@ package aredee.mesos.frameworks.accumulo.executor;
 
 import aredee.mesos.frameworks.accumulo.configuration.Environment;
 import aredee.mesos.frameworks.accumulo.configuration.ServerType;
-import aredee.mesos.frameworks.accumulo.configuration.cluster.ClusterConfiguration;
-import aredee.mesos.frameworks.accumulo.configuration.process.ProcessConfiguration;
 import aredee.mesos.frameworks.accumulo.scheduler.server.AccumuloServer;
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos.Status;
@@ -106,10 +104,10 @@ public class TestStartExecutor {
 */
 
     @SuppressWarnings("unchecked")
-    public TaskInfo buildTaskInfo(AccumuloServer server, ClusterConfiguration config) {
+//    public TaskInfo buildTaskInfo(AccumuloServer server, ClusterConfiguration config) {
 
-        Map<ServerType, ProcessConfiguration> servers = config.getProcessorConfigurations();
-        ProcessConfiguration inServerConfig = servers.get(server.getType());
+        //Map<ServerType, ProcessConfiguration> servers = config.getProcessorConfigurations();
+        //ProcessConfiguration inServerConfig = servers.get(server.getType());
         
         /** NEEDS FIXED TO RUN WITH A SINGLE TAR BALL
         
@@ -193,8 +191,8 @@ public class TestStartExecutor {
                 .build();
         return taskInfo;
         **/
-        return null;
-    }
+//        return null;
+//    }
     
     public String getExecutorJarFromURI(String uriString){
         String[] parts = uriString.split(File.pathSeparator);
