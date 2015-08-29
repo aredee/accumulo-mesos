@@ -33,7 +33,6 @@ public class ServerGroup {
     }
 
 
-
     @Override
     public String toString()  {
         StringBuilder sb = new StringBuilder();
@@ -44,4 +43,5 @@ public class ServerGroup {
         sb.append("}\n");
         return sb.toString();
     }
+
 }

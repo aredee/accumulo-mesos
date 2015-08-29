@@ -8,6 +8,7 @@ import java.math.BigDecimal;
 public class ServerProfile  {
 
     public enum TypeEnum {
+        // TODO remove accumulo dependence here
         master(org.apache.accumulo.master.Master.class),
         tserver(org.apache.accumulo.tserver.TabletServer.class),
         gc(org.apache.accumulo.gc.SimpleGarbageCollector.class),
