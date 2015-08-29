@@ -74,7 +74,6 @@
         <version.snake>1.15</version.snake>
         <version.gson>2.3.1</version.gson>
         <version.commons-lang3>3.4</version.commons-lang3>
-        <accumulo.bin.md5>898ec8e2c9d048be554a32a344dd6170</accumulo.bin.md5>
     </properties>
 
     <modules>
@@ -294,13 +293,6 @@
         </dependencies>
     </dependencyManagement>
 
-    <pluginRepositories>
-        <pluginRepository>
-            <id>protoc-plugin</id>
-            <url>http://sergei-ivanov.github.com/maven-protoc-plugin/repo/releases/</url>
-        </pluginRepository>
-    </pluginRepositories>
-
     <build>
         <testSourceDirectory>src/test/java</testSourceDirectory>
 
@@ -375,7 +367,6 @@
                         </manifest>
                         <manifestEntries>
                             <Class-Path>conf/</Class-Path>
-                            <Class-Path>/vagrant/accumulo-install/conf/</Class-Path>
                         </manifestEntries>
                     </archive>
                 </configuration>
@@ -404,30 +395,6 @@
                         <configuration>
                             <outputDirectory>${project.build.directory}/lib</outputDirectory>
                         </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <configuration>
-                    <windowtitle>Accumulo-Mesos ${project.artifactId}</windowtitle>
-                    <bottom>&amp;copy; 2015 ${project.organization.name} - licensed under &lt;a
-                        href="http://www.apache.org/licenses/LICENSE-2.0" target="_new"&gt;Apache License, Version 2&lt;/a&gt;
-                        - &lt;a href="http://mesos.apache.org/" target="_new"&gt;Homepage&lt;/a&gt;</bottom>
-                    <show>protected</show>
-                    <failOnError>false</failOnError>
-                    <aggregate>false</aggregate>
-                    <includeDependencySources>false</includeDependencySources>
-                    <includeTransitiveDependencySources>false</includeTransitiveDependencySources>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>javadoc</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
                     </execution>
                 </executions>
             </plugin>

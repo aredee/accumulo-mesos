@@ -69,24 +69,6 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>com.googlecode.maven-download-plugin</groupId>
-                <artifactId>download-maven-plugin</artifactId>
-                <version>1.2.1</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>wget</goal>
-                        </goals>
-                        <configuration>
-                            <url>http://apache.claz.org/accumulo/${version.accumulo}/accumulo-${version.accumulo}-bin.tar.gz</url>
-                            <outputDirectory>${project.build.directory}/tarball</outputDirectory>
-                            <unpack>true</unpack>
-                            <md5>${accumulo.bin.md5}</md5>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
                 <artifactId>maven-dependency-plugin</artifactId>
                 <executions>
                     <execution>
