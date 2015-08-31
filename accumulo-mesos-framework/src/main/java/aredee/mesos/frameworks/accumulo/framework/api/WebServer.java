@@ -4,10 +4,11 @@ package aredee.mesos.frameworks.accumulo.framework.api;
 import aredee.mesos.frameworks.accumulo.model.Framework;
 import com.google.inject.Inject;
 import com.google.inject.servlet.GuiceFilter;
-
 import org.apache.commons.lang3.StringUtils;
-import org.eclipse.jetty.server.*;
-import org.eclipse.jetty.servlet.*;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.servlet.DefaultServlet;
+import org.eclipse.jetty.servlet.ServletContextHandler;
 
 import java.util.EnumSet;
 

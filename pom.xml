@@ -73,6 +73,8 @@
         <version.snake>1.15</version.snake>
         <version.gson>2.3.1</version.gson>
         <version.commons-lang3>3.4</version.commons-lang3>
+        <version.commons-io>2.4</version.commons-io>
+        <version.validation-api>1.1.0.Final</version.validation-api>
     </properties>
 
     <modules>
@@ -127,6 +129,12 @@
                 <artifactId>commons-lang3</artifactId>
                 <version>${version.commons-lang3}</version>
             </dependency>
+            <dependency>
+                <groupId>commons-io</groupId>
+                <artifactId>commons-io</artifactId>
+                <version>${version.commons-io}</version>
+            </dependency>
+
             <dependency>
                 <groupId>javax.servlet</groupId>
                 <artifactId>javax.servlet-api</artifactId>
@@ -204,20 +212,11 @@
                 <artifactId>guice-servlet</artifactId>
                 <version>${version.guice}</version>
             </dependency>
-
             <dependency>
-                <artifactId>snakeyaml</artifactId>
-                <groupId>org.yaml</groupId>
-                <version>${version.snake}</version>
-                <scope>compile</scope>
+                <groupId>javax.validation</groupId>
+                <artifactId>validation-api</artifactId>
+                <version>${version.validation-api}</version>
             </dependency>
-            <dependency>
-                <groupId>com.google.code.gson</groupId>
-                <artifactId>gson</artifactId>
-                <version>${version.gson}</version>
-                <scope>compile</scope>
-            </dependency>
-
             <!-- Logging -->
             <dependency>
                 <groupId>org.slf4j</groupId>
@@ -229,11 +228,6 @@
                 <artifactId>${slf4j.binding}</artifactId>
                 <version>${version.slf4j}</version>
             </dependency>
- 	    <dependency>
-   	        <groupId>com.jcabi</groupId>
-                 <artifactId>jcabi-xml</artifactId>
-                 <version>0.16.2</version>
- 	    </dependency>
 
             <!-- Test Libraries -->
             <dependency>

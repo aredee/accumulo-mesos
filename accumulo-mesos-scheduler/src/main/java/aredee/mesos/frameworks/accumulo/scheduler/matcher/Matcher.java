@@ -1,11 +1,9 @@
 package aredee.mesos.frameworks.accumulo.scheduler.matcher;
 
 import aredee.mesos.frameworks.accumulo.model.Task;
-
 import org.apache.mesos.Protos;
 
 import java.util.List;
-import java.util.Set;
 
 /**
  * Responsible for matching required servers to available offers

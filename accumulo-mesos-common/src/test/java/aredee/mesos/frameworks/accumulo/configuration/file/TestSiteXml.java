@@ -1,16 +1,8 @@
 package aredee.mesos.frameworks.accumulo.configuration.file;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.io.ByteArrayInputStream;
-import java.io.File;
-
-import aredee.mesos.frameworks.accumulo.initialize.AccumuloSiteXml;
-//import org.apache.commons.configuration.XMLConfiguration;
-
 import com.google.common.base.Optional;
+
+//import org.apache.commons.configuration.XMLConfiguration;
 
 public class TestSiteXml {
 

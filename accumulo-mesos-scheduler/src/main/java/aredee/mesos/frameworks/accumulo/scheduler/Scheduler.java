@@ -2,11 +2,10 @@ package aredee.mesos.frameworks.accumulo.scheduler;
 
 import org.apache.mesos.Protos;
 import org.apache.mesos.SchedulerDriver;
-
-import java.util.List;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.List;
 
 public class Scheduler implements org.apache.mesos.Scheduler {
     private static final Logger LOGGER = LoggerFactory.getLogger(Scheduler.class);

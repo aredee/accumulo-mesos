@@ -4,7 +4,6 @@ import aredee.mesos.frameworks.accumulo.configuration.Constants;
 import aredee.mesos.frameworks.accumulo.model.Framework;
 import aredee.mesos.frameworks.accumulo.model.ServerProfile;
 import aredee.mesos.frameworks.accumulo.model.Task;
-import aredee.mesos.frameworks.accumulo.scheduler.Cluster;
 import aredee.mesos.frameworks.accumulo.scheduler.matcher.Match;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;

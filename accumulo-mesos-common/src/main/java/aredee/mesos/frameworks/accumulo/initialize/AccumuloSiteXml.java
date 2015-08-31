@@ -2,7 +2,6 @@ package aredee.mesos.frameworks.accumulo.initialize;
 
 import aredee.mesos.frameworks.accumulo.model.Accumulo;
 import com.google.common.base.Optional;
-import com.jcabi.xml.XMLDocument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -13,12 +12,19 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 import java.io.File;
 import java.io.IOException;
+import java.io.StringWriter;
 
 
 public class AccumuloSiteXml {
@@ -156,7 +162,7 @@ public class AccumuloSiteXml {
      * 
      */
     public String toXml() {
-        return new XMLDocument(document).toString();
+        return getXmlStringFromDocument(document);
     }
     
     /**
@@ -284,6 +290,26 @@ public class AccumuloSiteXml {
         Element rootElement = doc.createElement("configuration");
         doc.appendChild(rootElement);
 
-        return new XMLDocument(doc).toString();
+
+        return getXmlStringFromDocument(doc);
+    }
+
+    private static String getXmlStringFromDocument(Document doc){
+        DOMSource source = new DOMSource(doc);
+        StringWriter writer = new StringWriter();
+        StreamResult result = new StreamResult(writer);
+        TransformerFactory tf = TransformerFactory.newInstance();
+        Transformer transformer = null;
+        try {
+            transformer = tf.newTransformer();
+            transformer.transform(source, result);
+        } catch (TransformerConfigurationException e) {
+            LOGGER.error("Error creating XML transformer configuration");
+            throw new RuntimeException(e);
+        } catch (TransformerException e) {
+            LOGGER.error("Error performing xml transform");
+            throw new RuntimeException(e);
+        }
+        return writer.toString();
     }
 }
