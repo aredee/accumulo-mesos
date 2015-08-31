@@ -1,7 +1,6 @@
 package aredee.mesos.frameworks.accumulo.scheduler.matcher;
 
 import aredee.mesos.frameworks.accumulo.model.Task;
-import aredee.mesos.frameworks.accumulo.scheduler.server.AccumuloServer;
 
 import org.apache.mesos.Protos;
 
@@ -18,7 +17,6 @@ public interface Matcher {
 
         @param tasks tasks that require resources
         @param offers to match servers against
-        @param opCheck is operational considerations that may exist, optional
      */
     public List<Match> matchOffers(List<Task> tasks, List<Protos.Offer> offers);
 }

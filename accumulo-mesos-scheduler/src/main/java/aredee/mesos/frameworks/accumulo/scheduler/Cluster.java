@@ -14,7 +14,6 @@ import com.google.common.collect.Sets;
 import org.apache.mesos.Protos;
 import org.apache.mesos.SchedulerDriver;
 import org.apache.mesos.state.State;
-import org.eclipse.jetty.util.ConcurrentHashSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,8 +32,7 @@ public enum Cluster {
     private State state;
 
     private volatile List<Task> tasks = new ArrayList<>();
-
-    private Set<Protos.TaskStatus> runningTasks = new ConcurrentHashSet<>();
+    private volatile Set<Protos.TaskStatus> runningTasks = Sets.newConcurrentHashSet();
 
     private Matcher matcher;
     private Launcher launcher;
