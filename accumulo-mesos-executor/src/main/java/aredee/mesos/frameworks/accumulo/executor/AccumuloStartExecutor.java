@@ -1,7 +1,6 @@
 package aredee.mesos.frameworks.accumulo.executor;
 
 import aredee.mesos.frameworks.accumulo.configuration.Environment;
-import aredee.mesos.frameworks.accumulo.configuration.ServerType;
 import aredee.mesos.frameworks.accumulo.initialize.AccumuloInitializer;
 import aredee.mesos.frameworks.accumulo.initialize.AccumuloSiteXml;
 import aredee.mesos.frameworks.accumulo.model.ServerProfile;
@@ -131,8 +130,9 @@ public class AccumuloStartExecutor implements Executor {
             siteXml.defineTserverMemory(getScalarResource(taskInfo, "mem"));
             AccumuloInitializer.writeAccumuloSiteFile(System.getenv(Environment.ACCUMULO_HOME), siteXml);
 
-            AccumuloProcessFactory factory = new AccumuloProcessFactory(profile.getMemory().toString());
-            this.serverProcess = factory.exec(profile.getType().getServerClass(), jvmArgs, args);
+            AccumuloProcessFactory factory = new AccumuloProcessFactory();
+            this.serverProcess = factory.exec(profile.getType().getServerKeyword(),
+                                              profile.getServerKeywordArgs().toArray(new String[0]));
 
             sendTaskStatus(executorDriver, taskInfo.getTaskId(), TaskState.TASK_RUNNING);
             
@@ -255,21 +255,6 @@ public class AccumuloStartExecutor implements Executor {
 
         System.exit(-1);
     }
-/*
-    private ServerProcessConfiguration createProcessorConfig(Protos.TaskInfo taskInfo) {
-         ServerProcessConfiguration config = null;
-         try {
-             ConfigNormalizer normalizer =  new ConfigNormalizer(
-                     aredee.mesos.frameworks.accumulo.Protos.ServerProcessConfiguration.parseFrom(taskInfo.getData()));
-             config = normalizer.getServiceConfiguration();
-             siteXml = normalizer.getSiteXml();
-         } catch (Exception e) {
-            LOGGER.error("Failed to parse AccumuloServer protobuf",e);
-            throw new RuntimeException("Failed to parse server configuration: " + e.getMessage());
-        }   
-        return config;
-    }
- */
 
     private void sendTaskStatus(ExecutorDriver driver, TaskID taskId, TaskState state) {
      	

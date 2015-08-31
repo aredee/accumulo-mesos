@@ -10,6 +10,8 @@ public class Environment {
 
     public static final String JAVA_HOME = "JAVA_HOME";
 
+    public static final String CLASSPATH = "CLASSPATH";
+
     public static final String HADOOP_PREFIX = "HADOOP_PREFIX";
     public static final String HADOOP_CONF_DIR = "HADOOP_CONF_DIR";
     public static final String HADOOP_HOME = "HADOOP_HOME";

@@ -57,7 +57,6 @@
         <global.version>0.2.0-SNAPSHOT</global.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <version.java>1.7</version.java>
-        <version.accumulo>1.7.0</version.accumulo>
         <version.junit>4.12</version.junit>
         <version.mesos>0.22.0</version.mesos>
         <version.guava>18.0</version.guava>
@@ -112,53 +111,6 @@
                 <artifactId>protobuf-java</artifactId>
                 <version>${version.protobuf}</version>
             </dependency>
-            <!-- Accumulo dependencies -->
-            <dependency>
-                <groupId>org.apache.accumulo</groupId>
-                <artifactId>accumulo-core</artifactId>
-                <version>${version.accumulo}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.accumulo</groupId>
-                <artifactId>accumulo-start</artifactId>
-                <version>${version.accumulo}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.accumulo</groupId>
-                <artifactId>accumulo-server-base</artifactId>
-                <version>${version.accumulo}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.accumulo</groupId>
-                <artifactId>accumulo-master</artifactId>
-                <version>${version.accumulo}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.accumulo</groupId>
-                <artifactId>accumulo-monitor</artifactId>
-                <version>${version.accumulo}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.accumulo</groupId>
-                <artifactId>accumulo-tracer</artifactId>
-                <version>${version.accumulo}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.accumulo</groupId>
-                <artifactId>accumulo-tserver</artifactId>
-                <version>${version.accumulo}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.accumulo</groupId>
-                <artifactId>accumulo-gc</artifactId>
-                <version>${version.accumulo}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.accumulo</groupId>
-                <artifactId>accumulo-minicluster</artifactId>
-                <version>${version.accumulo}</version>
-            </dependency>
-
             <!-- Libraries that make working in java easier -->
             <dependency>
                 <groupId>com.google.guava</groupId>

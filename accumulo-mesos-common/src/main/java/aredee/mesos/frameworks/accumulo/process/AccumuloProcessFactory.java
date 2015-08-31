@@ -30,36 +30,50 @@ import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
-// TODO refactor this to not use clazz, just use the start jar and the name (e.g. init, master, tserver, etc)
 public class AccumuloProcessFactory {
     private static final Logger LOGGER = LoggerFactory.getLogger(AccumuloProcessFactory.class);
 
     private List<LogWriter> logWriters = new ArrayList<>(5);
     private List<Process> cleanup = new ArrayList<>();
     private Map<String, String> processEnv = Maps.newHashMap();
-    private final String memory;
 
-    public AccumuloProcessFactory(String memory){
-        if( memory.endsWith("M")){
-            this.memory = memory;
-        } else {
-            this.memory = memory + "M";
-        }
+    public AccumuloProcessFactory(){
 
         initializeEnvironment();
     }
 
-    public Process exec(Class<?> clazz, List<String> jvmArgs, String... args) throws IOException {
+    public Process exec(String keyword, String... keywordArgs) throws IOException {
 
-        ArrayList<String> jvmArgs2 = new ArrayList<>(2 + (jvmArgs == null ? 0 : jvmArgs.size()));
-        jvmArgs2.add("-Xmx" + this.memory);
-        if (jvmArgs != null)
-            jvmArgs2.addAll(jvmArgs);
-        
-        Process proc = _exec(clazz, jvmArgs2, args);
-        cleanup.add(proc);
 
-        return proc;
+        String javaHome = System.getProperty("java.home");
+        String javaBin = javaHome + File.separator + "bin" + File.separator + "java";
+
+        LOGGER.info("_exec: Java Bin? " + javaBin);
+
+        String classpath = getClasspath();
+        processEnv.put(Environment.CLASSPATH, classpath);
+
+        String accumulo_script = "${ACCUMULO_HOME}/bin/accumulo";
+
+        List<String> cmd = new ArrayList<>(2+keywordArgs.length);
+        cmd.add(accumulo_script);
+        cmd.add(keyword);
+        for( String kwd : keywordArgs){ cmd.add(kwd); }
+        ProcessBuilder builder = new ProcessBuilder(cmd.toArray(new String[0]));
+
+        // copy environment into builder environment
+        Map<String, String> environment = builder.environment();
+        environment.putAll(processEnv);
+
+        Process process = builder.start();
+        addLogWriter(processEnv.get(Environment.ACCUMULO_LOG_DIR),
+                process.getErrorStream(), keyword, process.hashCode(), ".err");
+        addLogWriter(processEnv.get(Environment.ACCUMULO_LOG_DIR),
+                process.getInputStream(), keyword, process.hashCode(), ".out");
+
+        cleanup.add(process);
+
+        return process;
     }
 
     private void initializeEnvironment(){
@@ -86,82 +100,6 @@ public class AccumuloProcessFactory {
         // hadoop-2.2 puts error messages in the logs if this is not set
         processEnv.put(Environment.HADOOP_HOME, hadoopPrefix);
         processEnv.put(Environment.HADOOP_CONF_DIR, hadoopPrefix);
-    }
-
-    private Process _exec(Class<?> clazz, List<String> extraJvmOpts, String... args) throws IOException {
-        String javaHome = System.getProperty("java.home");
-        String javaBin = javaHome + File.separator + "bin" + File.separator + "java";
-        
-        LOGGER.info("_exec: Java Bin? " + javaBin);
-
-        String classpath = getClasspath();
-        String className = clazz.getName();
-
-        ArrayList<String> argList = new ArrayList<>();
-
-        //START_JAR="${ACCUMULO_HOME}/lib/accumulo-start.jar"
-        //JAVA="${JAVA_HOME}/bin/java"
-        //exec "$JAVA" "-Dapp=$1" \
-        //$ACCUMULO_OPTS \
-        //-classpath "${CLASSPATH}" \
-        //-XX:OnOutOfMemoryError="${ACCUMULO_KILL_CMD:-kill -9 %p}" \
-        //-XX:-OmitStackTraceInFastThrow \
-        //-Djavax.xml.parsers.DocumentBuilderFactory=com.sun.org.apache.xerces.internal.jaxp.DocumentBuilderFactoryImpl \
-        //-Dorg.apache.accumulo.core.home.dir="${ACCUMULO_HOME}" \
-        //-Dhadoop.home.dir="${HADOOP_PREFIX}" \
-        //-Dzookeeper.home.dir="${ZOOKEEPER_HOME}" \
-        //org.apache.accumulo.start.Main \
-        //"$@"
-
-        argList.addAll(Arrays.asList(javaBin, "-Dproc=" + clazz.getSimpleName(), "-cp",classpath));
-
-        argList.addAll(extraJvmOpts);
-        
-        String prop;
-        //for (Map.Entry<String, String> sysProp : profile.getSystemProperties().entrySet()) {
-        // TODO follow the system properties... this might be accumulo properties list.
-        for (Map.Entry<Object, Object> sysProp : System.getProperties().entrySet()) {
-            
-            String svar;
-//            if (sysProp.getKey().equals("java.class.path")){
-//                svar = String.format("-D%s=%s", sysProp.getKey(), classpath+":"+sysProp.getValue());
-//            } else {
-                svar = String.format("-D%s=%s", sysProp.getKey(), sysProp.getValue());
-//            }
-            argList.add(svar);
-        }
-        // @formatter:off
-
-        argList.addAll(Arrays.asList(
-                "-XX:+UseConcMarkSweepGC",
-                "-XX:CMSInitiatingOccupancyFraction=75",
-                "-Dapple.awt.UIElement=true",
-                "-Djava.net.preferIPv4Stack=true",
-                "-XX:+PerfDisableSharedMem",
-                "-XX:+AlwaysPreTouch",
-                org.apache.accumulo.start.Main.class.getName(), className));
-
-        // TODO remove above accumulo dependence just use jar name
-
-        // @formatter:on
-
-        argList.addAll(Arrays.asList(args));
-
-        LOGGER.info("Launching with args? " + argList);
-        
-        ProcessBuilder builder = new ProcessBuilder(argList);
-
-        // copy environment into builder environment
-        Map<String, String> environment = builder.environment();
-        environment.putAll(processEnv);
-
-        Process process = builder.start();
-        addLogWriter(processEnv.get(Environment.ACCUMULO_LOG_DIR),
-                process.getErrorStream(), clazz.getSimpleName(), process.hashCode(), ".err");
-        addLogWriter(processEnv.get(Environment.ACCUMULO_LOG_DIR),
-                process.getInputStream(), clazz.getSimpleName(), process.hashCode(), ".out");
-
-        return process;
     }
 
     private void addLogWriter(String accumuloLogDir, InputStream stream, String className, int hash, String ext) throws IOException {
@@ -251,13 +189,6 @@ public class AccumuloProcessFactory {
         }).length > 0;
     }
 
-    /*
-    private List<String> buildRemoteDebugParams(int port) {
-        return Arrays.asList(new String[] {"-Xdebug", String.format("-Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=%d", port)});
-    }
-    */
-    
-    
     public static class LogWriter extends Thread {
         private BufferedReader in;
         private BufferedWriter out;

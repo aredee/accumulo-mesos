@@ -2,8 +2,8 @@ package aredee.mesos.frameworks.accumulo.initialize;
 
 import aredee.mesos.frameworks.accumulo.configuration.Environment;
 import aredee.mesos.frameworks.accumulo.model.Accumulo;
+import aredee.mesos.frameworks.accumulo.model.ServerProfile;
 import aredee.mesos.frameworks.accumulo.process.AccumuloProcessFactory;
-import org.apache.accumulo.server.init.Initialize;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,8 +11,6 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
-import java.net.URI;
-import java.net.URL;
 import java.util.LinkedList;
 
 public class AccumuloInitializer {
@@ -57,11 +55,12 @@ public class AccumuloInitializer {
         // needed during testing.
         initArgs.add("--clear-instance-name");
 
-        AccumuloProcessFactory processFactory = new AccumuloProcessFactory("256");
+        AccumuloProcessFactory processFactory = new AccumuloProcessFactory();
        
         Process initProcess = null;
         try {
-            initProcess = processFactory.exec(Initialize.class, null, initArgs.toArray(new String[initArgs.size()]));
+            initProcess = processFactory.exec(ServerProfile.TypeEnum.init.getServerKeyword(),
+                                              initArgs.toArray(new String[initArgs.size()]));
             LOGGER.info("Initializing Accumulo");
             initProcess.waitFor();
             LOGGER.info("New Accumulo instance initialized: {}", config.getInstance() );
@@ -71,12 +70,6 @@ public class AccumuloInitializer {
         }  
         return;
     }
-
-/*
-    public static AccumuloSiteXml createAccumuloSiteXml(String xml) throws Exception {
-        return new AccumuloSiteXml(new ByteArrayInputStream(xml.getBytes()));
-    }
-*/
 
     public static void writeAccumuloSiteFile(String accumuloHomeDir, AccumuloSiteXml siteXml) {
         LOGGER.info("ACCUMULO HOME? " + accumuloHomeDir);

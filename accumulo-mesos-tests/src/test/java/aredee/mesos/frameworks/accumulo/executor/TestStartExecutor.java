@@ -1,15 +1,11 @@
 package aredee.mesos.frameworks.accumulo.executor;
 
 import aredee.mesos.frameworks.accumulo.configuration.Environment;
-import aredee.mesos.frameworks.accumulo.configuration.ServerType;
-import aredee.mesos.frameworks.accumulo.scheduler.server.AccumuloServer;
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos.Status;
-import org.apache.mesos.Protos.TaskInfo;
 import org.apache.mesos.Protos.TaskStatus;
 
 import java.io.File;
-import java.util.Map;
 
 public class TestStartExecutor {   
 
@@ -198,7 +194,7 @@ public class TestStartExecutor {
         String[] parts = uriString.split(File.pathSeparator);
         return parts[parts.length-1];
     }
-    
+    /*
     public static class MyServer implements AccumuloServer {
         public String slaveId = "Slave-1";
         private int maxMemory;
@@ -228,7 +224,7 @@ public class TestStartExecutor {
             minMemory = memory;            
         }
     }
-    
+    */
     public static class MyDriver implements ExecutorDriver {
         public Status abort() {
             return null;
