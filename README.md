@@ -28,8 +28,10 @@ where somethings will be within the accumulo tarball when extracted, but this ha
 * Have accumulo initialization as a separate step to running the framework so we don't kill
 accumulo instances by mistake.
 * Run accumulo init from a mesos client just like the accumulo servers.
+* Flesh out the framework webservice.
 
 # Running the Framework
+
 
 # Configuration
 See config examples in `dev.config`
