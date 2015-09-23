@@ -10,7 +10,11 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.CopyOption;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.LinkedList;
 
 public class AccumuloInitializer {
@@ -43,6 +47,9 @@ public class AccumuloInitializer {
         writeAccumuloSiteFile(accumuloHome, siteXml);
         config.setSiteXml(siteXml.toString());
 
+        // accumulo-env.sh
+        copyAccumuloEnvFile(accumuloHome);
+
         LinkedList<String> initArgs  = new LinkedList<>();
         initArgs.add("--instance-name");
         initArgs.add(config.getInstance());
@@ -63,6 +70,7 @@ public class AccumuloInitializer {
                                               initArgs.toArray(new String[initArgs.size()]));
             LOGGER.info("Initializing Accumulo");
             initProcess.waitFor();
+            // TODO check if init actually happened.
             LOGGER.info("New Accumulo instance initialized: {}", config.getInstance() );
         } catch (Exception ioe) {
             LOGGER.error("IOException while trying to initialize Accumulo", ioe);
@@ -87,6 +95,12 @@ public class AccumuloInitializer {
         } catch (Exception e) {
             logErrorAndDie("Error Creating accumulo-site.xml\n",e);
         }
+    }
+
+    public static void copyAccumuloEnvFile(String accumuloHomeDir) throws IOException {
+        File inputFile = new File(accumuloHomeDir+File.separator+"conf/examples/1GB/native-standalone/accumulo-env.sh");
+        File destFile = new File(accumuloHomeDir+File.separator+"conf/accumulo-env.sh");
+        Files.copy(inputFile.toPath(), destFile.toPath(), StandardCopyOption.REPLACE_EXISTING );
     }
 
     private static void logErrorAndDie(String message, Exception e){

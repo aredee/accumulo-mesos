@@ -41,20 +41,19 @@ public class MinCpuMinRamFIFOMatcher implements Matcher {
 
         List<Match> matches = Lists.newArrayListWithCapacity(tasks.size());
         
-        int offerCount = 0;
         for(int tt = 0; tt < tasks.size(); tt++){
             Task task = tasks.get(tt);
-            boolean foundOffer = false;
-            for( int oo = offerCount; (oo < offers.size()) && (!foundOffer); oo++){
-                Protos.Offer offer = offers.get(offerCount);
+            for( int oo = 0; (oo < offers.size()) ; oo++){
+                Protos.Offer offer = offers.get(oo);
+                LOGGER.info("Checking offer id {} for task {}", offer.getId().getValue(), task.getType().getServerKeyword());
                 if( offerMatchesTask(task, offer)){
                     // create a match
                     Match match = new Match(task, offer);
                     matches.add(match);
-                    offerCount = oo;
-                    foundOffer = true;
+                    offers.remove(offer);
 
-                    LOGGER.info("Found match! task {} offer {}", task.getType().name(), offer.getId().getValue());
+                    LOGGER.info("Found match! task {} offer {}", task.getType().getServerKeyword(), offer.getId().getValue());
+                    break;
                 }
             }
         }

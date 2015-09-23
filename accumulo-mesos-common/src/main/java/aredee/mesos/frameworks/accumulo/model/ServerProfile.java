@@ -1,6 +1,7 @@
 package aredee.mesos.frameworks.accumulo.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.Lists;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -28,7 +29,6 @@ public class ServerProfile  {
 
     private String name = null;
     private String description = null;
-    private String id = null;
     private TypeEnum type = null;
     private Integer memory = 128;
     private BigDecimal cpus = null;
@@ -59,19 +59,6 @@ public class ServerProfile  {
     public void setDescription(String description) {
         this.description = description;
     }
-
-
-    /**
-     * Unique ID for this server profile\n
-     **/
-    @JsonProperty("id")
-    public String getId() {
-        return id;
-    }
-    public void setId(String id) {
-        this.id = id;
-    }
-
 
     /**
      * Accumulo server type\n
@@ -132,15 +119,28 @@ public class ServerProfile  {
     public void setUser(String user) {
         this.user = user;
     }
-
+    public boolean hasUser(){
+        boolean hasUser = false;
+        if( user != null ){
+            hasUser = !user.isEmpty();
+        }
+        return hasUser;
+    }
 
     @JsonProperty("siteXml")
     public String getSiteXml() { return siteXml; }
     public void setSiteXml(String siteXml) { this.siteXml = siteXml; }
 
     @JsonProperty("serverKeywordArgs")
-    public List<String> getServerKeywordArgs(){ return this.serverKeywordArgs; }
-    public void setServerKeywordArgs(List<String> serverKeywordArgs){ this.serverKeywordArgs = serverKeywordArgs; }
+    public List<String> getServerKeywordArgs(){
+        if( serverKeywordArgs == null ){
+            serverKeywordArgs = Lists.newArrayList();
+        }
+        return this.serverKeywordArgs;
+    }
+    public void setServerKeywordArgs(List<String> serverKeywordArgs){
+        this.serverKeywordArgs = serverKeywordArgs;
+    }
 
     @Override
     public String toString()  {
@@ -149,7 +149,6 @@ public class ServerProfile  {
 
         sb.append("  name: ").append(name).append("\n");
         sb.append("  description: ").append(description).append("\n");
-        sb.append("  id: ").append(id).append("\n");
         sb.append("  type: ").append(type).append("\n");
         sb.append("  memory: ").append(memory).append("\n");
         sb.append("  cpus: ").append(cpus).append("\n");

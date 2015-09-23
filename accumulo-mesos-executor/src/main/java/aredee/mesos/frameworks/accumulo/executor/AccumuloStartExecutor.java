@@ -19,6 +19,8 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 
 public class AccumuloStartExecutor implements Executor {
@@ -129,19 +131,44 @@ public class AccumuloStartExecutor implements Executor {
             siteXml.initializeFromExecutor(profile.getSiteXml());
             siteXml.defineTserverMemory(getScalarResource(taskInfo, "mem"));
             AccumuloInitializer.writeAccumuloSiteFile(System.getenv(Environment.ACCUMULO_HOME), siteXml);
+            AccumuloInitializer.copyAccumuloEnvFile(System.getenv(Environment.ACCUMULO_HOME));
 
             AccumuloProcessFactory factory = new AccumuloProcessFactory();
             this.serverProcess = factory.exec(profile.getType().getServerKeyword(),
                                               profile.getServerKeywordArgs().toArray(new String[0]));
 
+
             sendTaskStatus(executorDriver, taskInfo.getTaskId(), TaskState.TASK_RUNNING);
-            
-        } catch (Exception e) {
-            LOGGER.error("Unable to launch server process!", e);
-            sendFailMessageAndExit(executorDriver,Protos.TaskStatus.Reason.REASON_COMMAND_EXECUTOR_FAILED,e.getMessage());
+
+            Timer timer = new Timer();
+            timer.schedule(new ProcessHeartbeat(this.serverProcess), 5000, 10000);
+
+        } catch (IOException e) {
+            LOGGER.error("Unable to launch server process! {}", e);
+
+            sendFailMessageAndExit(executorDriver, Protos.TaskStatus.Reason.REASON_COMMAND_EXECUTOR_FAILED, "IOException");
         }
 
     }
+
+    private class ProcessHeartbeat extends TimerTask {
+        private Process proc;
+        public ProcessHeartbeat(Process process){
+            this.proc = process;
+        }
+        @Override
+        public void run() {
+            try {
+                if (this.proc.exitValue() != 0) {
+                    LOGGER.error("Process Heartbeat found process not alive, exiting. exitValue ? {}", this.proc.exitValue());
+                    destroyServer();
+                }
+            } catch (IllegalThreadStateException e){
+                LOGGER.info("Process heartbeat");
+            }
+        }
+    }
+
 
     private double getScalarResource(Protos.TaskInfo taskInfo, String name){
         double ret  = -1.0;
@@ -235,8 +262,14 @@ public class AccumuloStartExecutor implements Executor {
     private void destroyServer(){
         if( this.serverProcess != null ){
             this.serverProcess.destroy();
+            try {
+                this.serverProcess.waitFor();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             this.serverProcess = null;
-            LOGGER.info("Server destroyed.");
+            LOGGER.info("Server destroyed, exiting");
+            System.exit(-1);
         } else {
             LOGGER.info("No server process is running.");
         }

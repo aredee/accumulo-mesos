@@ -61,7 +61,7 @@ public class Task  {
         assert( taskId != null);
         assert( serverProfile != null);
 
-        this.taskId = getType()+"::"+serverProfile.getId()+"::"+ UUID.randomUUID();
+        this.taskId = getType()+"::"+ UUID.randomUUID();
 
         return taskId;
     }

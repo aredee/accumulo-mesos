@@ -2,12 +2,13 @@ package aredee.mesos.frameworks.accumulo.state;
 
 import aredee.mesos.frameworks.accumulo.model.Framework;
 import aredee.mesos.frameworks.accumulo.model.IdRegistry;
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.mesos.state.State;
 import org.apache.mesos.state.Variable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -18,10 +19,11 @@ import java.util.concurrent.Future;
 
 
 public class FrameworkStateHelper {
+    private static final Logger LOGGER = LoggerFactory.getLogger(FrameworkStateHelper.class);
 
     private static final ObjectMapper mapper = new ObjectMapper();
-    private static final String REGISTERED_FRAMEWORKS_KEY = "registered-frameworks";
-    private static final String FRAMEWORK_CONFIG_PREFIX = "framework:";
+    private static final String REGISTERED_FRAMEWORKS_KEY = "registered_frameworks";
+    private static final String FRAMEWORK_CONFIG_PREFIX = "framework__";
 
     private final State state;
 
@@ -38,6 +40,7 @@ public class FrameworkStateHelper {
         IdRegistry registry = mapper.readValue(registryBytes, IdRegistry.class);
         return registry;
     }
+
     public Map<String, String> getFrameworkIdMap() throws ExecutionException, InterruptedException, IOException {
         IdRegistry registry = getFrameworkRegistry();
         Map<String,String> retMap = Maps.newHashMap();
@@ -48,14 +51,15 @@ public class FrameworkStateHelper {
     }
 
     public Map<String, String> getFrameworkNameMap() throws ExecutionException, InterruptedException, IOException {
-        IdRegistry registry = getFrameworkRegistry();        Map<String,String> retMap = Maps.newHashMap();
+        IdRegistry registry = getFrameworkRegistry();
+        Map<String,String> retMap = Maps.newHashMap();
         for(IdRegistry.RegistryPair pair : registry.getRegistry()){
             retMap.put(pair.getName(), pair.getId());
         }
         return retMap;
     }
 
-    public void saveFrameworkConfig(Framework config) throws JsonProcessingException, ExecutionException, InterruptedException {
+    public void saveFrameworkConfig(Framework config) throws IOException, ExecutionException, InterruptedException {
 
         byte[] configBytes = mapper.writeValueAsBytes(config);
         if( config.hasId() ) {
@@ -64,6 +68,7 @@ public class FrameworkStateHelper {
         } else {
             throw new ExecutionException(new Exception("Cannot save configuration with no defined id"));
         }
+        updateRegistry(config);
     }
 
     public Framework getFrameworkConfig(String id) throws ExecutionException, InterruptedException, IOException {
@@ -72,6 +77,31 @@ public class FrameworkStateHelper {
         Framework config = mapper.readValue(configBytes, Framework.class);
 
         return config;
+    }
+
+    private void updateRegistry(Framework config) throws InterruptedException, ExecutionException, IOException {
+        synchronized (REGISTERED_FRAMEWORKS_KEY){
+            boolean foundFramework = false;
+            List<IdRegistry.RegistryPair> newRegistry = Lists.newArrayList();
+            IdRegistry registry;
+            if( hasRegisteredFrameworks() ) {
+                registry = getFrameworkRegistry();
+                for (IdRegistry.RegistryPair pair : registry.getRegistry()) {
+                    if (pair.getId().equals(config.getId())) {
+                        foundFramework = true;
+                    }
+                    newRegistry.add(pair);
+                }
+            } else {
+                registry = new IdRegistry();
+            }
+            if( !foundFramework ){
+                newRegistry.add(new IdRegistry.RegistryPair(config.getName(), config.getId()));
+            }
+            registry.setRegistry(newRegistry);
+            byte[] regBytes = mapper.writeValueAsBytes(registry);
+            saveBytesForKey(REGISTERED_FRAMEWORKS_KEY, regBytes);
+        }
     }
 
     private boolean keyExists(String inKey) throws InterruptedException {
@@ -86,6 +116,7 @@ public class FrameworkStateHelper {
                 }
             }
         } catch (ExecutionException e) {
+            LOGGER.error("Key not found via Execution Exception : {}", inKey);
             // key doesn't exist
         }
         return exists;
@@ -99,13 +130,15 @@ public class FrameworkStateHelper {
     private Variable getVariableForKey(String key) throws ExecutionException, InterruptedException {
         Future<Variable> stateFuture = state.fetch(key);
         Variable stateVariable = stateFuture.get();
+
         return stateVariable;
     }
 
     private void saveBytesForKey(String key, byte[] bytes) throws InterruptedException, ExecutionException {
-        Variable state = getVariableForKey(key);
-        state.mutate(bytes);
-        return;
+        Variable variable;
+        variable = getVariableForKey(key);
+        Variable toSave = variable.mutate(bytes);
+        this.state.store(toSave);
     }
 
     private static String buildFrameworkConfigKey(String id){

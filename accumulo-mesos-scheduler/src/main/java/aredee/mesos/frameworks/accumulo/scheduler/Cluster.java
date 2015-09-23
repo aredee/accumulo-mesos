@@ -53,7 +53,6 @@ public enum Cluster {
         this.launcher = new AccumuloStartExecutorLauncher(config);
         this.matcher = new MinCpuMinRamFIFOMatcher(config.getCluster());
 
-        // TODO initialize tasks from Config
         initializeTasks();
     }
 
@@ -73,31 +72,29 @@ public enum Cluster {
         config.setId(fid);
     }
 
-    @SuppressWarnings("unchecked")
     public void handleOffers(SchedulerDriver driver, List<Protos.Offer> offers){
+        int originalOfferSize = offers.size();
 
         List<Task> tasksToLaunch = this.getTasksToLaunch();
-        LOGGER.debug("Handling offers: for tasks {}", tasksToLaunch);
-
         List<Match> matchedServers = matcher.matchOffers(tasksToLaunch, offers);
-        
-        LOGGER.debug("Found {} matches for servers from {} offers", matchedServers.size(), offers.size());
 
+        LOGGER.info("Found {} matches for servers from {} offers",
+                matchedServers.size(), originalOfferSize);
+
+        LOGGER.info("Declining {} offers", offers.size());
         declineUnmatchedOffers(driver, offers, matchedServers);
 
         // Launch all the matched servers.
-        for (Match match: matchedServers){
-            LOGGER.info("Launching Server: {} on {}", match.getTask().getType().name(),
-                    match.getOffer().getSlaveId().getValue());
+        for (Match match : matchedServers) {
+            LOGGER.info("Launching Server: {} using offer {}", match.getTask().getType().name(),
+                    match.getOffer().getId());
 
             match.getTask().assignTaskId();
             Protos.TaskInfo taskInfo = launcher.launch(driver, match);
             match.getTask().setSlaveId(taskInfo.getSlaveId().getValue());
 
-            LOGGER.info("Created Task {} on {}", taskInfo.getTaskId(), taskInfo.getSlaveId().getValue());
+            LOGGER.info("Created Task {} on slave {}", taskInfo.getTaskId(), taskInfo.getSlaveId().getValue());
         }
-
-        // TODO call restore here?
     }
 
     /**
@@ -161,6 +158,7 @@ public enum Cluster {
                 }
                 
                 break;
+            // TODO task error
             case TASK_STARTING:
             case TASK_STAGING:
                 break;
@@ -172,8 +170,10 @@ public enum Cluster {
 
     // Finds a Task based on taskId and slaveId
     private Task findTask(@NotNull String taskId, @NotNull String slaveId){
+        LOGGER.info("Finding task {} slaveId {}", taskId, slaveId);
         for( Task task : tasks ){
-            if( task.getTaskId().equals(taskId) && task.getSlaveId().equals(slaveId)){
+            if( task.hasTaskId() && task.getTaskId().equals(taskId)
+                    && task.hasSlaveId() && task.getSlaveId().equals(slaveId)){
                 return task;
             }
         }

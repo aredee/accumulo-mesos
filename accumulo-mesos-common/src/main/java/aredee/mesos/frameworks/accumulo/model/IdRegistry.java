@@ -13,6 +13,8 @@ public class IdRegistry {
         private String name;
         private String id;
 
+        public RegistryPair(){}
+
         public RegistryPair(String name, String id){
             this.name = name;
             this.id = id;
@@ -37,7 +39,4 @@ public class IdRegistry {
     public List<RegistryPair> getRegistry(){ return this.pairs;}
     public void setRegistry(List<RegistryPair> pairs){ this.pairs = pairs; }
 
-    public void addItem(String name, String id){
-        pairs.add(new RegistryPair(name, id));
-    }
 }

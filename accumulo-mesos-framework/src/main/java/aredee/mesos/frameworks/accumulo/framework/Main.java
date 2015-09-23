@@ -40,6 +40,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public final class Main {
 
@@ -73,7 +74,7 @@ public final class Main {
         System.exit(exitStatus);
     }
 
-    private int run(Framework config) throws Exception{
+    private int run(Framework config) throws Exception {
 
         // before injector is created, Framework config must be validated/completely populated.
 
@@ -83,33 +84,44 @@ public final class Main {
                 Defaults.ZK_TIMEOUT_UNIT,
                 Defaults.ZK_STATE_ZNODE );
 
+        LOGGER.info("Connected to Zookeeper for mesos state: {} {}", mesosState.toString());
+
         FrameworkStateHelper stateHelper = new FrameworkStateHelper(mesosState);
 
         // Check if any accumulo-mesos frameworks have run here.
         if( !stateHelper.hasRegisteredFrameworks() ){
             // make sure Accumulo exists in config
             if( !config.hasCluster() ){
+                LOGGER.error("No Accumulo Cluster Definiton");
                 throw new IllegalStateException("No Accumulo Cluster definition exists");
             }
             // otherwise, things should be good to go.
         }
 
+        // TODO check if state store exists in zookeeper
+        boolean hasFrameworks = stateHelper.hasRegisteredFrameworks();
+
         // if config has a name, but no ID, it may either not exist yet or may be trying to restart with name.
         if( config.hasName() && !config.hasId() ){
+            LOGGER.info("Found configuration with name, but no id ? {}", config.getName());
             // lookup id for name in state store
-            Map<String,String> nameMap = stateHelper.getFrameworkNameMap();
-            String id = nameMap.get(config.getName());
-            if( id != null ) {
-                config.setId(id);
+            if( hasFrameworks ){
+                Map<String,String> nameMap = stateHelper.getFrameworkNameMap();
+                String id = nameMap.get(config.getName());
+                if( id != null ) {
+                    config.setId(id);
+                }
             } else if( config.hasCluster() ) {
-                // no id but accumulo config? initialize Accumulo with new random id
-
                 // Initializes accumulo or gets the instance from the state store if one exists.
                 //
                 AccumuloInitializer accumuloInitializer =
                         new AccumuloInitializer(config.getCluster());
 
                 accumuloInitializer.initialize();
+
+                // after initialization, save the config
+                config.setId(UUID.randomUUID().toString());
+                stateHelper.saveFrameworkConfig(config);
             }
 
         } else if( config.hasId() && !config.hasName() ){

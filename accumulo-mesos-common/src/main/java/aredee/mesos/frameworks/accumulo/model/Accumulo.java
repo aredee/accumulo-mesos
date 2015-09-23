@@ -20,6 +20,7 @@ public class Accumulo  {
     private String hdfsUri = null;
     private String siteXml = null;
 
+
     /**
      **/
     @JsonProperty("instance")
@@ -131,7 +132,7 @@ public class Accumulo  {
 
     @Override
     public String toString()  {
-      StringBuilder sb = new StringBuilder();
+        StringBuilder sb = new StringBuilder();
       sb.append("class Accumulo {\n");
 
       sb.append("  instance: ").append(instance).append("\n");

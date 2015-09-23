@@ -23,9 +23,11 @@ public final class Defaults {
     // Zookeeper server
     public final static String ZK_SERVERS = "127.0.0.1:2181";
     // Zookeeper connection timeout
-    public final static long ZOOKEEPER_TIMEOUT = 60l;
+    public final static long ZOOKEEPER_TIMEOUT = 3l;
     public final static TimeUnit ZK_TIMEOUT_UNIT = TimeUnit.SECONDS;
-    public final static String ZK_STATE_ZNODE = "accumulo-mesos";
+
+    // I spent way too much time figuring out this needs a leading / so don't be me
+    public final static String ZK_STATE_ZNODE = "/accumulo-mesos";
 
     // Memory settings are MB
     public final static int MIN_MASTER_MEM = 512;

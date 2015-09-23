@@ -1,12 +1,15 @@
 package aredee.mesos.frameworks.accumulo.scheduler.launcher;
 
 import aredee.mesos.frameworks.accumulo.configuration.Constants;
+import aredee.mesos.frameworks.accumulo.configuration.Environment;
 import aredee.mesos.frameworks.accumulo.model.Framework;
 import aredee.mesos.frameworks.accumulo.model.ServerProfile;
 import aredee.mesos.frameworks.accumulo.model.Task;
 import aredee.mesos.frameworks.accumulo.scheduler.matcher.Match;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
 import com.google.protobuf.ByteString;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.ExecutorID;
@@ -35,34 +38,19 @@ public class AccumuloStartExecutorLauncher implements Launcher {
     private static final String MEM = "mem";
 
     private Framework config;
-    //private ServerProcessConfiguration serviceConfig;
-    //private AccumuloInitializer initializer;
     private long executorCount = 0;
     private final Lock executorCountLock = new ReentrantLock();
-
-    /*
-    public AccumuloStartExecutorLauncher(ServerProcessConfiguration serviceConfig, ClusterConfiguration config){
-        this.config = config;
-        this.serviceConfig = serviceConfig;
-    }
-    
-    public AccumuloStartExecutorLauncher(AccumuloInitializer initializer) {
-        this.initializer = initializer; 
-        this.config = initializer.getClusterConfiguration();;
-        this.serviceConfig = initializer.getProcessConfiguration();     
-    }
-    */
 
     public AccumuloStartExecutorLauncher(Framework config){
         this.config = config;
     }
+
     /**
      * Interface used to launch Accumulo Server tasks.
      *
      * @param driver Mesos interface to use to launch a server
      * @param match AccumuloServer and Offer to launch
      */
-    @SuppressWarnings("unchecked")
     public Protos.TaskInfo launch(SchedulerDriver driver, Match match){
         Task task = match.getTask();
         Protos.Offer offer = match.getOffer();
@@ -82,12 +70,6 @@ public class AccumuloStartExecutorLauncher implements Launcher {
                 }
             }
         }
-
-        String keyword = getAccumuloProcessKeyword(task.getType());
-        String args[] = new String[1];
-        args[0] = keyword;
-
-        LOGGER.debug("Cluster Config? " + config);
 
         List<Protos.CommandInfo.URI> uris = new ArrayList<>();
         Protos.CommandInfo.URI frameworkTarballUri = Protos.CommandInfo.URI.newBuilder()
@@ -113,11 +95,22 @@ public class AccumuloStartExecutorLauncher implements Launcher {
         // Since JAVA_HOME is usually installed here...hard code it for now. Should we pass it in or instead
         // of launching it directly use a script that checks the local server(environment) for JAVA_HOME...and
         // the rest of the environment var?
-        StringBuilder sb = new StringBuilder("env ; /usr/bin/java")
+        String keyword = getAccumuloProcessKeyword(task.getType());
+        // TODO JAVA_HOME is not defined on current mesos slaves
+        String commandLine = new StringBuilder()
+                .append("export ACCUMULO_HOME=$MESOS_DIRECTORY/").append(getAccumuloDirectory(this.config.getCluster().getTarballUri())).append(";")
+                .append("export ACCUMULO_LOG_DIR=$ACCUMULO_HOME/logs").append(";")
+                .append("export JAVA_HOME=").append(System.getProperty("java.home")).append(";")
+                .append("export HADOOP_PREFIX=").append(System.getenv(Environment.HADOOP_PREFIX)).append(";")
+                .append("export ZOOKEEPER_HOME=").append(System.getenv(Environment.ZOOKEEPER_HOME)).append(";")
+                .append("$ACCUMULO_HOME/bin/build_native_library.sh").append(";")
+                .append("env").append(";")
+                .append("/usr/bin/java")
                 .append(" -Dserver=").append(keyword)  // this is just candy to see what's running using jps or ps
                 .append(" -Xmx").append(this.config.getCluster().getExecutorMemory() + "m")
                 .append(" -jar $MESOS_DIRECTORY/").append(Constants.ACCUMULO_MESOS_DISTRO)
-                .append("/").append(Constants.EXECUTOR_JAR);
+                .append("/").append(Constants.EXECUTOR_JAR)
+                .toString();
 
         /*
         // I believe this is not sane. The variables could be different on different nodes,
@@ -135,12 +128,15 @@ public class AccumuloStartExecutorLauncher implements Launcher {
                 .build();
         */
 
-        // TODO get user from server Profile
-        Protos.CommandInfo commandInfo = Protos.CommandInfo.newBuilder()
-                .setValue(sb.toString())
+        // Build Command
+        Protos.CommandInfo.Builder commandBuilder = Protos.CommandInfo.newBuilder()
+                .setValue(commandLine)
                 //.setEnvironment(env)
-                .addAllUris(uris)
-                .build();
+                .addAllUris(uris);
+        if(match.getTask().getServerProfile().hasUser()){
+            commandBuilder.setUser(match.getTask().getServerProfile().getUser());
+        }
+        Protos.CommandInfo commandInfo = commandBuilder.build();
 
         // Json to pass to task on executor
         ServerProfile profile = match.getTask().getServerProfile();
@@ -165,6 +161,9 @@ public class AccumuloStartExecutorLauncher implements Launcher {
             executorCountLock.unlock();
         }
 
+        LOGGER.info("Creating executor {}", executorId);
+        LOGGER.info("Executor command {}", commandInfo.getValue());
+
         List<Resource> resources = Arrays.asList(
                 Resource.newBuilder()
                         .setName(CPUS)
@@ -185,7 +184,7 @@ public class AccumuloStartExecutorLauncher implements Launcher {
                 .setExecutorId(ExecutorID.newBuilder().setValue(executorId))
                 .setCommand(commandInfo)
                 .setName(executorId)
-                .addAllResources(resources)
+                //.addAllResources(resources)  // TODO Should this be here and in TaskInfo???
                 .build();
 
         Protos.TaskInfo taskInfo = Protos.TaskInfo.newBuilder()
@@ -198,8 +197,13 @@ public class AccumuloStartExecutorLauncher implements Launcher {
                 .build();
 
         // TODO handle driver Status
+        LOGGER.info("Launching task {} offer {} slave {}", taskInfo.getTaskId(), offer.getId(), taskInfo.getSlaveId().getValue());
+
+
         Protos.Status status = driver.launchTasks(Arrays.asList(new Protos.OfferID[]{offer.getId()}),
                 Arrays.asList(new Protos.TaskInfo[]{taskInfo}));
+
+        LOGGER.info("Launched task. status ? ", status.toString());
 
         return taskInfo;
     }
@@ -222,8 +226,26 @@ public class AccumuloStartExecutorLauncher implements Launcher {
             case monitor:
                 server = "monitor";
                 break;
+            case init:
+                server = "init";
+                break;
         }
         return server;
     }
+
+    public static String getAccumuloDirectory(String uri){
+        // hdfs://localhost:9000/test/accumulo-1.7.0-bin.tar.gz
+        // TODO make a test case!
+
+        List<String> parts = Splitter.on("/").splitToList(uri);
+        // get last item only
+        String tarball = parts.get(parts.size()-1);
+        List<String> pieces = Splitter.on("-").splitToList(tarball);
+
+        String ret = Joiner.on("-").join(pieces.subList(0, pieces.size()-1));
+
+        return ret;
+    }
+
 
 }

@@ -33,22 +33,29 @@ public class AccumuloProcessFactory {
         String javaHome = System.getProperty("java.home");
         String javaBin = javaHome + File.separator + "bin" + File.separator + "java";
 
-        LOGGER.info("_exec: Java Bin? " + javaBin);
+        LOGGER.info("exec: Java Bin? " + javaBin);
 
         String classpath = getClasspath();
-        processEnv.put(Environment.CLASSPATH, classpath);
+        putProcessEnv(Environment.CLASSPATH, classpath);
 
-        String accumulo_script = "${ACCUMULO_HOME}/bin/accumulo";
+        String accumulo_script = processEnv.get(Environment.ACCUMULO_HOME)+"/bin/accumulo";
 
         List<String> cmd = new ArrayList<>(2+keywordArgs.length);
         cmd.add(accumulo_script);
         cmd.add(keyword);
+        LOGGER.info("exec: accumulo command: {}", cmd);
+
         for( String kwd : keywordArgs){ cmd.add(kwd); }
         ProcessBuilder builder = new ProcessBuilder(cmd.toArray(new String[0]));
 
         // copy environment into builder environment
         Map<String, String> environment = builder.environment();
-        environment.putAll(processEnv);
+        if( !processEnv.isEmpty() ) {
+            LOGGER.info("processEnv ? {}", processEnv);
+            environment.putAll(processEnv);
+        }
+
+        LOGGER.info("exec: environment ? {}", environment);
 
         Process process = builder.start();
         addLogWriter(processEnv.get(Environment.ACCUMULO_LOG_DIR),
@@ -56,17 +63,17 @@ public class AccumuloProcessFactory {
         addLogWriter(processEnv.get(Environment.ACCUMULO_LOG_DIR),
                 process.getInputStream(), keyword, process.hashCode(), ".out");
 
-        cleanup.add(process);
-
         return process;
     }
 
     private void initializeEnvironment(){
+        putProcessEnv(Environment.JAVA_HOME, System.getenv(Environment.JAVA_HOME));
+
         String accumuloHome = System.getenv(Environment.ACCUMULO_HOME);
-        processEnv.put(Environment.ACCUMULO_HOME, System.getenv(Environment.ACCUMULO_HOME));
-        processEnv.put(Environment.ACCUMULO_LOG_DIR, accumuloHome + File.separator + "logs");
-        processEnv.put(Environment.ACCUMULO_CLIENT_CONF_PATH, System.getenv(Environment.ACCUMULO_CLIENT_CONF_PATH));
-        processEnv.put(Environment.ACCUMULO_CONF_DIR, accumuloHome+"/conf/");
+        putProcessEnv(Environment.ACCUMULO_HOME, System.getenv(Environment.ACCUMULO_HOME));
+        putProcessEnv(Environment.ACCUMULO_LOG_DIR, accumuloHome + File.separator + "logs");
+        putProcessEnv(Environment.ACCUMULO_CLIENT_CONF_PATH, System.getenv(Environment.ACCUMULO_CLIENT_CONF_PATH));
+        putProcessEnv(Environment.ACCUMULO_CONF_DIR, accumuloHome + File.separator + "conf");
 
         String nativePaths = System.getenv(Environment.NATIVE_LIB_PATHS);
         String ldLibraryPath = "";
@@ -74,17 +81,25 @@ public class AccumuloProcessFactory {
             // change comma for a :
             ldLibraryPath = Joiner.on(File.pathSeparator).join(Arrays.asList(nativePaths.split(",")));
         }
-        processEnv.put(Environment.LD_LIBRARY_PATH, ldLibraryPath);
-        processEnv.put(Environment.DYLD_LIBRARY_PATH, ldLibraryPath);
+        putProcessEnv(Environment.LD_LIBRARY_PATH, ldLibraryPath);
+        putProcessEnv(Environment.DYLD_LIBRARY_PATH, ldLibraryPath);
 
         // if we're running under accumulo.start, we forward these env vars
         String hadoopPrefix = System.getenv(Environment.HADOOP_PREFIX);
-        processEnv.put(Environment.HADOOP_PREFIX, hadoopPrefix);
-        processEnv.put(Environment.ZOOKEEPER_HOME, System.getenv(Environment.ZOOKEEPER_HOME));
+        putProcessEnv(Environment.HADOOP_PREFIX, hadoopPrefix);
+        putProcessEnv(Environment.ZOOKEEPER_HOME, System.getenv(Environment.ZOOKEEPER_HOME));
 
         // hadoop-2.2 puts error messages in the logs if this is not set
-        processEnv.put(Environment.HADOOP_HOME, hadoopPrefix);
-        processEnv.put(Environment.HADOOP_CONF_DIR, hadoopPrefix);
+        putProcessEnv(Environment.HADOOP_HOME, hadoopPrefix);
+        putProcessEnv(Environment.HADOOP_CONF_DIR, hadoopPrefix);
+    }
+
+    private void putProcessEnv(String name, String value){
+        if( value != null && !value.isEmpty() ){
+            processEnv.put(name, value);
+        } else {
+            LOGGER.warn("Found empty or null value for process environment variable: {}", name);
+        }
     }
 
     private void addLogWriter(String accumuloLogDir, InputStream stream, String className, int hash, String ext) throws IOException {

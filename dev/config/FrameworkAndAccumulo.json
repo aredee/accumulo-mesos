@@ -1,0 +1,65 @@
+{
+  "bindAddress": "172.16.0.100",
+  "httpPort": "8192",
+  "mesosMaster": "172.16.0.100:5050",
+  "name":"accumulo-mesos-test",
+  "id": "",
+  "tarballUri": "hdfs://172.16.0.100:9000/dist/accumulo-mesos-dist-0.2.0-SNAPSHOT.tar.gz",
+  "zkServers": "172.16.0.100:2181",
+  "cluster":{
+    "instance": "TEST_09162015_1",
+    "rootUser": "jimbo",
+    "rootPassword": "jimbopassword",
+    "zkServers": "172.16.0.100:2181",
+    "executorMemory": 128,
+    "tarballUri": "hdfs://172.16.0.100:9000/dist/accumulo-1.7.0-bin.tar.gz",
+    "hdfsUri": "hdfs://172.16.0.100:9000/accumulo-mesos",
+    "siteXml": "",
+    "servers": [
+      {
+        "count": 3,
+        "profile":{
+          "name":"BasicTserver",
+          "description":"Basic Tserver setup",
+          "type":"tserver",
+          "cpus":1.0,
+          "mem":1024,
+          "user": ""
+        }
+      },
+      {
+        "count": 1,
+        "profile": {
+          "name": "BasicMaster",
+          "description": "Basic Master setup",
+          "type": "master",
+          "cpus": 1.0,
+          "mem": 512,
+          "user": ""
+        }
+      },
+      {
+        "count": 1,
+        "profile": {
+          "name": "Monitor",
+          "description": "Basic Monitor setup",
+          "type": "monitor",
+          "cpus": 1.0,
+          "mem": 256,
+          "user": ""
+        }
+      },
+      {
+        "count": 1,
+        "profile": {
+          "name": "BasicGC",
+          "description": "Basic Garbage Collector setup",
+          "type": "gc",
+          "cpus": 1.0,
+          "mem": 256,
+          "user": ""
+        }
+      }
+    ]
+  }
+}

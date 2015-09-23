@@ -3,123 +3,94 @@
 
 VAGRANTFILE_API_VERSION = "2"
 
-$provision_script = <<SCRIPT
+NUM_SLAVES = 6
 
-PREFIX="PROVISIONER:"
-
-set -e
-
-echo "${PREFIX} Installing pre-reqs..."
-
-# For installing Java 8
-add-apt-repository ppa:webupd8team/java
-
-# For Mesos
-apt-key adv --keyserver keyserver.ubuntu.com --recv E56151BF
-DISTRO=$(lsb_release -is | tr '[:upper:]' '[:lower:]')
-CODENAME=$(lsb_release -cs)
-echo "deb http://repos.mesosphere.io/${DISTRO} ${CODENAME} main" | sudo tee /etc/apt/sources.list.d/mesosphere.list
-
-apt-get -y update
-echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | sudo /usr/bin/debconf-set-selections
-apt-get -y install oracle-java8-installer
-apt-get -y install oracle-java8-set-default
-apt-get -y install libcurl3
-apt-get -y install zookeeperd
-apt-get -y install aria2
-apt-get -y install ssh
-apt-get -y install rsync
-
-
-MESOS_VERSION="0.21.1"
-echo "${PREFIX}Installing mesos version: ${MESOS_VERSION}..."
-apt-get -y install mesos
-
-#Install docker
-#sudo apt-get -y install linux-image-generic-lts-trusty
-#curl -sSL https://get.docker.com/ | sh
-
-echo "Done"
-
-ln -s /usr/lib/jvm/java-8-oracle/jre/lib/amd64/server/libjvm.so /usr/lib/libjvm.so
-
-echo "${PREFIX}Successfully provisioned machine for development"
-
+$host_script = <<SCRIPT
+echo "127.0.0.1 localhost" > /etc/hosts
 SCRIPT
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
-  #config.vm.box = "ubuntu/trusty64"
-  #config.vm.box_url = "trusty64.box"
-  config.vm.box_url = "https://vagrantcloud.com/ubuntu/boxes/trusty64"
+  config.vm.box = "ubuntu/trusty64"
+    if Vagrant.has_plugin?("vagrant-cachier")
+      # Configure cached packages to be shared between instances of the same base box.
+      config.cache.scope = :box
+    end
 
-  config.vm.provision "shell", inline: $provision_script
+
+  #config.vm.box_url = "trusty64.box"
+  #config.vm.box_url = "https://vagrantcloud.com/ubuntu/boxes/trusty64"
+  config.hostmanager.enabled = false
+  config.vm.provision "shell", path: "dev/provision/install_default_jdk.sh"
+  config.vm.provision "shell", path: "dev/provision/install_mesos.sh"
+  config.vm.provision "shell", path: "dev/provision/install_compiler.sh"
 
   # Configure VM resources
   config.vm.provider :virtualbox do |vb|
-    vb.customize ["modifyvm", :id, "--memory", "4096"]
+    vb.customize ["modifyvm", :id, "--memory", "2048"]
     vb.customize ["modifyvm", :id, "--cpus", "2"]
+    vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+    vb.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
   end
 
-  config.vm.define "master" do |node1|
-            node1.vm.box = "ubuntu/trusty64"
-	    node1.vm.hostname = "master"
-            node1.vm.network :private_network, ip: "192.168.50.101"
-	    node1.vm.network "forwarded_port",  guest: 8080, host: 8080
-	    node1.vm.network "forwarded_port",  guest: 8000, host: 8000
-	    node1.vm.network "forwarded_port",  guest: 8081, host: 8081
-	    node1.vm.network "forwarded_port",  guest: 5050, host: 5050
-  	    node1.vm.network "forwarded_port",  guest: 5051, host: 5051
-  	node1.vm.network "forwarded_port", guest: 50070, host: 50070
-  	node1.vm.network "forwarded_port", guest: 50075, host: 50075
-  	node1.vm.network "forwarded_port", guest: 50095, host: 50095
-  	node1.vm.network "forwarded_port", guest: 8088, host: 8088
-  	node1.vm.network "forwarded_port", guest: 8042, host: 8042
-  	node1.vm.network "forwarded_port", guest: 19888, host: 19888
-  	node1.vm.network "forwarded_port", guest: 8192, host: 8192
-  	node1.vm.network "forwarded_port", guest: 2181, host: 2181
+  # master contains:
+  #   Mesos master
+  #   Zookeeper
+  #   Namenode
+  config.vm.define "master" do |node|
+        node.vm.box = "ubuntu/trusty64"
+        node.vm.hostname = "master"
+        node.vm.network :private_network, ip: "172.16.0.100"
+        node.vm.provider "virtualbox" do |v|
+          v.memory = 2048
+          v.cpus = 2
+        end
+        node.vm.network "forwarded_port", guest: 8080, host: 8080
+        node.vm.network "forwarded_port", guest: 8000, host: 8000
+        node.vm.network "forwarded_port", guest: 8081, host: 8081
+        node.vm.network "forwarded_port", guest: 5050, host: 5050
+        node.vm.network "forwarded_port", guest: 5051, host: 5051
+        node.vm.network "forwarded_port", guest: 50070, host: 50070
+        node.vm.network "forwarded_port", guest: 50075, host: 50075
+        # accumulo monitor port
+        node.vm.network "forwarded_port", guest: 50095, host: 50095
+        node.vm.network "forwarded_port", guest: 8088, host: 8088
+        node.vm.network "forwarded_port", guest: 8042, host: 8042
+        node.vm.network "forwarded_port", guest: 19888, host: 19888
+        node.vm.network "forwarded_port", guest: 8192, host: 8192
+        node.vm.network "forwarded_port", guest: 2181, host: 2181
 
-            node1.vm.provision "shell", path: "startmaster.sh", args: "192.168.50.101"
-   end
+        node.vm.provision "shell", path: "dev/provision/start_mesos_master.sh", args: "172.16.0.100"
+        node.vm.provision "shell", path: "dev/provision/install_hadoop.sh", args: ["172.16.0.100","172.16.0.100"]
+        node.vm.provision "shell", path: "dev/provision/format_namenode.sh"
+        node.vm.provision "shell", path: "dev/provision/start_namenode.sh", run: "always"
 
-   config.vm.define "slave" do |node2|
-            node2.vm.box = "ubuntu/trusty64"
-	    node2.vm.hostname = "slave"
-            node2.vm.network :private_network, ip: "192.168.50.102"
-	    node2.vm.network "forwarded_port",  guest: 8080, host: 80802
-	    node2.vm.network "forwarded_port",  guest: 8000, host: 80002
-	    node2.vm.network "forwarded_port",  guest: 8081, host: 80812
-	    node2.vm.network "forwarded_port",  guest: 5050, host: 50502
-  	    node2.vm.network "forwarded_port",  guest: 5051, host: 50512
-  	    node2.vm.network "forwarded_port",  guest: 22, host: 50022
-       node2.vm.network "forwarded_port", guest: 50070, host: 90070
-        node2.vm.network "forwarded_port", guest: 50075, host: 90075
-        node2.vm.network "forwarded_port", guest: 50095, host: 90095
-        node2.vm.network "forwarded_port", guest: 8088, host: 8086
-        node2.vm.network "forwarded_port", guest: 8042, host: 8046
-        node2.vm.network "forwarded_port", guest: 19888, host: 19886
+  end
 
-            node2.vm.provision "shell", path: "startslave.sh", args: "192.168.50.102"
-   end
-   config.vm.define "slave3" do |node3|
-            node3.vm.box = "ubuntu/trusty64"
-            node3.vm.hostname = "slave3"
-            node3.vm.network :private_network, ip: "192.168.50.103"
-            node3.vm.network "forwarded_port",  guest: 8080, host: 80803
-            node3.vm.network "forwarded_port",  guest: 8000, host: 80003
-            node3.vm.network "forwarded_port",  guest: 8081, host: 80813
-            node3.vm.network "forwarded_port",  guest: 5050, host: 50503
-            node3.vm.network "forwarded_port",  guest: 5051, host: 50513
-  	    node3.vm.network "forwarded_port",  guest: 22, host: 50023
-       node3.vm.network "forwarded_port", guest: 50070, host: 91070
-        node3.vm.network "forwarded_port", guest: 50075, host: 91075
-        node3.vm.network "forwarded_port", guest: 50095, host: 91095
-        node3.vm.network "forwarded_port", guest: 8088, host: 8087
-        node3.vm.network "forwarded_port", guest: 8042, host: 8047
-        node3.vm.network "forwarded_port", guest: 19888, host: 19887
+  # works up to 9 slaves because of ip address.
+  (1..NUM_SLAVES).each do |i|
+    config.vm.define "slave#{i}" do |node|
+      node.vm.box = "ubuntu/trusty64"
+      node.vm.hostname = "slave#{i}"
+
+      # forward accumulo monitor port because we don't guarantee monitor and master live together.
+      hostport_ = 50095 + i
+      node.vm.network "forwarded_port", guest: 50095, host: hostport_
 
 
-            node3.vm.provision "shell", path: "startslave.sh", args: "192.168.50.103"
-   end
+      node.vm.provider "virtualbox" do |v|
+        v.memory = 2048
+        v.cpus = 2
+      end
 
+      node.vm.network :private_network, ip: "172.16.0.10#{i}"
+      node.vm.provision "shell", path: "dev/provision/install_hadoop.sh", args: ["172.16.0.100","172.16.0.10#{i}"]
+      node.vm.provision "shell", path: "dev/provision/start_mesos_slave.sh", args: ["172.16.0.10#{i}", "172.16.0.100", "slave#{i}"]
+      node.vm.provision "shell", path: "dev/provision/start_datanode.sh", run: "always"
+
+    end
+  end
+
+  config.vm.provision "shell", inline: $host_script
+  config.vm.provision :hostmanager
 
 end
