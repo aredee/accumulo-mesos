@@ -82,7 +82,6 @@
         <module>accumulo-mesos-scheduler</module>
         <module>accumulo-mesos-executor</module>
         <module>accumulo-mesos-framework</module>
-        <module>accumulo-mesos-tests</module>
         <module>accumulo-mesos-dist</module>
     </modules>
 

@@ -1,5 +1,6 @@
 Accumulo Mesos Framework
 =========================
+Initialize and run Accumulo clusters as a Mesos framework.
 
 ------------
 
@@ -10,57 +11,31 @@ document, code behavior, and anything else may change without notice and/or brea
 ------------
 
 # Design
+The accumulo-mesos framework launches accumulo server processes on mesos client machines using
+the `$ACCUMULO_HOME/bin/accumulo <server>` script. It automatically configures Java and Accumulo
+memory settings based on the mesos offer. Initially the framework ran using the standard mesos
+container, but due to a multitude of configuration differnces between clusters, it now runs
+the processes inside a docker container.
 
 # Current Status
 
 ### Implemented
-* Project setup modified from [mesos-cassandra](https://github.com/mesosphere/cassandra-mesos)
+* Framework no longer depends on accumulo! Accumulo is uploaded to HDFS. There are assumptions about
+where somethings will be within the accumulo tarball when extracted, but this has been stable.
 
 ### Near Term Tasks
-* none
+* Finalize docker implementation
+* Have accumulo initialization as a separate step to running the framework so we don't kill
+accumulo instances by mistake.
+* Run accumulo init from a mesos client just like the accumulo servers.
 
 # Running the Framework
 
 # Configuration
+See config examples in `dev.config`
 
-
-### Install Maven
-The Accumulo Mesos Framework requires an install of Maven 3.2.x.
-
-### Setup maven toolchain for protoc
-
-1. Download version 2.5.0 of protobuf [here](https://code.google.com/p/protobuf/downloads/list)
-2. Install
-  1. Linux (make sure g++ compiler is installed)
-    1. Run the following commands to build protobuf
-
-         ```
-         tar xzf protobuf-2.5.0.tar.gz
-         cd protobuf-2.5.0
-         ./configure
-         make
-         ```
-
-3. Create `~/.m2/toolchains.xml` with the following contents, Update `PROTOBUF_HOME` to match the directory you ran make in
-
-  ```
-  <?xml version="1.0" encoding="UTF-8"?>
-  <toolchains>
-    <toolchain>
-      <type>protobuf</type>
-      <provides>
-        <version>2.6.1</version>
-      </provides>
-      <configuration>
-        <protocExecutable>$PROTOBUF_HOME/src/protoc</protocExecutable>
-      </configuration>
-    </toolchain>
-  </toolchains>
-  ```
-
-#### Resources
-* https://developers.google.com/protocol-buffers/docs/downloads
-* https://code.google.com/p/protobuf/downloads/list
-* http://www.confusedcoders.com/random/how-to-install-protocol-buffer-2-5-0-on-ubuntu-13-04
+# Testing
+A multi-vm Vagrantfile is provided along with many provisioning scripts to setup
+the VMs for testing the framework. See `/dev` directory for more info.
 
 
