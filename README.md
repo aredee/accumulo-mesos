@@ -34,7 +34,7 @@ accumulo instances by mistake.
 
 
 ## Configuration
-See config examples in `dev.config`
+See config examples in `dev/config`
 
 ## Testing
 A multi-vm Vagrantfile is provided along with many provisioning scripts to setup
