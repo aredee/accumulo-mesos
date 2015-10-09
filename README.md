@@ -33,11 +33,12 @@ accumulo instances by mistake.
 # Running the Framework
 
 
-# Configuration
-See config examples in `dev.config`
+## Configuration
+See config examples in `dev/config`
 
-# Testing
+## Testing
 A multi-vm Vagrantfile is provided along with many provisioning scripts to setup
 the VMs for testing the framework. See `/dev` directory for more info.
 
-
+# Thanks
+Thanks to the cassandra-mesos project. I stole a lot of the project setup and framework design ideas from there.
