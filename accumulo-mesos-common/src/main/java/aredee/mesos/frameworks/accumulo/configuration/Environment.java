@@ -33,6 +33,7 @@ public class Environment {
     public static final String MESOS_DIRECTORY = "MESOS_DIRECTORY";
 
     public static final List<String> REQUIRED_FRAMEWORK_VARS = Arrays.asList(
+                   JAVA_HOME,
                    ACCUMULO_HOME,
                    HADOOP_PREFIX,
                    HADOOP_CONF_DIR,

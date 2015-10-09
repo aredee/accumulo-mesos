@@ -1,0 +1,8 @@
+{
+  "bindAddress": "0.0.0.0",
+  "httpPort": "18192",
+  "mesosMaster": "172.31.1.11:5050",
+  "name":"accumulo-mesos-aws-test-1",
+  "tarballUri": "hdfs://172.31.1.11:54310/user/klucar/accumulo-mesos-dist-0.2.0-SNAPSHOT.tar.gz",
+  "zkServers": "172.31.0.11:2181"
+}
