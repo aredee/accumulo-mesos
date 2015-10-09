@@ -17,4 +17,4 @@ echo "export PATH=$PATH:$HADOOP_HOME/bin:$JAVA_HOME/bin" >> /root/.bashrc
 # keep mesos slave from starting here
 echo manual | sudo tee /etc/init/mesos-slave.override
 
-sudo start mesos-master
+sudo service mesos-master start

@@ -20,4 +20,4 @@ echo manual | sudo tee /etc/init/mesos-master.override
 echo manual | sudo tee /etc/init/zookeeper.override
 
 
-start mesos-slave
+sudo service mesos-slave start

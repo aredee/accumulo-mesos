@@ -10,6 +10,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
 import com.google.protobuf.ByteString;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.ExecutorID;
@@ -82,9 +83,17 @@ public class AccumuloStartExecutorLauncher implements Launcher {
                 .setExtract(true)
                 .setExecutable(false)
                 .build();
-
         uris.add(frameworkTarballUri);
         uris.add(accumuloTarballUri);
+
+        if( config.getCluster().hasNativeLibUri() ) {
+            Protos.CommandInfo.URI accumuloNativeUri = Protos.CommandInfo.URI.newBuilder()
+                    .setValue(this.config.getCluster().getNativeLibUri())
+                    .setExtract(false)  // it's just a .so file
+                    .setExecutable(false)
+                    .build();
+            uris.add(accumuloNativeUri);
+        }
 
         // TODO get java -XX stuff from config
         // TODO get executor jar name from URI
@@ -112,26 +121,9 @@ public class AccumuloStartExecutorLauncher implements Launcher {
                 .append("/").append(Constants.EXECUTOR_JAR)
                 .toString();
 
-        /*
-        // I believe this is not sane. The variables could be different on different nodes,
-        // so they need to be set on the executors
-        Protos.Environment env = Protos.Environment.newBuilder()
-                .addVariables(Protos.Environment.Variable.newBuilder()
-                        .setName(Environment.HADOOP_PREFIX)
-                        .setValue(serviceConfig.getHadoopHomeDir().getAbsolutePath()))
-                .addVariables(Protos.Environment.Variable.newBuilder()
-                        .setName(Environment.HADOOP_CONF_DIR)
-                        .setValue(serviceConfig.getHadoopConfDir().getAbsolutePath()))
-                 .addVariables(Protos.Environment.Variable.newBuilder()
-                        .setName(Environment.ZOOKEEPER_HOME)
-                        .setValue(serviceConfig.getZooKeeperDir().getAbsolutePath()))
-                .build();
-        */
-
         // Build Command
         Protos.CommandInfo.Builder commandBuilder = Protos.CommandInfo.newBuilder()
                 .setValue(commandLine)
-                //.setEnvironment(env)
                 .addAllUris(uris);
         if(match.getTask().getServerProfile().hasUser()){
             commandBuilder.setUser(match.getTask().getServerProfile().getUser());
@@ -141,6 +133,9 @@ public class AccumuloStartExecutorLauncher implements Launcher {
         // Json to pass to task on executor
         ServerProfile profile = match.getTask().getServerProfile();
         profile.setSiteXml(config.getCluster().getSiteXml());
+        if( config.getCluster().hasNativeLibUri() ){
+            profile.setUseNativemaps(true);
+        }
         byte[] profileBytes = null;
         try {
             profileBytes = mapper.writeValueAsBytes(profile);
@@ -151,6 +146,7 @@ public class AccumuloStartExecutorLauncher implements Launcher {
             // TODO what do here?
             e.printStackTrace();
         }
+
 
         // TODO why not UUID instead of a counter here?
         String executorId;
@@ -187,25 +183,38 @@ public class AccumuloStartExecutorLauncher implements Launcher {
                 //.addAllResources(resources)  // TODO Should this be here and in TaskInfo???
                 .build();
 
-        Protos.TaskInfo taskInfo = Protos.TaskInfo.newBuilder()
+
+        Protos.TaskInfo.Builder taskInfo = Protos.TaskInfo.newBuilder()
                 .setName(keyword)
                 .setTaskId(Protos.TaskID.newBuilder().setValue(task.getTaskId()))
                 .setSlaveId(offer.getSlaveId())
                 .setData(ByteString.copyFrom(profileBytes))
                 .setExecutor(executorInfo)
-                .addAllResources(resources)
-                .build();
+                .addAllResources(resources);
+
+        if( config.hasDockerImage()){
+            // TODO this is totally untested
+            Protos.ContainerInfo.DockerInfo dockerInfo = Protos.ContainerInfo.DockerInfo.newBuilder()
+                    .setImage(config.getDockerImage())
+                    .build();
+
+            Protos.ContainerInfo containerInfo = Protos.ContainerInfo.newBuilder()
+                    .setDocker(dockerInfo)
+                    .build();
+
+            taskInfo.setContainer(containerInfo);
+        }
 
         // TODO handle driver Status
         LOGGER.info("Launching task {} offer {} slave {}", taskInfo.getTaskId(), offer.getId(), taskInfo.getSlaveId().getValue());
 
 
         Protos.Status status = driver.launchTasks(Arrays.asList(new Protos.OfferID[]{offer.getId()}),
-                Arrays.asList(new Protos.TaskInfo[]{taskInfo}));
+                Arrays.asList(new Protos.TaskInfo[]{taskInfo.build()}));
 
         LOGGER.info("Launched task. status ? ", status.toString());
 
-        return taskInfo;
+        return taskInfo.build();
     }
 
     private String getAccumuloProcessKeyword(ServerProfile.TypeEnum type){

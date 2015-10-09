@@ -3,7 +3,6 @@
 set -e
 
 #Install docker
+echo "deb http://http.debian.net/debian jessie-backports main" >> /etc/apt/sources.list
 apt-get update
-apt-get -y install linux-image-generic-lts-trusty
-curl -sSL https://get.docker.com/ | sh
-
+apt-get -y install docker.io

@@ -36,6 +36,7 @@ public class ServerProfile  {
     private String user = null;
     private String siteXml = null;
     private List<String> serverKeywordArgs = null;
+    private boolean useNativeMaps = false;
 
     /**
      * A short name for this profile\n
@@ -141,6 +142,13 @@ public class ServerProfile  {
     public void setServerKeywordArgs(List<String> serverKeywordArgs){
         this.serverKeywordArgs = serverKeywordArgs;
     }
+
+    @JsonProperty("useNativeMaps")
+    public boolean getUseNativeMaps(){ return useNativeMaps; }
+    public void setUseNativemaps(boolean useNativeMaps){
+        this.useNativeMaps = useNativeMaps;
+    }
+
 
     @Override
     public String toString()  {

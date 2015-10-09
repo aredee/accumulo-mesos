@@ -1,5 +1,6 @@
 package aredee.mesos.frameworks.accumulo.initialize;
 
+import aredee.mesos.frameworks.accumulo.configuration.Constants;
 import aredee.mesos.frameworks.accumulo.configuration.Environment;
 import aredee.mesos.frameworks.accumulo.model.Accumulo;
 import aredee.mesos.frameworks.accumulo.model.ServerProfile;
@@ -23,7 +24,7 @@ public class AccumuloInitializer {
     private Accumulo config;
     private String accumuloHome;
     
-    public AccumuloInitializer(Accumulo config) throws Exception {
+    public AccumuloInitializer(Accumulo config) {
         this.config = config;
         this.accumuloHome = Environment.get(Environment.ACCUMULO_HOME);
     }
@@ -36,7 +37,7 @@ public class AccumuloInitializer {
      *
      * @return accumulo instance name
      */
-    public void initialize() throws Exception{
+    public int initialize() throws IOException {
         
         // run accumulo init procedure
         LOGGER.info("Writing accumulo-site.xml");
@@ -48,7 +49,7 @@ public class AccumuloInitializer {
         config.setSiteXml(siteXml.toString());
 
         // accumulo-env.sh
-        copyAccumuloEnvFile(accumuloHome);
+        copyAccumuloEnvFile(accumuloHome); // IOException
 
         LinkedList<String> initArgs  = new LinkedList<>();
         initArgs.add("--instance-name");
@@ -57,26 +58,22 @@ public class AccumuloInitializer {
         initArgs.add(config.getRootPassword());
         initArgs.add("--user");
         initArgs.add(config.getRootUser());
-
-        // This clears the instance name out of zookeeper, this may need revisited, but was
-        // needed during testing.
         initArgs.add("--clear-instance-name");
 
         AccumuloProcessFactory processFactory = new AccumuloProcessFactory();
        
-        Process initProcess = null;
+        Process initProcess;
+        int status = 0;
         try {
             initProcess = processFactory.exec(ServerProfile.TypeEnum.init.getServerKeyword(),
                                               initArgs.toArray(new String[initArgs.size()]));
-            LOGGER.info("Initializing Accumulo");
             initProcess.waitFor();
-            // TODO check if init actually happened.
-            LOGGER.info("New Accumulo instance initialized: {}", config.getInstance() );
+            status = initProcess.exitValue();
         } catch (Exception ioe) {
             LOGGER.error("IOException while trying to initialize Accumulo", ioe);
-            System.exit(-1);
+            status = -1;
         }  
-        return;
+        return status;
     }
 
     public static void writeAccumuloSiteFile(String accumuloHomeDir, AccumuloSiteXml siteXml) {
@@ -97,11 +94,34 @@ public class AccumuloInitializer {
         }
     }
 
+    /**
+     * This is required because the bin/accumulo script complains without it. The framework should be setting
+     * all the environment variables that this sets, and the script uses them if already set.
+     *
+     * @param accumuloHomeDir
+     * @throws IOException
+     */
     public static void copyAccumuloEnvFile(String accumuloHomeDir) throws IOException {
         File inputFile = new File(accumuloHomeDir+File.separator+"conf/examples/1GB/native-standalone/accumulo-env.sh");
         File destFile = new File(accumuloHomeDir+File.separator+"conf/accumulo-env.sh");
-        Files.copy(inputFile.toPath(), destFile.toPath(), StandardCopyOption.REPLACE_EXISTING );
+        Files.copy(inputFile.toPath(), destFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
     }
+
+    /**
+     * Copy native maps from mesosDirectory to accumuloHome/lib/native if the maps exist
+     *
+     * @param mesosDirectory
+     * @param accumuloHome
+     * @throws IOException
+     */
+    public static void copyAccumuloNativeMaps( String mesosDirectory, String accumuloHome) throws IOException {
+        File inputFile = new File(mesosDirectory+File.separator+ Constants.ACCUMULO_NATIVE_LIB);
+        File destFile = new File(accumuloHome+File.separator+"lib/native");
+        if( inputFile.exists() ) {
+            Files.copy(inputFile.toPath(), destFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        }
+    }
+
 
     private static void logErrorAndDie(String message, Exception e){
         LOGGER.error(message, e);

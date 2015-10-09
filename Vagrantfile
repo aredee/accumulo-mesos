@@ -5,12 +5,13 @@ VAGRANTFILE_API_VERSION = "2"
 
 NUM_SLAVES = 6
 
+# re-write /etc/hosts because ubuntu does 127.0.1.1 stuff that borks Hadoop
 $host_script = <<SCRIPT
 echo "127.0.0.1 localhost" > /etc/hosts
 SCRIPT
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
-  config.vm.box = "ubuntu/trusty64"
+  config.vm.box = "klucar/jessie64_cgroup_mem"
     if Vagrant.has_plugin?("vagrant-cachier")
       # Configure cached packages to be shared between instances of the same base box.
       config.cache.scope = :box
@@ -20,9 +21,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   #config.vm.box_url = "trusty64.box"
   #config.vm.box_url = "https://vagrantcloud.com/ubuntu/boxes/trusty64"
   config.hostmanager.enabled = false
-  config.vm.provision "shell", path: "dev/provision/install_default_jdk.sh"
+  config.vm.provision "shell", path: "dev/provision/install_default_jre_headless.sh"
   config.vm.provision "shell", path: "dev/provision/install_mesos.sh"
-  config.vm.provision "shell", path: "dev/provision/install_compiler.sh"
+  config.vm.provision "shell", path: "dev/provision/install_docker.sh"
+  #config.vm.provision "shell", path: "dev/provision/install_compiler.sh"
 
   # Configure VM resources
   config.vm.provider :virtualbox do |vb|
@@ -37,7 +39,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   #   Zookeeper
   #   Namenode
   config.vm.define "master" do |node|
-        node.vm.box = "ubuntu/trusty64"
+        node.vm.box = "klucar/jessie64_cgroup_mem"
         node.vm.hostname = "master"
         node.vm.network :private_network, ip: "172.16.0.100"
         node.vm.provider "virtualbox" do |v|
@@ -59,7 +61,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         node.vm.network "forwarded_port", guest: 8192, host: 8192
         node.vm.network "forwarded_port", guest: 2181, host: 2181
 
-        node.vm.provision "shell", path: "dev/provision/start_mesos_master.sh", args: "172.16.0.100"
+        node.vm.provision "shell", path: "dev/provision/start_mesos_master_debian.sh", args: "172.16.0.100"
         node.vm.provision "shell", path: "dev/provision/install_hadoop.sh", args: ["172.16.0.100","172.16.0.100"]
         node.vm.provision "shell", path: "dev/provision/format_namenode.sh"
         node.vm.provision "shell", path: "dev/provision/start_namenode.sh", run: "always"
@@ -69,13 +71,12 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # works up to 9 slaves because of ip address.
   (1..NUM_SLAVES).each do |i|
     config.vm.define "slave#{i}" do |node|
-      node.vm.box = "ubuntu/trusty64"
+      node.vm.box = "klucar/jessie64_cgroup_mem"
       node.vm.hostname = "slave#{i}"
 
       # forward accumulo monitor port because we don't guarantee monitor and master live together.
       hostport_ = 50095 + i
       node.vm.network "forwarded_port", guest: 50095, host: hostport_
-
 
       node.vm.provider "virtualbox" do |v|
         v.memory = 2048
@@ -84,7 +85,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
       node.vm.network :private_network, ip: "172.16.0.10#{i}"
       node.vm.provision "shell", path: "dev/provision/install_hadoop.sh", args: ["172.16.0.100","172.16.0.10#{i}"]
-      node.vm.provision "shell", path: "dev/provision/start_mesos_slave.sh", args: ["172.16.0.10#{i}", "172.16.0.100", "slave#{i}"]
+      node.vm.provision "shell", path: "dev/provision/start_mesos_slave_debian.sh", args: ["172.16.0.10#{i}", "172.16.0.100", "slave#{i}"]
       node.vm.provision "shell", path: "dev/provision/start_datanode.sh", run: "always"
 
     end

@@ -26,6 +26,8 @@ import aredee.mesos.frameworks.accumulo.model.Framework;
 import aredee.mesos.frameworks.accumulo.scheduler.Cluster;
 import aredee.mesos.frameworks.accumulo.scheduler.Scheduler;
 import aredee.mesos.frameworks.accumulo.state.FrameworkStateHelper;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
@@ -37,10 +39,12 @@ import org.apache.mesos.state.ZooKeeperState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.awt.*;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 
 public final class Main {
 
@@ -48,7 +52,7 @@ public final class Main {
 
     private WebServer webServer;
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, ExecutionException, InterruptedException {
 
         if( !environmentVariablesAreSet() ){
             System.exit(-1);
@@ -61,96 +65,78 @@ public final class Main {
 
         Framework frameworkConfig = cmdHandler.getFrameworkDefinition();
 
-        int exitStatus = -1;
-        try {
-            LOGGER.info("Starting mesos-accumumlo framework version " + Constants.FRAMEWORK_VERSION);
-            LOGGER.info("Java Classpath: " + System.getProperty("java.class.path"));
-            exitStatus = new Main().run(frameworkConfig);
-        } catch (Exception e) {
-            LOGGER.error("Unhandled exception encountered, exiting: ", e);
+        LOGGER.info("Connecting to Mesos state");
+        State state = getMesosState(frameworkConfig);
+        FrameworkStateHelper stateHelper = new FrameworkStateHelper(state);
+
+        // at this point perhaps only the framework name was given, so
+        // read framework config
+        String frameworkName = frameworkConfig.getName();
+        Map<String,String> frameworks = stateHelper.getFrameworkNameMap();
+        LOGGER.info("frameworks ? {}", frameworks);
+        if( frameworks.containsKey(frameworkName) ){
+            LOGGER.info("Found previous framework with name {}", frameworkName);
+
+            Framework savedConfig = stateHelper.getFrameworkConfig(frameworks.get(frameworkName));
+            LOGGER.info("Found saved framework config: {}", savedConfig );
+            frameworkConfig.merge(savedConfig);
+            LOGGER.info("Merged command line configuration with saved configuration. Command line trumps.");
         }
 
-        LOGGER.info("Exiting Accumulo Framework with status: " + exitStatus);
-        System.exit(exitStatus);
+        // check if this is an initialization request
+        if( cmdHandler.isInitializeRequest() ){
+
+            LOGGER.info("Initializing Accumulo Instance: {}", frameworkConfig.getCluster().getInstance());
+            AccumuloInitializer accumuloInitializer =
+                    new AccumuloInitializer(frameworkConfig.getCluster());
+
+            int status = accumuloInitializer.initialize();
+            if( status != 0 ){
+                LOGGER.error("Accumulo failed to initialize instance: {}", frameworkConfig.getCluster().getInstance());
+                LOGGER.error("Either remove instance from HDFS or re-launch framework without init option");
+                System.exit(status);
+            } else {
+                LOGGER.info("Accumulo instance initialized: {}", frameworkConfig.getCluster().getInstance());
+            }
+
+            // after initialization, save the config
+            frameworkConfig.setId(UUID.randomUUID().toString());
+
+            try {
+                stateHelper.saveFrameworkConfig(frameworkConfig);
+                LOGGER.info("Saved Framework Configuration: {}", frameworkConfig.getId());
+
+            } catch (Exception e) {
+                LOGGER.error("Unable to save framework configuration to Mesos State");
+                System.err.println("Unable to save framework configuration to Mesos State");
+                e.printStackTrace();
+                System.exit(1);
+            }
+        } else {
+
+            int exitStatus = -1;
+            try {
+                LOGGER.info("Starting mesos-accumumlo framework version " + Constants.FRAMEWORK_VERSION);
+                exitStatus = new Main().run(frameworkConfig, state);
+            } catch (Exception e) {
+                LOGGER.error("Unhandled exception encountered, exiting: ", e);
+            }
+
+            LOGGER.info("Exiting Accumulo Framework with status: " + exitStatus);
+            System.exit(exitStatus);
+        }
+
+        System.exit(0); // necessary for init to finish because state launches a process
     }
 
-    private int run(Framework config) throws Exception {
-
-        // before injector is created, Framework config must be validated/completely populated.
-
-        // check zk for existing accumulo-mesos framework id/name pairs.
-        State mesosState = new ZooKeeperState(config.getZkServers(),
-                Defaults.ZOOKEEPER_TIMEOUT,
-                Defaults.ZK_TIMEOUT_UNIT,
-                Defaults.ZK_STATE_ZNODE );
-
-        LOGGER.info("Connected to Zookeeper for mesos state: {} {}", mesosState.toString());
-
-        FrameworkStateHelper stateHelper = new FrameworkStateHelper(mesosState);
-
-        // Check if any accumulo-mesos frameworks have run here.
-        if( !stateHelper.hasRegisteredFrameworks() ){
-            // make sure Accumulo exists in config
-            if( !config.hasCluster() ){
-                LOGGER.error("No Accumulo Cluster Definiton");
-                throw new IllegalStateException("No Accumulo Cluster definition exists");
-            }
-            // otherwise, things should be good to go.
-        }
-
-        // TODO check if state store exists in zookeeper
-        boolean hasFrameworks = stateHelper.hasRegisteredFrameworks();
-
-        // if config has a name, but no ID, it may either not exist yet or may be trying to restart with name.
-        if( config.hasName() && !config.hasId() ){
-            LOGGER.info("Found configuration with name, but no id ? {}", config.getName());
-            // lookup id for name in state store
-            if( hasFrameworks ){
-                Map<String,String> nameMap = stateHelper.getFrameworkNameMap();
-                String id = nameMap.get(config.getName());
-                if( id != null ) {
-                    config.setId(id);
-                }
-            } else if( config.hasCluster() ) {
-                // Initializes accumulo or gets the instance from the state store if one exists.
-                //
-                AccumuloInitializer accumuloInitializer =
-                        new AccumuloInitializer(config.getCluster());
-
-                accumuloInitializer.initialize();
-
-                // after initialization, save the config
-                config.setId(UUID.randomUUID().toString());
-                stateHelper.saveFrameworkConfig(config);
-            }
-
-        } else if( config.hasId() && !config.hasName() ){
-            // lookup name from ZK using id.
-            Map<String, String> idMap = stateHelper.getFrameworkIdMap();
-            String name = idMap.get( config.getId() );
-            if( name != null){
-                config.setName(name);
-            } else {
-                throw new IllegalStateException("Found saved Framework Id without name");
-            }
-            // populate cluster information from state store
-            if( !config.hasCluster() ){
-                // TODO what if no saved config here? need test cases.
-                try {
-                    Framework savedConfig = stateHelper.getFrameworkConfig(config.getId());
-                    config.setCluster(savedConfig.getCluster());
-                } catch (Exception e){
-                    throw new IllegalStateException("Could not find Cluster definition for framework: " + config.getId());
-                }
-            }
-        }
+    private int run(Framework config, State mesosState) throws Exception {
 
         // Sanity check before firing up processes.
-        assert( config.getId() != null );
-        assert( config.getName() != null );
-        assert( !config.getName().isEmpty() );
-        assert( !config.getName().isEmpty() );
-        assert( config.hasCluster() );
+        LOGGER.info("Preconditions check: {}", config);
+
+        Preconditions.checkState(!Strings.isNullOrEmpty(config.getId()));
+        Preconditions.checkState( !Strings.isNullOrEmpty(config.getName()));
+        Preconditions.checkState( config.hasCluster(), "No cluster definition found, exiting" );
 
         // Initialize the Cluster singleton. Do this before creating the webservice in case the
         // webservice touches it.
@@ -209,6 +195,13 @@ public final class Main {
         schedulerDriver.stop(true);
 
         return status;
+    }
+
+    private static State getMesosState(Framework config){
+        return new ZooKeeperState(config.getZkServers(),
+                Defaults.ZOOKEEPER_TIMEOUT,
+                Defaults.ZK_TIMEOUT_UNIT,
+                Defaults.ZK_STATE_ZNODE );
     }
 
     private static org.apache.mesos.Protos.FrameworkID createMesosFrameworkID(String frameworkId){

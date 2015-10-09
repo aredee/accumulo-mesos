@@ -9,16 +9,16 @@ import java.util.List;
 
 public class Accumulo  {
 
-    private String instance = null;
-    private String rootUser = null;
-    private String rootPassword = null;
-    //private String initLocation = null;
-    private String zkServers = null;
+    private String instance;
+    private String rootUser;
+    private String rootPassword;
+    private String zkServers;
     private Integer executorMemory = 128;
-    private String tarballUri = null;
+    private String tarballUri;
+    private String nativeLibUri;
     private List<ServerGroup> serverGroups = new ArrayList<ServerGroup>();
-    private String hdfsUri = null;
-    private String siteXml = null;
+    private String hdfsUri;
+    private String siteXml;
 
 
     /**
@@ -55,18 +55,6 @@ public class Accumulo  {
 
 
     /**
-     * URI of the rfiles for this instance\n
-     **/
-    //@JsonProperty("initLocation")
-    //public String getInitLocation() {
-    //  return initLocation;
-    //}
-    //public void setInitLocation(String initLocation) {
-    //  this.initLocation = initLocation;
-    //}
-
-
-    /**
      **/
     @JsonProperty("zkServers")
     public String getZkServers() {
@@ -98,6 +86,26 @@ public class Accumulo  {
     }
     public void setTarballUri(String tarballUri) {
       this.tarballUri = tarballUri;
+    }
+
+    /**
+     * URI for accumulo native library .so file.
+     *
+     * @return
+     */
+    @JsonProperty("nativeLibUri")
+    public String getNativeLibUri() {
+        return nativeLibUri;
+    }
+    public void setNativeLibUri(String nativeLibUri) {
+        this.nativeLibUri = nativeLibUri;
+    }
+    public boolean hasNativeLibUri(){
+        boolean hasNative = false;
+        if( nativeLibUri != null ){
+            hasNative = !nativeLibUri.isEmpty();
+        }
+        return hasNative;
     }
 
     /**

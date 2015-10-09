@@ -130,8 +130,14 @@ public class AccumuloStartExecutor implements Executor {
             AccumuloSiteXml siteXml = new AccumuloSiteXml();
             siteXml.initializeFromExecutor(profile.getSiteXml());
             siteXml.defineTserverMemory(getScalarResource(taskInfo, "mem"));
-            AccumuloInitializer.writeAccumuloSiteFile(System.getenv(Environment.ACCUMULO_HOME), siteXml);
-            AccumuloInitializer.copyAccumuloEnvFile(System.getenv(Environment.ACCUMULO_HOME));
+
+            final String accumuloHome = System.getenv(Environment.ACCUMULO_HOME);
+            final String mesosWork = System.getenv(Environment.MESOS_DIRECTORY);
+            AccumuloInitializer.writeAccumuloSiteFile(accumuloHome, siteXml);
+            AccumuloInitializer.copyAccumuloEnvFile(accumuloHome);
+            if( profile.getUseNativeMaps() ) {
+                AccumuloInitializer.copyAccumuloNativeMaps(mesosWork, accumuloHome);
+            }
 
             AccumuloProcessFactory factory = new AccumuloProcessFactory();
             this.serverProcess = factory.exec(profile.getType().getServerKeyword(),

@@ -31,13 +31,24 @@ public class FrameworkStateHelper {
         this.state = state;
     }
 
+    /**
+     * Checks if any frameworks have been written to this state interface.
+     *
+     * @return
+     * @throws InterruptedException
+     */
     public boolean hasRegisteredFrameworks() throws InterruptedException {
         return keyExists(REGISTERED_FRAMEWORKS_KEY);
     }
 
     private IdRegistry getFrameworkRegistry() throws ExecutionException, InterruptedException, IOException {
-        byte[] registryBytes = getBytesForKey(REGISTERED_FRAMEWORKS_KEY);
-        IdRegistry registry = mapper.readValue(registryBytes, IdRegistry.class);
+        IdRegistry registry;
+        if( hasRegisteredFrameworks() ) {
+            byte[] registryBytes = getBytesForKey(REGISTERED_FRAMEWORKS_KEY);
+            registry = mapper.readValue(registryBytes, IdRegistry.class);
+        } else {
+            registry = new IdRegistry();
+        }
         return registry;
     }
 
@@ -50,6 +61,14 @@ public class FrameworkStateHelper {
         return retMap;
     }
 
+    /**
+     * Retrieves a map of framework name:id pairs
+     *
+     * @return
+     * @throws ExecutionException
+     * @throws InterruptedException
+     * @throws IOException
+     */
     public Map<String, String> getFrameworkNameMap() throws ExecutionException, InterruptedException, IOException {
         IdRegistry registry = getFrameworkRegistry();
         Map<String,String> retMap = Maps.newHashMap();
@@ -64,6 +83,7 @@ public class FrameworkStateHelper {
         byte[] configBytes = mapper.writeValueAsBytes(config);
         if( config.hasId() ) {
             String key = buildFrameworkConfigKey(config.getId());
+            LOGGER.info("Saving framework config: {} bytes at {}", configBytes.length, key);
             saveBytesForKey(key, configBytes);
         } else {
             throw new ExecutionException(new Exception("Cannot save configuration with no defined id"));
@@ -74,6 +94,7 @@ public class FrameworkStateHelper {
     public Framework getFrameworkConfig(String id) throws ExecutionException, InterruptedException, IOException {
         String key = buildFrameworkConfigKey(id);
         byte[] configBytes = getBytesForKey(key);
+        LOGGER.info("Read config: {} bytes at {}", configBytes.length, key);
         Framework config = mapper.readValue(configBytes, Framework.class);
 
         return config;

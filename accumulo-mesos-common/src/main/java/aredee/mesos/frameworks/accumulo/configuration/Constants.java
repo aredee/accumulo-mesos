@@ -15,4 +15,5 @@ public final class Constants {
             +".jar";
 
     public static final String ACCUMULO_MESOS_DISTRO = "accumulo-mesos-dist-"+FRAMEWORK_VERSION;
+    public static final String ACCUMULO_NATIVE_LIB = "libaccumulo.so";
 }

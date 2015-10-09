@@ -1,6 +1,8 @@
 package aredee.mesos.frameworks.accumulo.initialize;
 
 import aredee.mesos.frameworks.accumulo.model.Accumulo;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -96,8 +98,8 @@ public class AccumuloSiteXml {
     }
 
     public void initializeFromScheduler(String xmlString){
+        Preconditions.checkNotNull(this.config, "Scheduler must instantiate class with configuration object");
         initXml(xmlString);
-
         addDefaultProperties();
         addPropertiesFromConfig();
         defineNativeMaps();
@@ -111,7 +113,6 @@ public class AccumuloSiteXml {
      */
     public void initializeFromExecutor(String xmlString){
         initXml(xmlString);
-        defineNativeMaps();
     }
 
     /**
@@ -122,6 +123,7 @@ public class AccumuloSiteXml {
      */
     public void defineTserverMemory(double memory) {
         // TODO this should probably be more sophisticated. Some of these may have a pratical cap
+        // TODO vary this based on native maps being used or not
         setMemoryValue(memory, TSERVER_MEMORY_MAPS_MAX, TSERVER_MEMORY_MAPS_MAX_FACTOR);
         setMemoryValue(memory, TSERVER_CACHE_DATA_SIZE, TSERVER_CACHE_DATA_SIZE_FACTOR);
         setMemoryValue(memory, TSERVER_CACHE_INDEX_SIZE, TSERVER_CACHE_INDEX_SIZE_FACTOR);
@@ -136,15 +138,19 @@ public class AccumuloSiteXml {
         setPropertyValue(name, mem);
     }
 
+    /*
+        only called from initFromScheduler
+     */
     private void defineNativeMaps(){
-        // TODO make this an option?
         String enableNativeMaps = "false";
-        String os = System.getProperty("os.name");
-        if( os.contains("Linux")){
-            enableNativeMaps = "true";
+        if( this.config.hasNativeLibUri() ) {
+            String os = System.getProperty("os.name");
+            if (os.contains("Linux")) {
+                // only supporting native maps on linux
+                enableNativeMaps = "true";
+            }
         }
         setPropertyValue(TSERVER_MEMORY_MAPS_NATIVE_ENABLED, enableNativeMaps);
-
     }
 
     private void addPropertiesFromConfig(){

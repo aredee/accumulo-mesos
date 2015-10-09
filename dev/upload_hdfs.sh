@@ -10,11 +10,11 @@ tar xzf /vagrant/dev/dist/accumulo-mesos-dist-0.2.0-SNAPSHOT.tar.gz -C /vagrant/
 TEST=`hadoop fs -ls /dist` 2>&1
 if [ -z "$TEST" ]; then
   echo "Creating dist directory"
-  hadoop fs -mkdir /dist 
+  hadoop fs -mkdir /dist
 else
   echo "/dist already exists... skipping"
 fi
 
 echo "Uploading files to HDFS"
 hadoop fs -copyFromLocal -f /vagrant/dev/dist/*.gz /dist/.
-
+hadoop fs -copyFromLocal -f /vagrant/dev/dist/libaccumulo.so /dist/.

@@ -33,7 +33,7 @@ public class AccumuloProcessFactory {
         String javaHome = System.getProperty("java.home");
         String javaBin = javaHome + File.separator + "bin" + File.separator + "java";
 
-        LOGGER.info("exec: Java Bin? " + javaBin);
+        LOGGER.debug("exec: Java Bin? " + javaBin);
 
         String classpath = getClasspath();
         putProcessEnv(Environment.CLASSPATH, classpath);
@@ -51,11 +51,11 @@ public class AccumuloProcessFactory {
         // copy environment into builder environment
         Map<String, String> environment = builder.environment();
         if( !processEnv.isEmpty() ) {
-            LOGGER.info("processEnv ? {}", processEnv);
+            LOGGER.debug("processEnv ? {}", processEnv);
             environment.putAll(processEnv);
         }
 
-        LOGGER.info("exec: environment ? {}", environment);
+        LOGGER.debug("exec: environment ? {}", environment);
 
         Process process = builder.start();
         addLogWriter(processEnv.get(Environment.ACCUMULO_LOG_DIR),

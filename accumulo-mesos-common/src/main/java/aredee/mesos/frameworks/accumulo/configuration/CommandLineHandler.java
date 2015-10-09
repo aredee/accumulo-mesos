@@ -28,8 +28,9 @@ public class CommandLineHandler  {
     private static final String OPTION_NAME = "n";
     private static final String OPTION_ZOOKEEPERS = "z";
     private static final String OPTION_TARBALL = "t";
-    private static final String OPTION_FRAMEWORK = "f";
-    private static final String OPTION_CLUSTER = "c";
+    private static final String OPTION_FRAMEWORK = "fc";
+    private static final String OPTION_CLUSTER = "cc";
+    private static final String OPTION_INITIALIZE = "i";
 
     private static final Options options;
     static {
@@ -42,9 +43,9 @@ public class CommandLineHandler  {
         options.addOption(OPTION_NAME, "name", true, "Name of this mesos framework");
         options.addOption(OPTION_ZOOKEEPERS, "zookeepers", true, "List of Zookeeper servers");
         options.addOption(OPTION_TARBALL, "tarball", true, "URI of framework tarball");
-
         options.addOption(OPTION_FRAMEWORK, "framework", true, "JSON file of entire framework configuration");
         options.addOption(OPTION_CLUSTER, "cluster", true, "JSON file containing cluster configuration");
+        options.addOption(OPTION_INITIALIZE, "init", false, "If present, initialize new Accumulo instance");
     }
 
     private static final Parser parser = new GnuParser();
@@ -78,6 +79,7 @@ public class CommandLineHandler  {
         // Read full config if available
         if( cmdLine.hasOption(OPTION_FRAMEWORK)){
             File frameworkFile = new File(cmdLine.getOptionValue(OPTION_FRAMEWORK));
+            LOGGER.info("Reading Framework Configuration from: {}", frameworkFile.getAbsolutePath());
             config = mapper.readValue(frameworkFile, Framework.class);
         } else {
             config = new Framework();
@@ -111,21 +113,23 @@ public class CommandLineHandler  {
         // If there's an Accumulo cluster JSON provided, override.
         if (cmdLine.hasOption(OPTION_CLUSTER)) {
             File clusterFile = new File(cmdLine.getOptionValue(OPTION_CLUSTER));
+            LOGGER.info("Loading cluster configuration {}", clusterFile.getAbsolutePath());
             Accumulo clusterConfig = mapper.readValue(clusterFile, Accumulo.class);
             config.setCluster(clusterConfig);
         }
 
-        LOGGER.info("Configuration after command line handling: " + config.toString());
+        LOGGER.debug("Configuration after command line handling: " + config.toString());
 
         return config;
     }
+
+    public boolean isInitializeRequest(){ return cmdLine.hasOption(OPTION_INITIALIZE); }
 
     private static CommandLine parseArgs(String args[]) {
         CommandLine cmdLine = null;
         try {
             cmdLine = parser.parse(options, args);
         } catch (ParseException e) {
-
             System.err.println(e);
         }
         return cmdLine;

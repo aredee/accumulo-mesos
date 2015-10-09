@@ -29,7 +29,9 @@ public class Environment {
     public static final String NATIVE_LIB_PATHS = "NATIVE_LIB_PATHS";
     
     public static final String ZOOKEEPER_HOME = "ZOOKEEPER_HOME";
- 
+
+    public static final String MESOS_DIRECTORY = "MESOS_DIRECTORY";
+
     public static final List<String> REQUIRED_FRAMEWORK_VARS = Arrays.asList(
                    ACCUMULO_HOME,
                    HADOOP_PREFIX,
