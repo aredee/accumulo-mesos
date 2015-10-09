@@ -39,7 +39,6 @@ import org.apache.mesos.state.ZooKeeperState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.awt.*;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -54,13 +53,14 @@ public final class Main {
 
     public static void main(String[] args) throws IOException, ExecutionException, InterruptedException {
 
-        if( !environmentVariablesAreSet() ){
-            System.exit(-1);
-        }
 
         CommandLineHandler cmdHandler = new CommandLineHandler(args);
         if( cmdHandler.checkHelpOrVersion() ){
             System.exit(0);  // checkHelpOrVersion prints appropriate info to System.out
+        }
+
+        if( !environmentVariablesAreSet() ){
+            System.exit(-1);
         }
 
         Framework frameworkConfig = cmdHandler.getFrameworkDefinition();
