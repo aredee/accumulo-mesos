@@ -75,26 +75,34 @@ public enum Cluster {
     public void handleOffers(SchedulerDriver driver, List<Protos.Offer> offers){
         int originalOfferSize = offers.size();
 
+        LOGGER.info("Received {} offers", originalOfferSize);
         List<Task> tasksToLaunch = this.getTasksToLaunch();
-        List<Match> matchedServers = matcher.matchOffers(tasksToLaunch, offers);
+        if( !tasksToLaunch.isEmpty() ) {
+            //TODO right now matchOffers removes offers it uses from the offers collection
+            // this assumed side-effect is bad if we actually want people to write their own
+            // matchers.
+            List<Match> matchedServers = matcher.matchOffers(tasksToLaunch, offers);
 
-        LOGGER.info("Found {} matches for servers from {} offers",
-                matchedServers.size(), originalOfferSize);
+            LOGGER.info("Found {} matches for servers from {} offers",
+                    matchedServers.size(), originalOfferSize);
 
-        LOGGER.info("Declining {} offers", offers.size());
-        declineUnmatchedOffers(driver, offers, matchedServers);
+            // Launch all the matched servers.
+            for (Match match : matchedServers) {
+                LOGGER.info("Launching Server: {} using offer {}", match.getTask().getType().name(),
+                        match.getOffer().getId());
 
-        // Launch all the matched servers.
-        for (Match match : matchedServers) {
-            LOGGER.info("Launching Server: {} using offer {}", match.getTask().getType().name(),
-                    match.getOffer().getId());
+                match.getTask().assignTaskId();
+                Protos.TaskInfo taskInfo = launcher.launch(driver, match);
+                match.getTask().setSlaveId(taskInfo.getSlaveId().getValue());
 
-            match.getTask().assignTaskId();
-            Protos.TaskInfo taskInfo = launcher.launch(driver, match);
-            match.getTask().setSlaveId(taskInfo.getSlaveId().getValue());
+                LOGGER.info("Created Task {} on slave {}", taskInfo.getTaskId(), taskInfo.getSlaveId().getValue());
+            }
 
-            LOGGER.info("Created Task {} on slave {}", taskInfo.getTaskId(), taskInfo.getSlaveId().getValue());
+        } else {
+            LOGGER.info("No tasks currently waiting launch.");
         }
+        LOGGER.info("Declining {} offers", offers.size());
+        declineUnmatchedOffers(driver, offers);
     }
 
     /**
@@ -181,17 +189,10 @@ public enum Cluster {
     }
 
     // Decline any offers not claimed by a match
-    private void declineUnmatchedOffers(SchedulerDriver driver, List<Protos.Offer> offers, List<Match> matches){
-        Set<String> usedOffers = new HashSet<>(matches.size());
-        for(Match match: matches){
-            if(match.hasOffer()){
-                usedOffers.add(match.getOffer().getId().getValue());
-            }
-        }
-        for( Protos.Offer offer: offers){
-            if( usedOffers.contains(offer.getId().getValue()) ) {
-                driver.declineOffer(offer.getId());
-            }
+    private void declineUnmatchedOffers(SchedulerDriver driver, List<Protos.Offer> offers){
+        for (Protos.Offer offer : offers){
+            LOGGER.debug("Declining Offer: ", offer.getId().getValue());
+            driver.declineOffer(offer.getId());
         }
     }
 
