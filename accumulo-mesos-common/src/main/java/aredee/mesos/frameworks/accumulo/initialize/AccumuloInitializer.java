@@ -56,8 +56,6 @@ public class AccumuloInitializer {
         initArgs.add(config.getInstance());
         initArgs.add("--password");
         initArgs.add(config.getRootPassword());
-        initArgs.add("--user");
-        initArgs.add(config.getRootUser());
         initArgs.add("--clear-instance-name");
 
         AccumuloProcessFactory processFactory = new AccumuloProcessFactory();

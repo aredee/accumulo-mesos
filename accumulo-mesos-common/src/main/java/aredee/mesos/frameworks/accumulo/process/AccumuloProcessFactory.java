@@ -43,9 +43,11 @@ public class AccumuloProcessFactory {
         List<String> cmd = new ArrayList<>(2+keywordArgs.length);
         cmd.add(accumulo_script);
         cmd.add(keyword);
-        LOGGER.info("exec: accumulo command: {}", cmd);
 
-        for( String kwd : keywordArgs){ cmd.add(kwd); }
+        for( String kwd : keywordArgs){
+            cmd.add(kwd);
+        }
+        LOGGER.info("exec: accumulo command: {}", cmd);
         ProcessBuilder builder = new ProcessBuilder(cmd.toArray(new String[0]));
 
         // copy environment into builder environment
@@ -72,7 +74,6 @@ public class AccumuloProcessFactory {
         String accumuloHome = System.getenv(Environment.ACCUMULO_HOME);
         putProcessEnv(Environment.ACCUMULO_HOME, System.getenv(Environment.ACCUMULO_HOME));
         putProcessEnv(Environment.ACCUMULO_LOG_DIR, accumuloHome + File.separator + "logs");
-        putProcessEnv(Environment.ACCUMULO_CLIENT_CONF_PATH, System.getenv(Environment.ACCUMULO_CLIENT_CONF_PATH));
         putProcessEnv(Environment.ACCUMULO_CONF_DIR, accumuloHome + File.separator + "conf");
 
         String nativePaths = System.getenv(Environment.NATIVE_LIB_PATHS);

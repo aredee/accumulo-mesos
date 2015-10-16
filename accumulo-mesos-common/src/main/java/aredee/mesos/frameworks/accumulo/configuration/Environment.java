@@ -37,8 +37,7 @@ public class Environment {
                    ACCUMULO_HOME,
                    HADOOP_PREFIX,
                    HADOOP_CONF_DIR,
-                   ZOOKEEPER_HOME,
-                   ACCUMULO_CLIENT_CONF_PATH);
+                   ZOOKEEPER_HOME);
 
     public static final List<String> REQUIRED_EXECUTOR_VARS = Arrays.asList(
                    JAVA_HOME,
