@@ -1,0 +1,4 @@
+accumulo:
+  build: .
+  dockerfile: accumulo.dockerfile
+  net: host
