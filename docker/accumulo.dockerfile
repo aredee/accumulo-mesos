@@ -19,7 +19,7 @@ RUN \
 RUN apt-get install -y wget lsb-release
 RUN DISTRO=$(lsb_release -is | tr '[:upper:]' '[:lower:]') CODENAME=$(lsb_release -cs) && echo "deb http://repos.mesosphere.com/${DISTRO} ${CODENAME} main" | tee /etc/apt/sources.list.d/mesosphere.list
 RUN apt-get -y update
-RUN apt-get install -y zookeeper
+RUN apt-get install -y zookeeper mesos
 
 ADD bin/install-accumulo.sh /
 RUN chmod +x /install-accumulo.sh
