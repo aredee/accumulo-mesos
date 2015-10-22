@@ -25,10 +25,6 @@ ADD bin/install-accumulo.sh /
 RUN chmod +x /install-accumulo.sh
 RUN /install-accumulo.sh
 
-ADD bin/init-fs.sh /
-RUN chmod +x /init-fs.sh
-RUN /init-fs.sh
-
 ADD bin/start-framework.sh /
 RUN chmod +x /start-framework.sh
 
