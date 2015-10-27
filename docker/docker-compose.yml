@@ -1,0 +1,7 @@
+accumulo:
+  build: .
+  dockerfile: accumulo.dockerfile
+  net: host
+  volumes:
+    - ./lib:/accumulo-lib:rw
+    - ./config:/accumulo-config
